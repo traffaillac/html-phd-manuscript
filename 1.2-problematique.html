@@ -1,0 +1,133 @@
+<h2>Problématique</h2>
+
+<p>
+	Aujourd'hui, on peut considérer que l'interaction avec les systèmes informatiques a atteint un point de stabilité.
+	Les environnements de bureau (Windows, macOS, Linux) partagent de nombreux points communs liés au modèle WIMP (fenêtres déplaçables et redimensionnables, icônes sur le bureau, menus déroulants en haut, utilisation de la souris)<!-- <del>, et la transition entre deux systèmes ne requiert pas d'apprentissage conséquent <notesh>... mouais... ça mériterait d'être étayé et sourcé comme affirmation...</notesh></del> -->.
+	De même, l'interaction au doigt sur smartphones et tablettes s'est uniformisée entre systèmes (utilisation des gestes au doigt, icônes d'applications sur des “écrans” virtuels, exécution d'une seule application à la fois).
+	Les interfaces se sont “standardisées” [<a href=#beaudouin-lafon_instrumental_2000>Bea00</a>, <a href=#poor_applying_2016>Poo16</a>], facilitant l'accès à la technologie pour les utilisateurs, et leur permettant de réutiliser les mêmes acquis entre les différents systèmes.
+	En outre, la programmation des interfaces a été rendue plus rapide, en les exprimant par des assemblages de contrôles standards (ex. boutons, cases à cocher, menus, onglets), et grâce à une uniformisation des architectures logicielles autour du modèle objet [<a href=#krasner_cookbook_1988>Kra88</a>, <a href=#coutaz_pac_1987>Cou87</a>, <a href=#conversy_improving_2008>Con08</a>].
+	<!-- <del>Cette stabilité est preuve que l'interactivité des systèmes actuels est satisfaisante, et qu'il reste simplement à la raffiner. <notesh>... mouais encore... satisfaisante pour qui, pour quoi ? Même si c'est vrai (et j'en doute car on voit quand même autour de nous pas mal "d'insatisfaits"), est-ce que ce n'est pas une "satisfaction par ignorance" que ça pourrait être mieux (et qu'il existe mieux) et/ou par résignation ? (après tout, c'est comme ça, alors bon...)</notesh>
+	Pourtant, elle est aussi un symptôme de la difficulté de créer de nouvelles formes d'interaction aujourd'hui. <notesh>Le lien n'est pas évident...</notesh></del> -->
+</p>
+<p>
+	Cependant, cette standardisation a donné lieu à des interfaces stéréotypées, qui se distinguent peu les unes des autres, et dont les évolutions (aussi bien fonctionnelles que cosmétiques) sont faibles dans le temps.
+	En conséquence, il est difficile d'adapter les interfaces actuelles à de nouveaux usages, et elles manquent de flexibilité pour introduire de nouveaux modes d'interaction.
+	La cristallisation de la programmation d'interfaces a généré un écosystème complexe, duquel il est difficile de s'extraire aujourd'hui.
+	Plusieurs freins s'opposent au travail de prototypage des chercheurs : la multiplicité <i>horizontale</i> des outils avec lesquels travailler, la multiplicité <i>verticale</i> des couches dans les systèmes interactifs, et l'extensibilité limitée des bibliothèques.
+</p>
+<!-- <del><p>
+	En effet les chercheurs sont confrontés à un écosystème complexe, qui n'a pas toujours été conçu pour évoluer ou être remplacé.
+	Dans cette situation, la définition sur papier d'une nouvelle technique d'interaction n'est qu'une infime partie du travail à réaliser.
+	Il reste à l'intégrer dans un système informatique existant, qui oppose de nombreux freins au prototypage de l'interaction.
+</p>
+
+<sh>Globalement pour cette intro, je vois où tu veux en venir, mais c'est assez maladroit. Je crois avoir compris que tu veux dire (des choses que j'ai déjà écrit, d'autres aussi  e.g. MBL) que la "standardisation" des interfaces a des avantages certains: démocratisation et accessibilité à la technologie dont se satisfont déjà beaucoup d'utilisateurs pour des tâches de base et simplification de leur développement; des conséquences: stéréotypage des interfaces et des outils pour les développer; qui soulèvent elles-même des problèmes: limitations des interfaces actuelles pour réaliser certaines tâches et pour supporter l'évolution des utilisateurs vers des pratiques plus avancées, et manque de flexibilité des outils pour introduire de nouveaux modes d'interaction. Je pense que tu devrais reformuler dans ce sens.</sh></del> -->
+
+<h3>Choix des outils de programmation</h3>
+
+<p>
+	Le premier frein est l'état des outils de base des systèmes, pour la programmation d'entrées/sorties avec les utilisateurs.
+	Les systèmes d'exploitation, qui gèrent ces entrées/sorties, fournissent des interfaces de programmation (ou API, pour <i>Application Programming Interface</i>) complexes et/ou de très bas niveau, c'est-à-dire qui nécessitent de s'occuper de nombreux détails.
+	Par exemple, dans Linux au moins deux APIs majeures sont disponibles pour dessiner à l'écran, framebuffer et X11.
+	Le premier ne fournit aucune primitive de dessin (ligne, polygone, image), et donne uniquement accès à une matrice de pixels.
+	Le second fournit une API de 239 fonctions, décrites dans un document de 476 pages [<a href=#gettys_xlib_2002>Get02</a>].
+</p>
+<p>
+	Face à cette complexité sous-jacente, les programmeurs doivent recourir à des bibliothèques intermédiaires, qui <!-- <del>“discutent” <notesh>s'interfacent ?</notesh></del> -->s'interfacent avec les APIs de bas niveau, tout en fournissant des APIs de plus haut niveau permettant d'exprimer des comportements plus complexes avec moins de code.
+	Or il en existe un <i>très grand nombre</i>.
+	En effet de multiples contextes nécessitent la programmation d'interactions, chacun avec des particularités qui nécessitent des outils spécifiques : interfaces de bureau, visualisation interactive de données, jeux vidéos, interfaces d'environnements critiques, smartphones, ou encore interfaces sur microcontrôleurs.
+	Chaque contexte bénéficie de bibliothèques dédiées, cependant les contextes partagent souvent des besoins (ex. la gestion de la souris entre interfaces de bureau et visualisations interactives).
+	Ainsi il est courant qu'une bibliothèque soit utilisée hors de son contexte d'origine, et certaines bibliothèques “généralistes” mettent en avant leur utilisabilité dans de nombreux contextes.
+	C'est le cas par exemple de Qt [<a href=#the_qt_company_qt_2019>Qt19</a>], qui cite sur sa page principale les contextes <i>Embedded Devices</i>, <i>Application UIs and Software</i>, <i>Internet of Things</i>, <i>Mobile</i>, <i>Automotive</i>, <i>Automation</i>, <i>Set-top-box & DTV</i>, et <i>Medical</i>.<!-- <del> <notesh> ce paragraphe est une réponse à <a href="1.1-contexte.html#rqueCtx">une de mes remarques de la section précédente :)</a></notesh></del> -->
+</p>
+<p>
+	Les programmeurs sont donc confrontés entre le choix de bibliothèques spécialisées, aptes à répondre en détails à un contexte d'utilisation mais potentiellement limitées en dehors, et des bibliothèques généralistes, aptes à répondre à de nombreux contextes, mais potentiellement de façon superficielle.
+	En outre, lorsque plusieurs bibliothèques sont utilisées conjointement, un problème supplémentaire d'interopérabilité se pose.
+	Comme l'écrit Huot [<a href=#huot_designeering_2013>Huo13</a>], « <i>As discussed before, we now have many different tools that address specific problems, but they are difficult or impossible to use together. Different toolkits are based on different abstractions and models, requiring to deal with several programing paradigms, abstractions, data structures and even sometimes programming languages within the same prototype</i> ».
+	En pratique il faut consacrer beaucoup de temps pour chercher et comparer de telles bibliothèques.
+	Lorsque le choix se porte sur l'une d'elles, on doit investir du temps et des efforts conséquents dans l'apprentissage de son utilisation, sans garantie qu'elle répondra à tous les besoins.
+	C'est particulièrement délicat dans le cas du développement de nouvelles interactions, qui touchent fréquemment aux limites des bibliothèques d'interaction.<!-- <del><notesh>Sans vouloir en abuser, peut-être citer le chapitre 4 de mon HDR ici... Il y a aussi les questions que j'aborde sur les défauts d’interopérabilité de ces toolkits multiples, qui seraient peut-être intéressantes à discuter (et reprendre aussi dans ta solution basée sur ECS qui ouvre de fait la voie à des toolkits multiples pour résoudre des problèmes différents, mais basées sur un même modèle permettant la composition et donc l’interopérabilité.</notesh></del> -->
+</p>
+
+<h3>Structure des APIs en couches</h3>
+
+<p>
+	Alors que le premier frein à la programmation de nouvelles techniques d'interaction fait état d'une multiplicité <i>horizontale</i> des bibliothèques disponibles, le deuxième frein concerne une multiplicité <i>verticale</i>. <!-- <notesh>Pas mal ce horizontal vs vertical ! Ça pourrait être utilisé dans un petit paragraphe de fin de l'introduction pour servir de transition avec ces 2 sections. Peut-être intéressant aussi à reprendre après pour classifier les solutions que tu apportes...</notesh> -->
+	La gestion des entrées et sorties avec les utilisateurs, dans un système interactif, est généralement organisée en couches successives (voir <a href=#fig-couches>figure</a>), formant une hiérarchie de dépendances de pair à pair.
+</p>
+<!-- <traf>Remarque intégrée dans l'introduction 1.2 et le dernier paragraphe. Je le mentionnerai dans la conclusion si j'ai du temps.</traf> -->
+<p>
+	Au plus bas niveau, les pilotes de périphériques (<i>drivers</i> en anglais) communiquent avec les puces connectées à la carte mère qui gèrent les prototoles de communication externes (USB, audio, HDMI), et transmettent ces informations au système d'exploitation.
+	Ce dernier fait correspondre les informations reçues en des périphériques <i>virtuels</i> (comme le curseur à l'écran), qui permettent d'utiliser uniformément différents types de périphériques (souris, doigt, <i>eye-tracking</i>).
+	Ensuite, certains langages de programmation (rares) interceptent les informations d'entrée/sortie du système d'exploitation, pour les mettre à disposition des programmeurs.
+	Plus haut, le nombre de couches est variable et peut représenter des graphes de dépendances complexes.
+	Cependant, on distingue généralement l'existence de bibliothèques de bas niveau, qui se spécialisent chacune dans un type de périphérique physique/virtuel (ex. OpenGL pour l'affichage, TUIO pour le multitouch, OpenAL pour l'audio).
+	Enfin, à haut niveau se trouvent les frameworks d'applications, qui combinent et donnent accès à tous les périphériques.
+</p>
+<figure id=fig-couches>
+	<img src=figures/couches.svg style="width:6cm">
+	<figcaption>Structure en couches des différents types de bibliothèques logicielles permettant de gérer l'interaction avec les utilisateurs.</figcaption>
+</figure>
+<p>
+	Lors d'une action de l'utilisateur sur la machine, les données générées par les capteurs des périphériques transitent par chacune des couches de cette hiérarchie.
+	Chacune reçoit des informations d'une couche plus basse, l'interprète éventuellement en actions plus complexes (ex. un clic de souris est un appui suivi d'un relâchement), et le met à disposition des couches supérieures.
+	Le même phénomène se produit pour les actions de la machine vers l'utilisateur, même si nous parlons préférentiellement des <i>entrées</i>.
+	Avec cette structure, les données de plus haut niveau (qui ont transité par le plus de couches) sont aussi les plus abstraites.
+	Les programmeurs interrogent une seule couche, le plus haut possible, et n'interagissent normalement pas avec les autres couches.
+<!-- 	<del>Les programmeurs peuvent généralement interroger chaque couche afin d'intercepter les informations qui y transitent.<notesh>Pas vraiment en fait... cette approche est faite pour que justement on se place à un niveau (si possible le plus haut) et qu'on y reste. C'est quand on veut des choses des autres couches que se pose le problème: plus les même modèles, langages, etc. Je viens de lire la suite, c'est ce que tu dis, mais donc ne dis pas ici que "Les programmeurs peuvent généralement interroger chaque couche afin d'intercepter les informations qui y transitent", dis plutôt ce que je dis au début  de se commentaire, et garde cette phrase pour les 2 paragraphes suivants.</notesh></del> -->
+</p>
+<p>
+	Cependant, cette hiérarchie en couches rend la programmation d'interactions complexe.
+	En effet, chaque transmission d'une couche à l'autre peut voir des informations être ignorées/perdues (ex. la résolution du capteur de la souris), converties dans d'autres unités (ex. un déplacement en millimètres de la souris vers un déplacement en pixels), voire corrompues lors de la traduction.
+	Il arrive aussi qu'une couche fusionne des informations, et perde trace de leur cause.
+	C'est le cas par exemple lorsqu'un bouton est déclenché au niveau du framework applicatif, il est parfois impossible de savoir si c'est un clic de souris ou un raccourci clavier qui l'a déclenché.
+</p>
+<p>
+	Du point de vue du programmeur cherchant à prototyper une nouvelle technique d'interaction, il faut déjà choisir entre toutes les couches disponibles, où intercepter les données d'interaction.
+	Chaque couche dispose d'une API qu'il faut apprendre au préalable, ainsi qu'un modèle de programmation potentiellement différent des autres (<i>callbacks</i>, évènements, <i>listeners</i>).
+	Lorsqu'une donnée est manquante, il faut s'adresser à une couche plus basse, apprendre l'utilisation de son API, et risquer d'avoir de multiples interlocuteurs.
+	Dans ce cas, on s'expose à des problèmes de cohérence entre couches : rien ne garantit qu'une information propagée par une couche le soit aussi par une plus haute.
+	Par exemple, si une couche basse signale un appui de bouton de souris suivi d'un relâchement du même bouton, on ne peut pas garantir qu'une couche supérieure interprétera un clic de souris.
+	Le programmeur doit donc considérer que les informations interceptées à plusieurs niveaux peuvent ne pas être cohérentes, et les comparer à chaque fois pour “rétablir” leur cohérence.
+	Dans l'ensemble cette organisation en couches tend à augmenter la tâche du programmeur, tant dans le temps passé à appréhender la topologie des couches, que dans les efforts pour assurer la cohérence des données interceptées.<!-- <del><notesh>C'est ça, bien dit... on se retrouve dans ce que l'on disait précédemment: cette abstraction  en couches est une standardisation basée sur des besoins et la résolution de problèmes technologique (plus de computing que d'interaction) et qui a des avantages pour les programmeurs dans beaucoup de cas... mais pas pour l'interaction.</notesh></del> -->
+</p>
+
+<h3>Extensibilité des bibliothèques</h3>
+
+<p>
+	Le troisième frein au prototypage de nouvelles interactions est la faible extensibilité des bibliothèques logicielles, et plus précisément des frameworks applicatifs.
+	Tout d'abord, dans le domaine de l'IHM, les interfaces graphiques sont majoritairement codées en utilisant le modèle <i>objet</i>.
+	Dans ce modèle, tous les éléments du programme (entiers, chaînes de caractères, boutons, fenêtres, etc.) sont des objets.
+	Un objet est une collection de variables et de fonctions (les méthodes), qui ne fait que réagir à son environnement par des appels de méthodes, et gère son état en manipulant ses propres variables.
+	Dans les frameworks, tous les éléments graphiques interactifs (boutons, labels, <i>sliders</i>, etc.) sont représentés par des objets, qu'on appelle alors des <i>widgets</i>.
+	Ainsi toute interface est un assemblage de widgets, qui communiquent entre eux et avec leur environnement par des appels de méthodes.
+</p>
+<p>
+	Pour un chercheur, la création d'une nouvelle forme d'interaction revient normalement à créer de nouveaux widgets.
+	Cependant, ces objets sont intrinsèquement complexes.
+<!-- 	<del>Ils doivent gérer de nombreuses dépendances avec l'environnement, qui doivent nécessairement être implémentées par tout nouveau widget à intégrer dans l'interface.
+	De plus, une interface moyenne contient des centaines de widgets et plus d'objets.</del> -->
+	Ils doivent gérer de nombreuses interactions avec leur environnement (être affichables, redimensionnables, réagir au clavier, être compatibles pour l'accessibilité aux handicaps, etc.), qui doivent nécessairement être implémentées lors de la création d'un nouveau widget.
+	On a tendance à qualifier ces frameworks qui se basent sur des objets lourds et peu flexibles, de “monolithiques” [<a href=#bederson_toolkit_2004>Bed04</a>].
+	Face à cette situation, l'ajout d'une nouvelle fonctionnalité est une opération difficile, qui nécessite de comprendre (au moins en partie) les comportements gérés par les widgets, les dynamiques entre objets dans le programme, et les structures de données utilisées pour stocker les widgets.
+</p>
+<p>
+	En pratique, en plus de leur complexité structurelle, les frameworks sont souvent peu extensibles, principalement car c'est un besoin secondaire pour leur base d'utilisateurs.
+	Les APIs proposées pour intégrer des extensions sont souvent des fonctions internes, qui n'ont pas nécessairement été conçues pour être exposées, ni beaucoup testées dans des cas d'utilisation avancées.
+	Des bugs peuvent subsister pour de tels usages avancés, et recevoir peu d'attention étant donné le faible intérêt pour d'autres utilisateurs potentiels.
+	La documentation de telles portions d'APIs est souvent insuffisante, d'autant que pour des fonctions internes l'API est plus souvent sujette à évoluer, donc il faut régulièrement corriger leur documentation.
+	Le faible nombre d'utilisateurs avec des besoins analogues étant faible, l'aide en ligne est principalement limitée, et on y marche “hors des sentiers battus”.
+	Enfin, il arrive que les frameworks intègrent des présomptions dans leur code, qui compromettent sérieusement la flexibilité et le remplacement de certaines fonctionnalités.
+	C'est le cas par exemple pour le changement de la fonction de transfert du pointeur, qui fait correspondre les déplacements de la souris avec les déplacement du curseur à l'écran [<a href=#casiez_no_2011>Cas11</a>].
+	Cette modification est impossible dans un framework comme Qt, et nécessite de faire appel au plus bas niveau, mettant en défaut la flexibilité du framework qui devrait pouvoir exprimer ce type de changements.<!-- <del><notesh>Cite article no more bricolage/libpointing?</notesh></del> -->
+</p>
+
+<!-- <del><sh>Une petite synthèse avant / transition avec l'état de l'art ?</sh></del> -->
+<p>
+	Pour finir, dans cette section nous avons souligné la multiplicité <i>horizontale</i> des bibliothèques à choisir, la multiplicité <i>verticale</i> des couches interdépendantes dans les systèmes interactifs, et les difficultés d'extension des frameworks logiciels.
+	Maintenant que nous avons présenté l'écosystème de la programmation d'interactions et les problématiques liées au prototypage de nouvelles techniques d'interaction, il convient de s'intéresser aux besoins des <i>chercheurs</i> eux-mêmes.
+</p>
+
+<link rel=stylesheet href=style.css>
+<script src=scripts.js></script>
+<script>prefix_headers(1, 2)</script>

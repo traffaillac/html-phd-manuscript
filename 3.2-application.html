@@ -1,0 +1,438 @@
+<!--
+	_ Présentation du modèle ECS de base (avec un schéma)
+	_ Présentation des extensions au modèle (avec second schéma)
+	_ Présentation de Polyphony et de l'exemple qui a servi à le faire évoluer
+-->
+<h2>Programmation d'interactions avec Polyphony</h2>
+
+<!-- <notesh>Juste quelques petites remarques dans cette section, vu que c'est le papier EICS globalement. Il faudrait d'ailleurs la "re-aligner" avec la version finale du papier où certains points/détail/explications ont été améliorées.</notesh> -->
+
+<p>
+	Dans cette section, nous présentons la boîte à outils Polyphony, basée sur le modèle de programmation ECS, et adaptée au prototypage d'interfaces graphiques et de techniques d'interaction.
+	Nous décrivons d'abord les concepts de base d'ECS, puis illustrons l'utilisation de Polyphony du point de vue d'un programmeur d'application.
+</p>
+
+<h3>Le modèle Entité-Composant-Système</h3>
+
+<p>
+	ECS (parfois appelé CES) est un paradigme conçu pour structurer le code et les données dans un programme, apparu dans le domaine du développement de jeux vidéos [<a href=#leonard_postmortem_1999>Leo99</a>, <a href=#bilas_data-driven_2002>Bil02</a>, <a href=#martin_entity_2007>Mar07</a>].
+	Dans ce contexte, les équipes sont typiquement séparées entre programmeurs concevant la logique et les outils, et concepteurs produisant du contenu scénaristique ou multimédia.
+	ECS conçoit les Composants comme l'interface entre ces deux mondes : les programmeurs définissent les Composants disponibles et créent les Systèmes qui vont itérer dessus ; les concepteurs instancient le contenu avec des Entités et leur associent des comportements par assemblage de Composants choisis.
+	Les éléments constituant le modèle sont donc :
+</p>
+<dl>
+	<dt>Entités</dt>
+	<dd>Ce sont des identifiants uniques pour chaque élément du programme (souvent de simples entiers). Ils sont similaires aux objets, mais ne possèdent <i>ni données ni code</i>.</dd>
+	<dt>Composants</dt>
+	<dd>Ils représentent les données du programme (comme <code>bounds</code> ou <code>children</code>), et sont associés dynamiquement aux Entités. Selon les interprétations, un Composant seul peut désigner le <i>type</i> de donnée attachable à toutes les Entités, ou son <i>instance</i> attachée à une Entité.</dd>
+	<dt>Systèmes</dt>
+	<dd>Ils s'exécutent continuellement en suivant un ordre prédéfini, et représentent chacun un comportement réutilisable du programme. Les Entités ne s'enregistrent pas auprès des Systèmes, mais acquièrent plutôt les Composants nécessaires pour être “vus” par ceux-ci.</dd>
+</dl>
+<p>
+	Le fonctionnement général d'une application basée sur ECS est illustré en <a href=#fig-ecs>figure</a>.
+	Les Composants sont le coeur du programme, ils définissent à la fois les attributs (<code>shape</code>, <code>backgroundColor</code>) et les capacités des Entités (<code>clickable</code>, <code>draggable</code>).
+	Les Entités acquièrent du comportement par l'acquisition de Composants.
+	Enfin ce sont les Systèmes qui exécutent chaque type de comportement, sélectionnant les Entités à partir de leurs Composants.
+	Par exemple, un Système de dessin d'arrière plan sélectionnerait toutes les Entités possédant les Composants <code>bounds</code>, <code>shape</code> et <code>backgroundColor</code>, et pour chacune dessinerait une forme d'arrière-plan à l'écran.
+	Nous représentons les Systèmes dans un ordre d'exécution commun à la plupart des frameworks d'interaction<!-- <del>l'ordre habituel des types de comportements (que Polyphony ne force pas)<notesh>Que veulent dire "ordre habituel" et "ne force pas" ? Il faut préciser,  pas très clair pour moi</notesh></del> --> : gestion des périphériques d'entrée, interprétation des techniques d'interaction, traitements spécifiques aux différents widgets, traitements spécifiques à l'application, et rendu des sorties (en particulier à l'écran).
+</p>
+<figure id=fig-ecs>
+	<img src=figures/ecs.svg style="height:5cm">
+	<figcaption>Illustration des échanges à haut niveau entre Entités, Composants, et Systèmes.</figcaption>
+</figure>
+<p>
+	Aux trois éléments de base du modèle s'ajoutent quatre éléments récurrents dans la majorité des implémentations d'ECS, bien qu'ils ne fassent pas partie du modèle de base et n'aient pas de terminologies fixes :
+</p>
+<dl>
+	<dt>Descripteurs</dt>
+	<dd>Ce sont des conditions basées sur les Composants possédés par chaque Entité. Ils sont analogues à des <i>interfaces</i> évaluées dynamiquement, et sont le mécanisme fondamental par lequel les Systèmes savent sur quelles Entités opérer.</dd>
+	<dt>Sélections</dt>
+	<dd>Ce sont des conteneurs basés sur les Descripteurs, et mis à jour dynamiquement à mesure que des Entités acquièrent ou perdent des Composants.</dd>
+	<dt>Contexte</dt>
+	<dd>Il représente le <i>monde</i> courant auquel appartiennent toutes les Entités, stocke les Composants et les variables globales, enregistre et exécute les Systèmes, et fournit une interface pour obtenir des Sélections.</dd>
+	<dt>Fabriques d'Entités</dt><!-- <del><notesh>Fabriques au lieu de patrons ?</notesh></del> -->
+	<dd>Ce sont des modèles prédéterminés, utilisés pour instancier des Entités avec un ensemble de Composants et de valeurs par défaut.</dd>
+</dl>
+
+<h3>Présentation de Polyphony et du prototype de développement</h3>
+
+<p>
+	Polyphony est une boîte à outils logicielle expérimentale basée sur ECS, dédiée à la construction d'interfaces graphiques et d'interactions (voir <a href=#fig-polyphony>figure</a>).
+	Elle se compose d'un noyau implémentant les notions d'Entités, de Composants, de Systèmes, de Descripteurs et de Sélections.
+	Elle fournit de plus des <i>bindings</i> vers l'une ou l'autre de deux bibliothèques de bas-niveau <!-- <del><notesh>pourquoi l'une ou l'autre ?</notesh></del> -->, SDL [<a href=#lantinga_simple_1998>Lan98</a>] et libpointing [<a href=#casiez_no_2011>Cas11</a>].
+	Notre objectif était de pouvoir utiliser le support avancé de la souris de libpointing (souris multiples, remplacement des fonctions de transfert, interaction <i>subpixel</i> [<a href=#roussel_giving_2012>Rou12</a>]), avec SDL pour l'affichage.
+	Cependant, libpointing empêchait la réception des évènements du clavier par SDL, ce qui nous a obligés à utiliser <i>l'un ou l'autre</i> des bindings.
+<!-- 	<del><notesh>Pourquoi ces 2 bibliothèques ? À qui elles servent pour Polyphony ? Pourquoi celles-là plutôt que d'autre ? (tu peux développer dans la thèse ce qui est un peu superflu dans un article).</notesh></del> -->
+	À un niveau supérieur dépendant du premier, Polyphony fournit des Composants, Systèmes, Sélections et fabriques prédéfinis, qui peuvent être utilisés par les applications pour construire rapidement des interfaces.
+</p>
+<figure id=fig-polyphony>
+	<img src=figures/polyphony.svg style="height:4cm">
+	<figcaption>Structure en modules de Polyphony</figcaption>
+</figure>
+<p>
+	L'application de dessin vectoriel est un exemple courant et bien approprié pour illustrer la conception de techniques d'interaction [<a href=#goguey_adoiraccourcix_2014>Gog14</a>, <a href=#apitz_crossy_2004>Api04</a>].
+	Elle combine l'implémentation d'objets graphiques, d'outils (ex. dessin de formes, pipette à couleurs), de commandes (ex. copier/coller, undo), et offre une large palette de tâches possibles avec de nombreuses améliorations et combinaisons entre éléments.
+</p>
+<p class=break>Notre application de base de dessin (voir <a href=#fig-app>figure</a>) permet ainsi de :</p>
+<ul>
+	<li>dessiner des rectangles et des ovales ;</li>
+	<li>déplacer, supprimer et changer le type des formes créées ;</li>
+	<li>enregistrer le résultat au format SVG ;</li>
+	<li>réinitialiser l'espace de travail.</li>
+</ul>
+<figure id=fig-app>
+	<img src=figures/app.png style="width:13cm">
+	<figcaption>Espace de travail de notre exemple d'application de dessin vectoriel</figcaption>
+</figure>
+
+<h3>Illustration avec le code de l'application</h3>
+
+<p>
+	Tous les éléments de l'interface sont des Entités : boutons, formes dessinées, et zone de dessin en arrière plan.
+	Les périphériques d'entrée<!-- <del>interaction <notesh>périphériques d'entrée</notesh></del> --> sont aussi représentés par des Entités, ainsi que la zone d'affichage.
+</p>
+
+<h4>Création d'Entités</h4>
+
+<p>
+	Les Entités sont essentiellement des identifiants qui peuvent être créés à la volée et sans Composants avec la fonction <code>Entity</code> : <code>let e = Entity()</code>.
+	Dans la pratique, il peut être souhaitable de créer des Entités avec des Composants initiaux.
+	C'est pourquoi la fonction <code>Entity</code> peut recevoir en paramètre optionnel un objet JavaScript pour ajouter ces Composants initiaux.
+<!-- 	<del>Les Entités sont essentiellement des identifiants qui peuvent être créés à la volée et sans Composants.<notesh>Et tout de suite après, l'exemple est de créer une entité avec des composants... Il faudrait revoir ce paragraphe en : "Les Entités sont essentiellement des identifiants qui peuvent être créés à la volée et sans Composants avec la fonction <code>Entity</code> : <code>let e = Entity()</code>. Dans la pratique, il peut être souhaitable de créer des Entités avec des Composants initiaux. C'est pourquoi la fonction <code>Entity</code> peut recevoir en paramètre optionnel un objet JavaScript pour ajouter ces Composants initiaux. Par exemple, dans notre application de dessin [...]"</notesh>
+	Dans notre boîte à outils, une Entité est créée avec la fonction <code>Entity</code>, qui peut recevoir en paramètre optionnel un objet JavaScript pour ajouter des Composants initiaux.</del> -->
+	Par exemple, dans notre application de dessin, une Entité pour un simple rectangle sera créée avec :
+</p>
+<pre><code class="lang-js line-numbers">let e = Entity({
+	bounds: new Bounds(0, 0, 100, 50),
+	shape: SHAPE_RECTANGLE,
+})
+</code></pre>
+<p>
+	À ce stade, l'Entité est visible par tous les Systèmes qui sélectionnent les Entités avec <code>bounds</code> ou <code>shape</code> (ex. “Système de <i>layout</i>”), sans avoir besoin de l'enregistrer quelque part.
+	Dans notre cas, le “Système de rendu d'arrière-plan” sélectionnera et affichera les Entités qui possèdent au moins les Composants <code>bounds</code>, <code>shape</code>, et <code>backgroundColor</code>.
+	Ainsi, l'ajout du Composant approprié à notre Entité la fera apparaître à l'écran :
+</p>
+<pre><code class="lang-js line-numbers">e.backgroundColor = rgba(0, 0, 255)
+</code></pre>
+<p>
+	L'Entité devient alors visible par le “Système de rendu d'arrière-plan”, qui dessine un rectangle bleu à l'écran.
+	En pratique, Polyphony fournit des fabriques <!-- <del><notesh>Là tu utilises fabriques et pas patrons. Je suis pour que tu utilises fabrique partout</notesh></del> --> d'Entités qui permettent d'instancier des widgets standards avec des Composants prédéfinis.
+	Ainsi, dans l'application de dessin, les boutons de la barre d'outils ainsi que le canevas sont créés à partir des fabriques <code>Button</code> et <code>Canvas</code> :
+</p>
+<pre><code class="lang-js line-numbers">let y = 2
+let resetButton = Button(new Icon('icons/reset.bmp'), 2, y)
+let saveButton = Button(new Icon('icons/save.bmp'), 2, y += 34)
+let moveButton = Button(new Icon('icons/move.bmp'), 2, y += 34, {toggleGroup: 1})
+let rectButton = Button(new Icon('icons/rect.bmp'), 2, y += 34, {toggleGroup: 1})
+let ovalButton = Button(new Icon('icons/oval.bmp'), 2, y += 34, {toggleGroup: 1})
+let canvas = Canvas(36, 2, 602, 476)
+</code></pre>
+<p>
+	Chaque fabrique prend en arguments un ensemble de valeurs nécessaires à la construction de l'Entité de base.
+	En dernier argument optionnel, on peut passer un dictionnaire contenant un ensemble de Composants additionnels pour initialiser la nouvelle Entité.
+	Si ce dictionnaire est déjà une Entité, elle est directement complétée plutôt que d'en créer une nouvelle.
+	Par exemple, la fabrique <code>Button</code> est définie par :
+</p>
+<pre><code class="lang-js line-numbers">function Button(imgOrTxt, x, y, e = {}) {
+	e.depth = e.depth || 0
+	e.bounds = e.bounds || new Bounds(x, y, imgOrTxt.w + 8, imgOrTxt.h + 8)
+	e.shape = e.shape || SHAPE_RECTANGLE
+	e.backgroundColor = e.backgroundColor || rgba(240, 248, 255)
+	e[imgOrTxt instanceof Image ? 'image' : 'richText'] = imgOrTxt
+	e.targetable = true
+	e.actionable = true
+	return Entity(e)
+}
+</code></pre>
+<p>
+	Lorsque la fabrique reçoit une Entité à compléter, elle n'ajoute les Composants que s'ils n'ont pas été déjà définis.
+	C'est ce que réalise l'opération <code>e.composant = e.composant || valeur</code> — lorsqu'un Composant n'est pas défini il est évalué à <code>undefined</code>, ce qui est équivalent à <code>false</code> pour les opérations booléennes.
+</p>
+<p>
+	Enfin, dans ECS les Entités sont supprimées manuellement.
+	Comme elles sont accessibles globalement grâce aux Sélections, elles ne peuvent jamais être qualifiées de “hors de portée” pour des mécanismes de portée locale ou de ramasse-miettes.
+	La suppression d'une Entité s'effectue avec <code>e.delete()</code>, ses Composants étant alors automatiquement retirés, ainsi que toutes références pointant vers <code>e</code> dans le système<!-- <del>les Sélections <notesh>Pas très clair ici car on n'a pas encore bien vu en détail ce que sont les sélections, ça a juste été évoqué au début et c'est expliqué en détail après. Peut-être juste rappeler rapidement entre parenthèses "(conteneurs d'entités mis à jour dynamiquement selon les Composants que possèdent les entités, voir détails ci-après)"</notesh></del> -->.
+</p>
+
+<h4>Création de Composants</h4>
+
+<p>
+	Dans Polyphony, les Composants sont les constructeurs d'objets de JavaScript :
+</p>
+<pre><code class="lang-js line-numbers">function Bounds(x, y, w, h) {
+	this.x = x
+	this.y = y
+	this.w = w
+	this.h = h
+}
+</code></pre>
+<p>
+	Conformément au modèle ECS, ils ne contiennent pas normalement de code.
+	Une exception à cette règle est la définition d'accesseurs, pour laquelle nous utilisons alors des méthodes d'instance — implémentées par l'héritage <i>prototypal</i> de JavaScript.
+	Un <i>setter</i>, par exemple, se crée avec :
+</p>
+<pre><code class="lang-js line-numbers">Bounds.prototype = {
+	setX(x) {
+		this.x = x
+		return this
+	}
+}
+</code></pre>
+<p>
+	Par convention, les<!-- <del>nos <notesh>les, pas nos</notesh></del> --> <i>setters</i> dans Polyphony renvoient toujours l'objet ciblé (<code>this</code>), afin de pouvoir enchaîner plusieurs appels dans une seule instruction et rendre ainsi le code plus concis : (<code>e.setX(10).setY(20)</code>).
+</p>
+
+<h4>Création de Systèmes</h4>
+
+<p>
+	Comme pour les fonctions lambda, qui sont réifiées en tant qu'objets du langage, nous avons implémenté les Systèmes en tant qu'Entités.
+	Leurs dépendances sont donc représentées par des données stockées sous forme de Composants.
+	Les systèmes sont instanciés une seule fois avec la même fonction <code>Entity</code>, qui prend comme paramètres une fonction suivie de ses Composants :
+</p>
+<pre><code class="lang-js line-numbers">let ResetSystem = Entity(function ResetSystem() {
+	if (resetButton.tmpAction) {
+		for (let c of canvas.children)
+			c.delete()
+		canvas.children = []
+	}
+	...
+}, { runOn: POINTER_INPUT, order: 60 })
+</code></pre>
+<p>
+	Dans notre exemple d'application,<!-- <del><notesh>Dans notre application exemple de dessin vectoriel,</notesh></del> --> ce Système simple va vérifier si le bouton <code>resetButton</code> défini plus haut a été activé (cliqué) par la souris.
+	Lorsque c'est le cas, il supprime tous les enfants de l'Entité canevas.
+	Le Composant <code>runOn</code> de ce Système indique qu'il sera déclenché lors de chaque évènement de pointage (souris).
+	Le Composant <code>order</code> distingue et ordonne les classes de Systèmes (représentés en <a href=#fig-ecs>figure</a>) : Entrées (0 à 19), Techniques d'interaction (20 à 39), Widgets (40 à 59), Application (60 à 79), et Sorties (80 à 99).
+	<code>ResetSystem</code> fait donc partie des Systèmes d'application.
+</p>
+
+<h4>Création de Sélections</h4>
+
+<!-- <del><sh>
+	mettre un titre de sous-section pour les sélections ?
+</sh></del> -->
+<p>
+	Lorsqu'on souhaite itérer sur des groupes d'Entités possédant des Composants en commun, on utilise généralement les Sélections de Polyphony.
+	Par exemple, pour mettre en surbrillance toutes les Entités pouvant être ciblées par la souris :
+</p>
+<pre><code class="lang-js line-numbers">for (let t of Targetables)
+	t.border = new Border(1, rgba(0, 255, 0))
+</code></pre>
+<p>
+	Ici, on itère sur la Sélection <code>Targetables</code>, qui contient toutes les Entités avec les Composants <code>bounds</code>, <code>depth</code> et <code>targetable</code>.
+	Pour chacune de ces Entités, on remplace la bordure par une bordure verte épaisse d'un pixel.
+	Une Sélection est définie avec la fonction <code>Selection</code>, qui prend comme paramètre une fonction <i>accept : Entité → booléen</i> pour filtrer les entités par condition programmable.
+	Un deuxième argument optionnel fournit un critère d'ordre <i>compare : Entité × Entité → nombre</i> lors de l'itération sur la Sélection.
+	Par exemple, la Sélection <code>Targetables</code> est définie avec :
+</p>
+<pre><code class="lang-js line-numbers">let Targetables = Selection(e => 'bounds' in e && 'depth' in e && e.targetable,
+	(a, b) => b.depth - a.depth) // trier par profondeur décroissante
+</code></pre>
+<p>
+	Les Sélections dans Polyphony sont implémentées avec de simples tableaux.
+	Lorsqu'une Entité subit une modification de Composant (ajout, remplacement, ou suppression), elle est ajoutée à une liste interne d'Entités à “soumettre aux Sélections”.
+	À l'issue de l'exécution de tout Système (et avant l'exécution du suivant), chaque Entité de cette liste est soumise à chaque Sélection (elle est passée en argument de la fonction <i>accept</i>) qui l'inclut ou non.
+	Grâce à ce mécanisme, nous ne courons pas le risque de modifier une Sélection alors qu'on itère dessus, ce qui est une source de bugs répandue.
+	Enfin, le tri d'une Sélection est effectué avant d'itérer dessus, à l'aide d'un booléen <code>dirty</code> indiquant si la Sélection a été modifiée et doit être triée à nouveau.
+</p>
+<!-- <del><sh>
+	Expliquer un peu plus ce qui se passe "sous le capot" de la toolkit pour les sélections ? Comment c'est implémenté, structures de données, etc. ?
+</sh></del>
+
+<sh>
+	Tu ne parles pas de "meta-systèmes" ? Ce n'est pas développé dans l'article, mais ça aurait du sens d'en parler dans ta thèse.
+</sh>
+<traf>C'est volontaire, j'ai enlevé toute mention aux meta-systèmes avant la partie architecture, ils tenaient du détail interne alors que je voulais aller à l'essentiel au début. De manière générale j'ai évité les discussions autour des meta-systèmes, étant donné qu'on ne fait pas directement usage de ce concept (hors interne).</traf>
+
+<del><sh>
+	Ou alors ces deux points (détails des sélections et meta-systèmes sont détaillés dans les sections suivantes (architecture et implémentation) ? Auquel cas il faudrait le dire et ajouter des références vers ces sections.)
+</sh>
+
+<sh>
+	Note: j'ai bien lu la suite, mais pas de commentaires. Il faut que je lise le reste du chapitre avant peut-être de revenir ici.
+</sh></del> -->
+
+<h3>Modélisation d'une application interactive avec ECS</h3>
+
+<p>
+	La <a href=#fig-entites>figure</a> présente toutes les Entités de notre exemple d'application de dessin, chacune identifiée par la fabrique qui l'a instanciée.
+	Contrairement aux frameworks les plus courants (ex. Qt, JavaFX, HTML), les objets graphiques n'appartiennent pas nécessairement à un graphe de scène.
+	Dès leur création, les Entités sont accessibles aux Systèmes, donc déjà visibles et interactives.
+	Les relations d'arbres, représentées dans cette figure par des flèches entre Entités, ne sont définies que lorsqu'il est nécessaire d'établir un ordre entre Entités — comme la profondeur d'affichage avec le Composant <code>depth</code>.
+	Les périphériques d'interaction sont également matérialisés par des Entités (<code>Pointer</code>, <code>Keyboard</code>, et <code>View</code>), afin de fournir un stockage persistant et flexible pour les techniques d'interaction.
+	Enfin, les Systèmes sont représentés par ordre d'exécution, leur couleur différenciant le type de traitement qu'ils exécutent.
+</p>
+<figure id=fig-entites>
+	<img src=figures/entites.svg  style="width:96%">
+	<figcaption>Liste des Entités (incluant les Systèmes) dans l'application de dessin. Les flèches à gauche représentent les relations d'arbre. Les Systèmes à droite sont présentés dans leur ordre d'exécution, leur couleur de bordure indiquant leur type de traitement : Entrées, Techniques d'interaction, Widgets, Application, Sorties.</figcaption>
+</figure>
+<p>
+	Le flux d'exécution dans Polyphony fonctionne comme une machine réactive [<a href=#dragicevic_input_2001>Dra01</a>].
+	Toutes les 25<i>ms</i> (40<i>Hz</i>), Polyphony vérifie tous les évènements en attente du système d'exploitation et met instantanément à jour les Entités claviers et souris.
+	Lorsqu'au moins un évènement clavier ou souris se produit, une liste ordonnée des Systèmes est recueillie, par le biais d'une Sélection <code>Systems</code>.
+	Polyphony les ordonne ensuite selon le Composant <code>order</code>, et exécute chaque Système dont le Composant <code>runOn</code> correspond avec l'un des types d'évènements produits.
+	Nous avons choisi de synchroniser le déclenchement de tous les Systèmes (y compris l'affichage) avec les évènements d'entrée (mouvement de souris, appui clavier, ou tout autre périphérique d'entrée), en raison du manque d'accessibilité des évènements <i>VSync</i> à bas-niveau.
+	À l'avenir nous envisageons d'améliorer le modèle d'exécution réactive de Polyphony, avec une machine réactive plus générique et extensible, indépendante des évènements en entrée.
+</p>
+<p>
+	Les Composants déterminent les comportements qui peuvent être acquis par chaque Entité.
+	Ils sont lus par chaque Système mettant en œuvre ces comportements.
+	Le <a href=#tab-composants>tableau</a> liste les Composants de l'application de dessin, ainsi que les fabriques qui les assignent.
+	Ces Composants ont été inspirés par CSS1 [<a href=#w3c_cascading_1996>W3C96</a>], qui synthétise la plupart des comportements communs aux différentes balises HTML, permettant par exemple de mimer un <code>button</code> avec un conteneur <code>div</code>, uniquement en acquérant des propriétés CSS.
+</p>
+<table id=tab-composants class=striped style="width:12cm">
+	<tr style="border-bottom: 1pt solid black"><th>Composants</th><th>Button</th><th>Canvas</th><th>Shape</th><th>Pointer</th><th>Keyboard</th><th>View</th><th><i>Systems</i></th></tr>
+	<tr><td>children       </td><td> </td><td>×</td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+	<tr><td>depth          </td><td>×</td><td>×</td><td>×</td><td> </td><td> </td><td> </td><td> </td></tr>
+	<tr><td>bounds         </td><td>×</td><td>×</td><td>×</td><td> </td><td> </td><td>×</td><td> </td></tr>
+	<tr><td>shape          </td><td>×</td><td>×</td><td>×</td><td> </td><td> </td><td> </td><td> </td></tr>
+	<tr><td>backgroundColor</td><td>×</td><td>×</td><td>×</td><td> </td><td> </td><td> </td><td> </td></tr>
+	<tr><td>border         </td><td> </td><td> </td><td>×</td><td> </td><td> </td><td> </td><td> </td></tr>
+	<tr><td>image          </td><td>~</td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+	<tr><td>richText       </td><td>~</td><td> </td><td>~</td><td> </td><td> </td><td> </td><td> </td></tr>
+	<tr><td>targetable     </td><td>×</td><td>×</td><td>×</td><td> </td><td> </td><td> </td><td> </td></tr>
+	<tr><td>actionable     </td><td>×</td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+	<tr><td>toggleGroup    </td><td>~</td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td></tr>
+	<tr><td>draggable      </td><td> </td><td> </td><td>×</td><td> </td><td> </td><td> </td><td> </td></tr>
+	<tr><td>textEditable   </td><td> </td><td> </td><td>×</td><td> </td><td> </td><td> </td><td> </td></tr>
+	<tr><td>cursorPosition </td><td> </td><td> </td><td> </td><td>×</td><td> </td><td> </td><td> </td></tr>
+	<tr><td>buttons        </td><td> </td><td> </td><td> </td><td>×</td><td> </td><td> </td><td> </td></tr>
+	<tr><td>keyStates      </td><td> </td><td> </td><td> </td><td> </td><td>×</td><td> </td><td> </td></tr>
+	<tr><td>focus          </td><td> </td><td> </td><td> </td><td> </td><td>×</td><td> </td><td> </td></tr>
+	<tr><td>origin         </td><td> </td><td> </td><td> </td><td> </td><td> </td><td>×</td><td> </td></tr>
+	<tr><td>scrollable     </td><td> </td><td> </td><td> </td><td> </td><td> </td><td>~</td><td> </td></tr>
+	<tr><td>runOn          </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td>×</td></tr>
+	<tr><td>order          </td><td> </td><td> </td><td> </td><td> </td><td> </td><td> </td><td>×</td></tr>
+	<caption>Composants et fabriques d'Entités les assignant. Les Entités de chaque fabrique reçoivent tous les Composants indiqués par ×, et selon leur spécialisation reçoivent ensuite ceux indiqués par ~.</caption>
+</table>
+
+<p>
+	Polyphony permet l'implémentation de contrôles standards d'interface utilisateur, avec les Systèmes et Composants.
+	Trois types de contrôles sont illustrés dans notre exemple d'application :
+<ul>
+	<li>Les boutons activables (<i>toggle buttons</i>) sont des Entités avec les composants <code>bounds</code>, <code>shape</code>, <code>backgroundColor</code>, <code>image</code>/<code>richText</code>, <code>targetable</code>, et <code>actionable</code> (comme les boutons ordinaires). Le comportement d'activation/désactivation nécessite un autre Composant, <code>toggleGroup</code>. Un Système <code>ToggleSystem</code> sélectionne toutes les Entités avec ce Composant, et recherche un clic de pointeur sur l'une d'elles. Quand c'est le cas, l'Entité activée reçoit un nouveau Component <code>toggled</code> valant <code>true</code>, et son Composant <code>backgroundColor</code> est modifié, en même temps que toutes les autres Entités du même <code>toggleGroup</code> sont désactivées.</li>
+	<li>Les champs de texte nécessitent un Composant <code>focus</code> sur chaque Entité clavier, et un Composant <code>richText</code> pour afficher le texte formaté à l'intérieur des limites d'une Entité. Ce dernier Composant contient une chaîne de caractères, des marges internes, et des informations de polices des caractères. Un Système <code>TextEditSystem</code> observe chaque caractère tapé sur le clavier et, en fonction du <code>focus</code>, met à jour le Composant <code>richText</code> de l'Entité ciblée, tout en gérant un curseur clignotant.</li>
+</ul><ul>
+	<li>Les vues déroulantes étendent les Entités <code>View</code> avec des Composants <code>viewport</code> et <code>scrollable</code>. Un Système <code>ScrollSystem</code> ajoute et gère une Entité enfant pour chaque vue avec ces Composants, afin d'afficher une barre de défilement. Le système détecte les actions de glisser-déposer de la barre, et les mouvements de la molette à l'intérieur de la vue, pour mettre à jour le composant <code>origin</code> à l'intérieur des bornes autorisées par <code>viewport</code>.</li>
+</ul>
+<p>
+	Plus généralement, la mise en œuvre de nouveaux types de widgets nécessite l'ajout de nouveaux Composants décrivant leurs capacités, et l'insertion de nouveaux Systèmes dans la plage des widgets de <code>order</code> (entre 40 et 59).
+	Ces Systèmes forment des comportements réutilisables, qui peuvent à leur tour être composés pour la conception de futurs widgets.
+</p>
+
+
+<h3>Réification des périphériques en Entités</h3>
+
+<p>
+	Polyphony s'interface avec les ressources du système d'exploitation via un ensemble extensible d'Entités <i>périphériques</i> (<code>Pointer</code>, <code>Keyboard</code>, <code>View</code>).
+	Leurs Composants stockent l'état courant de chaque périphérique.
+	<code>Pointer</code>, par exemple, possède le Composant <code>buttons</code> qui stocke l'état des boutons à tout instant, ainsi que le Composant <code>cursorPosition</code> qui stocke les coordonnées du curseur système.
+	Ces coordonnées sont évidemment accessibles, mais aussi modifiables afin de contrôler la position du curseur de manière simple.
+	Dans notre application de dessin, ce mécanisme est utilisé pour forcer le curseur à rester dans les bornes du canevas lors du dessin d'une forme par appui-déplacement.
+</p>
+<p>
+	La modélisation des périphériques en tant qu'Entités offre une représentation flexible et persistante entre les différentes couches du programme.
+	La structure d'une Entité étant extensible, de nouvelles données peuvent être introduites sans créer de nouvel objet, mais en ajoutant de nouveaux Composants qui permettront à l'Entité d'être traitée par les Systèmes correspondants.
+	Ce mécanisme est une forme de propagation d'évènements, qui ne crée pas d'objets d'évènements temporaires puisque les données sont centralisées dans les Composants de l'Entité.
+</p>
+<p>
+	La réification du pointeur en Entité est illustrée en <a href=#fig-pointer>figure</a>.
+	L'Entité représentant le curseur système est initialisée par la fabrique <code>Pointer</code> avec deux Composants, <code>cursorPosition</code> et <code>buttons</code>.
+	Tant que c'est le seul pointeur disponible, nous l'appelons l'Entité <code>Pointer</code>.
+	Ensuite, le <i>binding</i> d'entrées/sorties de Polyphony ajoute des Composants temporaires <code>tmpPressed</code>, <code>tmpReleased</code>, <code>tmpMotion</code> ou <code>tmpWheel</code> — qui stockent les coordonnées relatives ou absolues de l'évènement de pointage.
+	Les Systèmes en aval qui dépendent d'une action de la souris observeront l'Entité <code>Pointer</code> par le biais de la Sélection <code>Pointers</code> — au cas où plusieurs pointeurs ont été instanciés.
+	Ces Systèmes peuvent ensuite ajouter ou retirer des Composants pour les Systèmes suivants.
+	Par exemple, <code>PointerClickSystem</code> uilise les Composants <code>tmpPressed/Released</code> pour détecter les clics de souris, et ajoute ensuite un Composant <code>tmpClick</code> avec la valeur de <code>target</code> à l'Entité lorsque c'est le cas.
+	Enfin, les Composants temporaires (dont le nom commence par <code>tmp</code>) sont automatiquement supprimés des Entités à l'issue de chaque chaîne d'exécution des Systèmes.
+</p>
+<figure id=fig-pointer>
+	<img src=figures/pointer.svg  style="width:75%">
+	<figcaption>Évolution des Composants de l'Entité <code>Pointer</code>, à travers les Systèmes réagissant aux évènements de pointage.</figcaption>
+</figure>
+
+<h3>Un exemple pratique : implémentation du glisser-déposer</h3>
+
+<p>
+	Notre exemple d'application repose principalement sur des techniques de manipulation directe (dessin, déplacement, modification de formes), et en particulier sur le glisser-déposer.
+	Cette technique d'interaction est notoirement difficile à mettre en œuvre dans la plupart des bibliothèques d'interaction actuelles, et illustre bien les avantages de Polyphony pour l'implémentation de techniques d'interaction.
+	Le glisser-déposer consiste à déplacer un objet et à le déposer sur un espace vide ou un autre objet.
+	Dans le second cas, si les deux objets sont compatibles, une commande est exécutée, qui dépend des deux objets et de l'emplacement du dépôt.
+</p>
+<p>
+	Dans l'application de dessin, les objets graphiques peuvent être glissés et déposés sur les boutons de la barre d'outils, afin de modifier leur forme ou les supprimer :
+	Le bouton/outil de réinitialisation de la toile supprime la forme déposée ; Le bouton/outil de rectangles la transforme en rectangle (en conservant ses dimensions) ; Le bouton/outil d'ellipses la transforme en ellipse.
+	Les combinaisons possibles sont résumées dans le <a href=#tab-dnd>tableau</a>.
+</p>
+<table id=tab-dnd style="width:9cm">
+	<col style="border-right: 1pt solid black">
+	<tr><td></td><th colspan=3>Bouton de dépôt</th></tr>
+	<tr style="border-bottom: 1pt solid black"><th>Forme déplacée</th><th><img src=figures/new.png style="width:2em"></th><th><img src=figures/rectangle.png style="width:2em"></th><th><img src=figures/oval.png style="width:2em"></th></tr>
+	<tr><th>Rectangle</th><td>suppression</td><td><i>sans effet</i></td><td>→ Ellipse</td></tr>
+	<tr><th>Ellipse</th><td>suppression</td><td>→ Rectangle</td><td><i>sans effet</i></td></tr>
+	<caption>Matrice des combinaisons de glisser-déposer et commandes exécutées dans l'application</caption>
+</table>
+<p class=break>La séquence d'actions pour exécuter et modéliser le glisser-déposer est :</p>
+<ul>
+	<li>le curseur survole l'objet à déplacer (un mécanisme de <i>feedforward</i> peut indiquer que l'objet peut être déplacé) ;</li>
+	<li>un bouton est pressé au dessus de l'objet à déplacer ;</li>
+	<li>le curseur se déplace et l'objet le suit ;</li>
+	<li>le curseur survole un objet de dépôt (un <i>feedforward</i> peut suggérer que le dépôt aura un effet) ;</li>
+	<li>le bouton est relâché (une commande dépendant de la nature des deux objets est exécutée s'ils sont compatibles).</li>
+</ul>
+<p>
+	Les difficultés associées à cette technique sont de plusieurs natures.
+	Tout d'abord, déplacer un objet implique de le retirer de son emplacement actuel, ce qui peut casser les contraintes de positionnement locales.
+	Ensuite, les différentes étapes nécessitent d'attendre des actions de l'utilisateur, et peuvent donc difficilement être exprimées par un bloc de code continu (elles sont généralement implémentées dans plusieurs <i>callbacks</i> à différents endroits du code).
+	Enfin, les commandes et leur <i>feedforward</i> ne dépendent pas de l'un ou l'autre des objets, mais de la <i>combinaison</i> des deux.
+	Le nombre de possibilités peut donc être très important puisqu'il dépend du produit du nombre d'objets qui peuvent être déplacés par le nombre d'objets destinataires.
+	Selon le cas, les comportements résultants peuvent appartenir aux objets déplacés ou aux objets de dépôt.
+</p>
+<p>
+	Dans notre exemple d'application de dessin, un Système <code>PointerDragSystem</code> est dédié à la détection et à la gestion du glisser-déposer.
+	Il dépend des Composants <code>cursorPosition</code>, <code>buttons</code> et <code>tmpReleased</code>, ainsi que <code>pressPosition</code> et <code>pressTarget</code> ajoutés par <code>PointerClickSystem</code>.
+	Son code complet est présenté ci-dessous :
+</p>
+<pre><code class="lang-js line-numbers">let PointerDragSystem = Entity(function PointerDragSystem() {
+	for (let pointer of Pointers) {
+		let position = pointer.cursorPosition
+		let target = pointer.pressTarget
+		let dragging = pointer.dragging // Entité en cours de déplacement
+		if (!dragging && pointer.buttons[0] && target && target.draggable &&
+		  position.distance(pointer.pressPosition) > 10) {
+			pointer.dragging = dragging = target
+			dragging.draggedBy = pointer
+			delete dragging.targetable // ne peut plus être pointé
+		}
+		if (dragging) {
+			dragging.bounds.setX(position.x).setY(position.y)
+			if (pointer.tmpReleased == BUTTON_PRIMARY) {
+				delete pointer.dragging
+				pointer.tmpDrop = dragging
+				delete dragging.draggedBy
+				dragging.targetable = true
+			}
+		}
+	}
+}, { runOn: POINTER_INPUT, order: 22 })
+</code></pre>
+<p>
+	Au début d'une action de déplacement valide, ce Système ajoute les Composants <code>dragging</code> et <code>draggedBy</code>, respectivement au pointeur et à l'élément déplacé.
+	Tant que le pointeur possède l'attribut <code>dragging</code>, il actualise la position de l'objet déplacé avec les coordonnées du curseur.
+	Lorsque le Système détecte un relâchement de bouton, il supprime les Composants précédents et ajoute <code>tmpDrop</code> au pointeur (son Composant <code>target</code> contient déjà la cible du dépôt).
+	Les Systèmes insérés après <code>PointerDragSystem</code> détecteront la technique du glisser-déposer en observant les Composants des Entités pointeurs.
+	Dans notre application de dessin vectoriel, les Systèmes <code>ResetSystem</code>, <code>MoveSystem</code> et <code>DrawSystem</code> détectent et exécutent les actions spécifiées dans le <a href=#tab-dnd>tableau</a>.
+	De plus, le déplacement des formes sur le canevas utilise les Composants ajoutés par <code>PointerDragSystem</code> pour gérer cette action.
+</p>
+<p>
+	Ce séquencement des Systèmes illustre la composition des comportements avec ECS.
+	L'outil de déplacement des formes est basé sur le Système de détection du glisser-déposer, <code>PointerDragSystem</code>, qui lui-même dépend de <code>PointerClickSystem</code> pour détecter la cible cliquée.
+	Les dépendances entre Systèmes sont modélisées par leur ordre dans la chaîne d'exécution.
+	Chaque Système insère des Composants sur les Entités des périphériques, en se basant sur les Composants insérés par les Systèmes précédents.
+	Ainsi, construire des techniques d'interaction de plus haut niveau implique de les positionner en aval dans la chaîne d'exécution.
+</p>
+
+<link rel=stylesheet href=style.css>
+<link rel=stylesheet href=prism.css>
+<script src=scripts.js></script>
+<script src=prism.js></script>
+<script>prefix_headers(3, 2)</script>

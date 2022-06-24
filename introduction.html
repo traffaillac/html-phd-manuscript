@@ -1,0 +1,139 @@
+<h1 class=break-right id=sec0>Introduction</h1>
+
+<!--<p>
+	La recherche en Interactions Homme-Machine est en effervescence !
+	En atteste le succès croissant de la conférence CHI, qui réunit d'année en année de plus en plus de participants.
+	<notesh>Ces 2 premières phrases... (déjà, pas de "s" à Interaction), ensuite, c'est too much et un peu surfait pour démarrer une thèse (je connais déjà 3 membres du jury qui vont partir sur un a priori très moqueur voir négatif avec une telle entrée en matière)</notesh>
+	Nous inventons sans cesse de nouvelles manières d'interagir, physiquement et virtuellement <notesh>Interragir virtuellement ? je ne comprends pas ce que cela veut dire</notesh>, avec les machines autour de nous.
+	Ainsi se développent pêle-mêle l'usage de périphériques mobiles, l'interaction au doigt et avec le reste du corps, ou encore la navigation immersive dans des univers virtuels en 3D. 
+	Ces développements suivent et accompagnent des progrès techniques réguliers.
+	Ils assurent ainsi le développement régulier de nouvelles formes d'interactions, l'émergence d'innovations autrefois impossibles, et le renouvellement des usages modernes.
+</p>
+<sh>
+	Proposition de remplacement pour le 1er paragraphe:
+	"La recherche en Interaction Homme-Machine explore sans cesse de nouvelles manières d'interagir avec les systèmes numériques, mêlant par exemple l'usage de périphériques mobiles, l'interaction au doigt et avec le reste du corps, ou encore la navigation immersive dans des univers virtuels en 3D. 
+	Ces développements suivent et accompagnent des progrès techniques réguliers.
+	Ils assurent ainsi le développement régulier de nouvelles formes d'interactions, l'émergence d'innovations autrefois impossibles, et le renouvellement des usages modernes."
+</sh>-->
+<p>
+	La recherche en Interaction Homme-Machine explore sans cesse de nouvelles manières d'interagir avec les systèmes numériques.
+	Elle mêle par exemple l'usage de périphériques mobiles, l'interaction au doigt et avec le reste du corps, ou encore la navigation immersive dans des univers virtuels en 3D. 
+	Ces développements suivent et accompagnent des progrès techniques réguliers.
+	Ils assurent ainsi le développement régulier de nouvelles formes d'interactions, l'émergence d'innovations autrefois impossibles, et le renouvellement des usages modernes.
+</p>
+<p>
+	Pourtant, les outils que nous utilisons ont peu progressé depuis l'apparition des premières interfaces graphiques.
+	Ils sont souvent peu adaptés à la recherche de nouvelles formes d'interactions, orientant les développements vers des interfaces stéréotypées — comme la sélection de boutons, l'entrée de texte avec un clavier, ou la séparation d'applications avec des fenêtres.
+	La recherche est active dans ce domaine, et de nombreux outils émergent régulièrement pour supporter le développement de nouvelles interactions [<a href=#ledo_evaluation_2018>Led18</a>], mais ils ne sont pas suffisamment utilisés en pratique [<a href=#marquardt_hcitools_2017>Mar17</a>].
+	Avec le temps, il semble qu'un fossé se soit creusé entre les outils démontrant des architectures logicielles innovantes, et ceux plus complets bénéficiant de décennies de développement (les <i>frameworks</i>).
+</p>
+<!-- Conséquences :
+	_ Complexité du travail de prototypage, demandant travail/apprentissage/temps
+	_ Fossé entre l'usabilité des démonstrations de recherche et les interfaces existantes
+	_ Faible diffusion des travaux de recherche en informatique, alors que beaucoup sont des contributions pratiques vouées à être indégrées directement aux interfaces modernes (voire sont liées à une fenêtre de temps courte)
+-->
+<p>
+	Le développement de prototypes de recherche est une activité difficile, qui requiert du temps et de l'expertise.
+	Les chercheurs doivent souvent déployer beaucoup d'efforts pour intégrer leurs idées et prototypes dans des systèmes informatiques complexes, et par ailleurs peu flexibles, afin d'en démontrer la pertinence et la validité.<!--“lutter” pour imposer leurs idées dans des systèmes informatiques complexes, et par ailleurs peu flexibles <notesh>mouais...  "lutter pour imposer leurs idées", ça fait plus politique que scientifique. On n'impose rien, on  démontre la pertinence et on valide => "doivent souvent déployer beaucoup d'efforts pour intégrer leurs idées et prototypes dans des systèmes informatiques complexes, et par ailleurs peu flexibles, afin d'en démontrer la pertinence et la validité."</notesh>.-->
+	Les démonstrateurs issus de la recherche peinent à égaler l'utilisabilité des interfaces existantes, auxquelles sont habitués les utilisateurs finaux.
+	En conséquence, l'aspect souvent rudimentaire des prototypes de recherche freine leur diffusion auprès des publics ciblés, alors que ce sont souvent des contributions pratiques, vouées à être intégrées dès que possible à des interfaces modernes.
+</p>
+
+<h2 id=intro1>Questions de recherche</h2>
+
+<p>
+	Nous sommes face à une situation complexe, avec de nombreuses causes et beaucoup de tentatives de solutions.
+	Le premier objectif de cette thèse est donc de comprendre cette situation, et d'en exposer chacun des aspects, afin de poser des bases de discussions et d'argumentations.
+	Au fil de cette recherche, nous nous concentrons moins sur les causes qui ont mené aux outils actuels, mais plutôt sur ce que nous pouvons y apporter aujourd'hui.
+	Ainsi, nous tentons de répondre dans un premier temps à la question <b>Quels sont les besoins des chercheurs pour le prototypage de nouvelles interfaces et techniques d'interaction ?</b>
+</p>
+<p>
+	L'objet de cette thèse est l'étude des outils et langages pour concevoir des programmes interactifs (interagissant avec des personnes), en particulier pour la recherche.
+	Notre objectif ici est d'étudier les outils existants et ce qu'en font les chercheurs.
+	Nous analysons également les outils issus de la recherche qui ont exploré des paradigmes alternatifs de programmation d'interfaces, avec des succès divers.
+	En outre, les “outils” ne se réduisent pas uniquement à des bibliothèques logicielles, et nous considérons dans notre étude les travaux de production et de promotion de connaissances.
+	Il s'agit alors de comprendre l'impact des différents types de contributions, pour proposer de nouveaux outils adaptés aux besoins des chercheurs.
+	Ainsi, nous répondons dans un second temps à la question <b>Sous quelles formes peut-on contribuer à l'activité de prototypage en IHM ?</b>
+</p>
+<p>
+	Enfin, nous choisissons dans cette thèse de nous concentrer sur les bibliothèques et architectures logicielles pour le prototypage.
+	Ces types de contributions étant très répandues en IHM, nous pouvons nous baser sur un vaste corpus de travaux existants, et ainsi analyser leurs avantages et inconvénients.
+	Il s'agit de déterminer les besoins auxquels ils répondent, et ceux qui manquent encore de support aujourd'hui.
+	Nous souhaitons alors proposer des travaux innovants, et en adéquation avec les technologies contemporaines.
+	En particulier, l'influence des langages de programmation sur l'expression des programmes interactifs est explorée plus en avant dans cette thèse.
+	Ainsi, nous répondons dans un dernier temps à la question <b>Comment concevoir un framework ou un langage de programmation qui satisfasse une partie des besoins des chercheurs en IHM ?</b>
+</p>
+
+<h2 id=intro2>Méthodologie</h2>
+
+<p>
+	Notre sujet d'étude au sens large est la <i>programmation d'interactions</i>.
+	Comme toute activité humaine, elle est difficile à quantifier, c'est-à-dire qu'il sera difficile d'avancer et de valider des vérités objectives (ex. <i>plus de 50% des chercheurs ont des difficultés avec l'outil X</i>).
+	De plus, de très nombreux facteurs peuvent influencer l'activité de programmation (ex. le confort physique de l'utilisateur, son humeur du moment, ses collègues de bureau), qui ne peuvent pas tous être contrôlés.
+	Ainsi, la complexité de la situation que nous étudions est telle que nous n'avons pas cherché à en isoler chacune des causes.
+	Nous nous sommes basés sur des observations systématiques de chercheurs ayant programmé des interactions, et à partir d'un nombre suffisant d'observations avons cherché à formuler des hypothèses <i>probables</i>.
+	Notre méthode s'inspire de la théorie ancrée (<i>grounded theory</i>), par laquelle nous formulons des hypothèses par induction, à partir de nos observations [<a href=#glaser_decouverte_2017>Gla17</a>].
+	Ces hypothèses sont limitées par la variété de nos observations, donc se généralisent à une population très réduite de personnes.
+	En ce sens, nous ne cherchons pas des vérités absolues et des réponses certaines à nos questions de recherche, mais à argumenter en faveur de solutions probables.
+	Ainsi ce manuscrit est structuré comme un support de discussion, afin de laisser le soin aux lecteurs de nuancer nos conclusions, et si possible de contribuer à y voir plus clair.
+</p>
+<p>
+	Nous avons donc commencé ce travail de thèse par une série d'interviews de chercheurs en IHM, à propos de leurs projets passés de développement d'interactions.
+	Une analyse systématique de ces interviews nous permet ensuite de formuler des observations, que nous avons ensuite testées à l'aide d'un questionnaire en ligne.
+	À partir des résultats des interviews et du questionnaire, nous identifions des besoins de haut-niveau pour le prototypage d'interactions innovantes, et proposons différentes pistes de contributions pour y répondre.
+	Dans un second temps, nous avons rapproché la programmation d'interactions de l'usage d'un langage de programmation, et considéré le rapport étroit entre une bibliothèque d'interaction et le langage sur lequel elle s'appuie.
+	Nous formulons alors trois <i>Essentiels d'Interaction</i>, des recommandations pratiques visant à orienter la conception des systèmes interactifs, que ce soit par un langage de programmation, ou par une bibliothèque logicielle.
+	Ces recommandations sont destinées à justifier les choix de contributions de ce manuscrit, ainsi que nos travaux futurs dans le domaine.
+	Pour finir, nous avons exploré les deux types de contributions, en développant d'une part une extension du langage Smalltalk dédiée aux animations, et d'autre part un framework d'interaction dédié au prototypage d'interfaces ad hoc.
+</p>
+
+<h2 id=intro3>Contributions</h2>
+
+<p>
+	Deux contributions se dégagent principalement de cette thèse.
+	La première est une étude approfondie de l'activité de programmation d'interactions dans un contexte de recherche, à partir des interviews et du questionnaire en ligne.
+	Nous présentons en particulier les problèmes principaux auxquels les chercheurs que nous avons interrogés sont confrontés, ainsi que les stratégies de résolutions qu'ils ont employées.
+	Ces observations nous ont amenés à considérer que les domaines nécessitant des investissements futurs sont le support de bas-niveau de l'interaction, et le rapprochement des technologies du Web avec les applications de bureau.
+</p>
+<p>
+	La deuxième contribution principale est l'application d'un modèle original de programmation, l'Entité-Composant-Système, à la programmation d'interfaces graphiques.
+	Ce modèle, basé sur le principe de <i>Composition plutôt qu'Héritage</i>, facilite la manipulation explicite des comportements interactifs dans une interface, et promeut leur réutilisation.
+	En outre, il matérialise les périphériques d'entrée/sortie en entités virtuelles, qui facilitent l'implémentation de techniques d'interaction utilisant ces périphériques.
+	Nous avons implémenté cette contribution dans une bibliothèque logicielle, Polyphony.
+</p>
+
+<h2 id=intro4>Plan du manuscrit</h2>
+
+<p>
+	Dans le <b>Chapitre 1. Programmer l'interaction</b>, nous détaillons le contexte et les problématiques de recherche de cette thèse, et présentons l'état actuel des connaissances sur la programmation d'interactions.
+	Nous introduisons ensuite les interviews et le questionnaire en ligne, qui nous permettent de dépeindre une vision plus claire de l'activité de programmation dans un contexte de recherche en IHM, et de finir avec un ensemble de recommandations pour les contributions futures à la programmation d'interactions.
+</p>
+<p>
+	Dans le <b>Chapitre 2. Les Essentiels d'Interaction</b>, nous élaborons une série de trois principes pour l'ingénierie des systèmes interactifs.
+	Ces principes ont guidé nos travaux durant ce travail de thèse, et justifient nos choix de contributions.
+	Chaque Essentiel d'Interaction est présenté indépendamment, et discuté à l'aide d'observations et de réflexions sur l'état courant et futur des systèmes informatiques.
+	Le dernier point est élaboré à partir d'un travail exploratoire sur l'expression des animations, avec une extension du langage Smalltalk.
+</p>
+<p>
+	Dans le <b>Chapitre 3. La boîte à outils Polyphony</b>, nous présentons notre travail sur la conception d'une bibliothèque logicielle pour créer des interfaces graphiques.
+	Nous y détaillons le modèle Entité-Composant-Système, que nous avons adapté du domaine du Jeu Vidéo aux Interactions Homme-Machine.
+	Nous démontrons une implémentation fonctionnelle de ce travail, et détaillons son architecture logicielle.
+	L'ensemble du chapitre est structuré pour faciliter la reproduction de ce travail, pour quiconque voudrait l'adapter à nouveau.
+</p>
+
+<!-- <del><sh>Rajouter ici ta liste de publications</sh></del> -->
+
+<h2 id=intro5>Publications</h2>
+
+<p>
+	Nous présentons ici la liste des publications produites durant ces quatre années de thèse.
+	Pour les articles dont le contenu est en partie présenté dans ce manuscrit, nous indiquons entre parenthèses le chapitre ou la section correspondante.
+</p>
+<ol>
+	<li><b>Raffaillac, T.</b> (2017). Language and System Support for Interaction. <i>Proceedings of the ACM SIGCHI Symposium on Engineering Interactive Computing Systems (Doctoral Consortium)</i>, 149–152. [<a href=#raffaillac_language_2017>Raf17</a>]</li>
+	<li><b>Raffaillac, T.</b>, Huot, S., &amp; Ducasse, S. (2017). Turning Function Calls into Animations. <i>Proceedings of the ACM SIGCHI Symposium on Engineering Interactive Computing Systems</i>, 81–86. (<a href=#sec2x4>section 2.4</a>) [<a href=#raffaillac_turning_2017>Raf17</a>]</li>
+	<li><b>Raffaillac, T.</b>, &amp; Huot, S. (2018). Application du modèle Entité-Composant-Système à la programmation d’interactions. <i>Proceedings of the 30th Conference on L’Interaction Homme-Machine</i>, 42–51. [<a href=#raffaillac_application_2018>Raf18</a>]</li>
+	<li><b>Raffaillac, T.</b>, &amp; Huot, S. (2019). Polyphony : Programming Interfaces and Interactions with the Entity-Component-System Model. 🏆 Best Paper. <i>Proc. ACM Hum.-Comput. Interact.</i>, <i>3</i>(EICS), 8:1–8:22. (<a href=#sec3>chapitre 3</a>) [<a href=#raffaillac_polyphony_2019>Raf19</a>]</li>
+</ol>
+
+<link rel=stylesheet href=style.css>

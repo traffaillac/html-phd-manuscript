@@ -1,0 +1,238 @@
+<h2>Conclusions</h2>
+
+<p>
+	Nous avons discuté dans ce chapitre de la conception d'une bibliothèque d'IHM basée sur le modèle Entité-Composant-Système, et orientée vers le prototypage de nouvelles techniques d'interaction.
+	Nous avons présenté l'état de l'art des bibliothèques liées au prototypage d'interfaces, et dégagé les opportunités de recherche qui ont motivé ce travail de thèse.
+	Nous avons présenté la boîte à outils Polyphony, et illustré son utilisation à l'aide d'une application de dessin vectoriel.
+	Nous avons ensuite détaillé l'architecture de Polyphony, en nous focalisant sur des descriptions de haut niveau permettant de la répliquer dans d'autres contextes.
+	Enfin, nous avons analysé les choix de conception de l'implémentation d'ECS à l'aide de trois variantes majeures, et expliqué nos propres choix pour la conception d'une boîte à outils pour l'IHM.
+</p>
+
+<h3>Contributions et limites</h3>
+<!-- Contributions :
+	_ Approche de composition décorrélée d'un arbre de scène, et mécanisme permettant d'énumérer/découvrir les objets autrement que par parcours récursif
+	_ Interfaces dynamiques pouvant être spécifiées indépendamment des objets, et comportements dynamiques basés sur ces interfaces
+	_ Centralisation de la logique du programme, classée par type de traitement (contre la fragmentation de logique)
+	_ Stockage persistant des données des techniques d'interaction (contre la structure en couches)
+-->
+
+<p>
+	Nous discutons à présent des apports et inconvénients d'ECS et Polyphony à la programmation d'interfaces graphiques et d'interactions, à partir de notre expérience dans leur conception et leur implémentation.
+	Lors de la conception de Polyphony, nous avons été confrontés à de nombreux problèmes d'implémentation pour lesquels les solutions choisies pouvaient fortement influencer<!-- <del>avoir un impact fort et des conséquences imprévisibles <notesh>imprévisibles, vraiment ?</notesh>sur</del> --> l'utilisabilité de la boîte à outils.
+	En particulier, nous aurions pu utiliser les patrons de conception courants, tels que les <i>listeners</i> ou les <i>delegates</i>.
+	Au lieu de cela, nous avons essayé de garder le modèle ECS aussi <i>pur</i> que possible en ne le mêlant pas à d'autres paradigmes, afin de souligner ses forces et ses faiblesses dans le contexte des IHMs.
+</p>
+
+<h4>Application d'un modèle de composition à l'interaction</h4>
+
+<p>
+	Les frameworks d'interaction s'appuient communément sur deux hiérarchies en arbres pour structurer le code et les données dans une application : un <i>arbre de types</i> (classes) pour partager et réutiliser le code, et un <i>arbre de scène</i> pour structurer l'interface.
+	Les arbres de types propagent les méthodes et les variables de n'importe quel type d'objet à ses enfants, et permettent d'utiliser n'importe quel enfant là où un parent est attendu.
+	C'est le polymorphisme des types, et c'est le mécanisme par lequel les comportements sont généralement partagés entre différents types de widgets.
+	Les arbres de scènes sont utilisés pour structurer l'interface, et permettent le couplage de nombreux aspects des interfaces graphiques avec un seul arbre : ordre d'affichage, positionnement relatif, et propagation des styles.
+	Certains travaux introduisent également un troisième <i>graphe d'interaction</i>, pour exprimer les dépendances entre les techniques d'interaction [<a href=#hudson_extensible_2005>Hud05</a>, <a href=#huot_magglite_2004>Huo04</a>, <a href=#myers_amulet_1997>Mye97</a>].
+</p>
+<p>
+	Les jeux vidéo utilisent souvent les arbres de types, tandis que les éléments du jeu nécessitent généralement moins de structuration qu'un arbre de scène.
+	Dans ce domaine, l'application d'un modèle de composition comme ECS s'est avérée utile, en partie parce que de nombreux comportements (visibilité, physicalité, contrôlabilité) peuvent être décorrélés et composés à volonté.
+	Par exemple, on peut instancier un pot de fleurs qui soit visible, qui ne bloque pas physiquement le joueur, et qui soit inerte, mais on peut aussi donner au joueur le contrôle de cette plante, et lui attribuer une masse et une boîte de collision.
+</p>
+<p>
+	Pour les interfaces graphiques, de nombreux aspects peuvent être déconnectés des arbres de types et de scène, et donc bénéficier d'un modèle de composition.
+	Dans notre application d'exemple, le parcours d'arbre typiquement effectué pendant la sélection à la souris (<i>picking</i>) et le rendu graphique des widgets, est synthétisé dans un seul système <code>DepthUpdateSystem</code>.
+	De même, la composition de l'apparence graphique des widgets par des formes simples (polygones pleins, lignes, images, et texte) permet un rendu plus rapide en les envoyant en groupes à la carte graphique.
+	Un autre exemple est la spécification de contraintes de positionnement élastiques entre widgets dans l'interface [<a href=#badros_cassowary_2001>Bad01</a>], au lieu du positionnement relatif des widgets par rapport aux parents dans l'arbre de scène.
+	Enfin, nous avons montré avec l'exemple du glisser-déposer comment chaque technique d'interaction peut être composée à partir des résultats de techniques d'interaction plus simples (ciblage de widget, clic sur widget, etc.).
+</p>
+<p>
+	Avec Polyphony, le modèle de composition d'ECS remplace intégralement l'arbre des types, tout en s'appuyant partiellement sur un arbre de scène.
+	Celui-ci nous est encore utile pour :
+</p>
+<ul>
+	<li>référer explicitement à des enfants plutôt qu'en utilisant une Sélection (ex. les formes du canevas)</li>
+	<li>exprimer des relations d'ordre d'affichage entre Entités</li>
+	<li>propager des styles visuels entre entités (ex. police de caractères), bien que nous n'ayons pas encore implémenté cette fonctionnalité</li>
+</ul>
+<p>
+	À l'avenir, nous comptons expérimenter différentes alternatives, et nous cherchons toujours un bon compromis entre ces principes structurants.
+</p>
+
+<h4>Réutilisation non-hiérarchique</h4>
+
+<p>
+	ECS met en œuvre un mécanisme puissant de réutilisation : il évite la <i>duplication de code</i> en permettant aux Entités de déléguer leurs comportements à des Systèmes, et il limite également la <i>duplication d'exécution</i> en exécutant chaque Système une fois pour toutes les Entités.
+	La duplication d'exécution est fréquente pour les widgets effectuant des traitements périodiques dans des méthodes d'instance.
+	En effet lorsque plusieurs widgets du même type partagent la même méthode, elle est exécutée autant de fois qu'il y a de widgets.
+	Les Systèmes, d'autre part, exécutent un même traitement sur tout un ensemble d'Entités.
+	Ils peuvent dupliquer l'exécution en traitant chaque entité à la fois, mais ils ont également la possibilité de les exécuter en parallèle lorsque cela est possible.
+</p>
+<p>
+	L'énumération des Entités intégrée à ECS permet de ne pas dépendre du parcours récursif d'un arbre de scène, et de choisir l'ordre dans lequel on les parcourt.
+	<!-- <del>Énumérer et traiter toutes les Entités à la fois permet aux Systèmes de fonctionner de manière plus efficace. <notesh>"plus efficace" en quels termes et selon quel(le(s) mesure(s)?</notesh>
+	De plus, l'organisation des comportements n'est a priori pas hiérarchie <notesh>hiérarchiQUe ?</notesh>(sans héritage), et n'est pas dépendante d'un ordre de parcours récursif.</del> -->
+	Par exemple, on peut résoudre les contraintes de mise en page en utilisant un solveur d'optimisation linéaire tel que Cassowary [<a href=#badros_cassowary_2001>Bad01</a>], plutôt que de propager des contraintes avec des messages entre entités [<a href=#sannella_multi-way_1993>San93</a>].
+	Dans les implémentations ECS, les Systèmes sont également utiles pour optimiser implicitement le rendu des composants graphiques en les envoyant par paquets (<i>batches</i>) à l'API graphique.
+	De telles optimisations existent dans la plupart des frameworks d'interaction, mais elles nécessitent des gestionnaires d'affichage complexes, qui gèrent des caches d'affichage et compilent les multiples instructions de dessin en paquets pour l'API graphique.
+</p>
+<p>
+	Avec les Systèmes, tous les comportements sont séparés des éléments auxquels ils se rapportent (à l'inverse des méthodes d'instance ou des callbacks).
+	Bien que ce soit utile pour des comportements partagés, qui sont écrits et exécutés une seule fois pour toutes les Entités, cela n'apporte aucun avantage pour les comportements individuels — écrits pour une Entité et jamais réutilisés.
+	Des cas d'utilisation et des interfaces plus réalistes doivent être conçus et implémentés avec notre approche ECS avant que nous puissions tirer des conclusions fermes, mais nous pourrions envisager une approche mixte utilisant des systèmes pour les comportements partagés et des mécanismes existants pour les comportements individuels.
+</p>
+
+<h4 class=break>Dynamicité des interfaces</h4>
+
+<p>
+	Avec les Descripteurs, on peut vérifier qu'une Entité respecte un protocole donné.
+	En ce sens ils sont analogues à des <i>interfaces</i>, à la différence qu'ils sont définis dynamiquement, évalués dynamiquement (puisque les Entités peuvent changer en cours d'exécution), et ne se limitent pas aux Composants possédés (ce sont des conditions programmables).
+	Avec les Sélecteurs, on peut obtenir une liste de toutes les Entités vérifiant un Descripteur.
+	Ce mécanisme permet de découvrir des Entités en fonction de leurs capacités, et de les filtrer finement afin de sélectionner celles sur lesquelles agir.
+</p>
+<p>
+	Nous avons ainsi conçu des interfaces aussi flexibles que possible, afin de permettre l'ajout de nouveaux comportements, aussi bien à la compilation qu'à l'exécution.
+	Ces comportements peuvent aussi bien s'appliquer à des Entités futures, qu'à des Entités déjà initialisées.
+	Par ce mécanisme, nous voulons permettre la modification de toute application existante à des fins de recherche et de prototypage.
+	Nous pensons par exemple à l'intégration d'ExposeHK [<a href=#malacria_promoting_2013>Mal13</a>] à une application existante, qui consiste à afficher sous chaque bouton une <i>tooltip</i> avec son raccourci clavier, lors d'un appui sur la touche Cmd/Ctrl.
+	L'implémentation d'une telle technique d'interaction nécessiterait d'abord d'énumérer tous les boutons, ce qui est réalisable à l'aide d'une Sélection sur les Entités possédant le Composant <code>clickable</code>.
+	Nous énumérons ainsi les widgets qui sont des boutons par leur <i>caractéristique</i>, plutôt que par les noms de classe qui sont clickables.
+<!-- 	<del><notesh>Exemple de ce que pourrait être ces modifications ? 2 niveaux => exemple d'ajout d'un usage/une interaction, et ses conséquences/son impact sur les ajouts  modifications dans le code</notesh></del> -->
+</p>
+<p>
+	Ensuite, il faudrait associer chaque bouton à la commande qu'il déclenche, et de même chaque raccourci clavier à la commande qu'il déclenche, afin d'associer ensuite les boutons aux raccourcis clavier.
+	Si l'exécution d'une commande après un clic ou un raccourci clavier est gérée directement en code, alors il faudra inspecter le code des Systèmes pour retrouver cette association.
+	Dans notre application de dessin, elle prendrait la forme suivante :
+</p>
+<pre><code class="lang-js line-numbers">let saveButton = Button(new Image('icons/save.png'), 2, y += 34)
+...
+let SaveSystem = Entity(function() {
+	if (saveButton.tmpClick || Keyboards[0].tmpShortcut === SDLK_s) {
+		// sauvegarde du canevas
+		...
+	}
+}, { runOn: POINTER_INPUT | KEYBOARD_INPUT, order: 61 })
+</code></pre>
+<p>
+	Alternativement, l'instruction <code>if</code> pourrait être séparée en deux instructions <code>if</code> appelant une même fonction <code>saveCanvas()</code>, ou le code de sauvegarde pourrait être dupliqué (ce qui est peu envisageable si la commande est complexe).
+	Ici, ECS ne permet pas facilement de retrouver l'association entre boutons et clavier, car la relation de <i>causalité</i> n'est pas explicitée en un objet qui puisse être énuméré, comme peuvent l'être les <i>bindings</i> de djnn [<a href=#magnaudet_djnn_2017>Mag17</a>], ou la classe <code>Action</code> de Swing.
+	En leur absence, on devra inspecter le <i>bytecode</i> de chaque Système pour détecter les instructions <code>if</code>, ou comme les auteurs d'ExposeHK, d'instrumenter les appels de fonctions au niveau du système.
+	Pour éviter d'avoir recours à ces techniques très complexes (et non portables entre systèmes), il est important d'inclure un niveau d'<i>indirection</i> dans le déclenchement de toute commande, qui permette de retrouver l'association entre une commande et ses déclencheurs.
+	Dans notre cas, il s'agirait d'ajouter des attributs à <code>SaveSystem</code>, et de déléguer son activation au Méta-Système (ou à un Système tiers) :
+</p>
+<pre><code class="lang-js line-numbers">let SaveSystem = Entity(function() {
+	// sauvegarde du canevas
+	...
+}, { runOn: SHORTCUT_S, order: 61 })
+</code></pre>
+<p>
+	Plus généralement, nous arguons que l'utilisation d'indirections dans les liens entre éléments (objets ou processus) contribue à la <i>flexibilité</i> et l'<i>observabilité</i> des applications.
+	L'indirection pourrait donc être un principe de conception, applicable à toutes les applications interactives, et que nous envisageons d'étudier et de promouvoir à l'avenir.
+</p>
+<!-- <del><p>
+	Avec ECS, la facilité d'inspecter et de muter une application existante dépend grandement du choix des Composants qui a été fait au préalable.<notesh>Dire quand même que ça permet d'inspecter et muter toute les applications, mais que la "facilité", et la "profondeur" dépend du choix des composants.</notesh>
+	Les Composants peuvent avoir été conçus sans anticipation de besoins futurs, et rendre difficiles certains comportements.
+	Par exemple, sans Composant <code>targetable</code> pour les Entités, on pourrait considérer que la possession du Composant <code>bounds</code> implique que l'Entité est “visible” par la souris.
+	Ce choix interdirait alors la création d'Entités visibles mais “transparentes” pour la souris — propriété que nous utilisons <notesah>reword: propriété utile pour l'implémentation de certaines techniques d'interaction, comme par exemple...</notesh> sur les Entités déplacées par glisser-déposer.
+	Le choix des Composants est donc complexe, et conditionne la facilité à prototyper de nouvelles formes d'interfaces et techniques d'interaction. <notesh>oui, mais on peut quand même "Descendre un peu plus bas" quand on est bloqué à un niveau ? (e.g. remplacer des Selecteurs ou des Systèmes pour changer des comportements ?) C'est juste plus complexe... ?</notesh>
+</p></del> -->
+<!-- Lier la flexibilité à l'utilisation d'indirections -->
+<!-- A l'avenir, considérer l'expression de la causalité au déclenchement de chaque Système -->
+
+
+<h4>Centralisation de la logique du programme</h4>
+
+<p>
+	Les systèmes aident à centraliser la définition des interactions et des comportements d'une manière similaire aux machines à états de SwingStates [<a href=#appert_swingstates_2006>App06</a>].
+	Le sélecteur d'outils de notre application de dessin illustre bien ce principe.
+	Le Système <code>ToggleSystem</code> détecte les clics sur n'importe quelle Entité <code>togglable</code>, et désactive toutes les autres Entités avec le même <code>toggleGroup</code>.
+	Ainsi, aucun des boutons de sélection d'outils n'implémente un callback <code>onClick</code> pour activer un outil et désactiver les autres.
+	Ce comportement commun est géré dans un système dédié à plus haut niveau.
+	De plus, l'ajout d'un nouvel outil ne nécessite que d'ajouter les Composants <code>togglable</code> et <code>toggleGroup</code> au nouveau bouton, pour que <code>ToggleSystem</code> le prenne en compte.
+	Il n'est donc pas nécessaire d'ajouter de nouveaux callbacks ou de modifier le code de l'application à plusieurs endroits.
+	Pour chaque outil, il est courant d'avoir du code à exécuter lors de l'activation ou la désactivation.
+	Dans notre application, ce code est contenu dans le Système de chaque outil activable (<code>MoveTool</code> et <code>DrawTool</code>), qui détecte l'activation avec le Composant temporaire <code>tmpToggled == true</code>.
+<!-- 	<del><notesh>mais donc, le code qui change effectivement d'outil est aussi dans le système ? Tu parles du niveau "widget" et la mise à jour des widget et du togglegroup, mais pas de la "fonction"  qui est d'habitude implémentée dans le callback. D'ailleurs c'est intéressant: les widgets + callbacks avaient séparé le code de gestion du widget (e.g. mise à jour des graphismes d'un bouton quand on clique dessus) et les fonctions qu'il contrôle (exécution de la fonctionnalité "applicative" dans un callback), et toi tu les remet ensemble dans les systèmes, non ?</notesh></del> -->
+</p>
+<p>
+	Un autre exemple est l'implémentation du glisser-déposer dont nous avons parlé précédemment.
+	La logique de cette technique d'interaction est contenue dans un seul Système, malgré les nombreuses actions requises pour effectuer un glisser-déposer complet.
+	Des techniques d'interaction multimodales pourraient également être implémentées, en déclenchant un même Système sur plusieurs types d'évènements, par exemple avec <code>runOn : MOUSE_INPUT | KEYBOARD_INPUT</code>.
+</p>
+<p>
+	Le regroupement de toutes les actions d'un type de comportement en un unique Système implique aussi que les traitements de plusieurs Systèmes ne peuvent pas s'entremêler.
+	Or certaines opérations requièrent d'ordonner les traitements par Entités, plutôt que par type de comportement, comme le rendu graphique.
+	Dans ce cas, le dessin des formes de fond, des bordures et des images sont des opérations distinctes exécutées dans l'ordre pour chaque Entité.
+	Ces opérations doivent également être ordonnées entre Entités, c'est-à-dire dessiner l'image d'une Entité d'arrière-plan avant la bordure d'une Entité d'avant-plan.
+	Ceci est illustré dans la <a href=#fig-ordre>figure</a>, où le regroupement des processus dans des Systèmes réorganise leur exécution.
+</p>
+<figure id=fig-ordre>
+	<img src=figures/ordre.svg style="width:8cm">
+	<figcaption>Ordonnancement de deux processus avec deux Entités. Le regroupement des exécutions par type de processus altère l'ordre des exécutions.</figcaption>
+</figure>
+<p>
+	La programmation avec les Systèmes nous oblige à rendre les processus réordonnés insensibles à l'ordre d'exécution.
+	Dans le cas du rendu graphique, l'utilisation d'un <i>depth-buffer</i> permet de dessiner tous les éléments opaques dans un ordre quelconque.
+	Pour les éléments avec transparence, il faut normalement dessiner les éléments d'arrière-plan avant ceux d'avant-plan.
+	Notre solution est de rediriger les instructions de dessin de chaque élément transparent vers une texture privée, et de les dessiner dans l'ordre dans un dernier Système.
+	L'application des principes d'ECS exige donc de réduire au minimum les relations d'ordre entre les entités.
+</p>
+
+<h4>Matérialisation persistante des périphériques</h4>
+
+<p>
+	Dans Polyphony, les Entités des périphériques sont les supports du stockage de données relatives aux techniques d'interaction.
+	Les différents Systèmes interprétant les techniques en séquence n'ont pas à se passer les données en arguments, au risque de perdre des données de Systèmes antérieurs.
+	Toutes les données sont stockées sur les Entités périphériques, et permettent donc aux Systèmes d'accéder à la fois à des données de bas-niveau et de haut-niveau.
+</p>
+<p>
+	De plus avec ECS, les périphériques d'entrée sont caractérisés par leurs Composants : <code>cursorPosition</code> et <code>buttons</code> pour les souris, <code>bounds</code> et <code>origin</code> pour les vues, et <code>keyStates</code> pour les claviers.
+	Ce principe permet d'abstraire les dispositifs tout en conservant leurs caractéristiques individuelles.
+	Les données telles que la présence de boutons supplémentaires sur une souris sont conservées, mais simplement ignorées par tout système traitant des pointeurs à deux boutons.
+</p>
+<p>
+	Grâce à l'utilisation systématique des Sélections pour rassembler les Entités, les techniques d'interaction sont implicitement exposées à la possibilité d'utiliser de multiples périphériques.
+	Bien que nous ne l'ayons pas démontré dans notre prototype, l'utilisation de plusieurs instances des mêmes périphériques d'entrée ou de sortie (physiques ou virtuels), ainsi que leur remplacement, est facilitée car elle est implicite, tant qu'ils présentent les bons Composants.
+	Par exemple, un Système implémentant une technique de pointage pourrait fonctionner avec n'importe quelle Entité qui fournit les composants <code>cursorPosition</code> et <code>buttons</code>, que ce soit une souris, une tablette ou un dispositif virtuel produisant ces données (par exemple, un “robot” qui rejoue des entrées).
+</p>
+<p>En pratique, nous avons observé que les Composants se divisaient en deux catégories :</p>
+<ul>
+	<li><b>attributs</b> — qui ne sont que des propriétés des Entités, sont souvent partagées par plusieurs Systèmes, et n'apportent aucun comportement spécifique (ex. <code>bounds</code>, <code>keyStates</code>, <code>order</code>)</li>
+	<li><b>activateurs</b> — qui sont souvent requis par <i>un</i> Système, donc relatifs à un comportement spécifique (ex. <code>richText</code>, <code>targetable</code>, <code>focus</code>).</li>
+</ul>
+<!-- <del><sh>Intéressant cette réflexion attributs vs activateurs... mériterait presque d'être développé un peu plus...</sh></del> -->
+<p>
+	Lors de la conception de l'ensemble des Composants disponibles et des Systèmes correspondants, nous devons rendre l'activation de chaque Système pour chaque Entité <i>prévisible</i>.
+	À cette fin, l'activation d'un Système par un seul Composant est de toute évidence le plus prévisible (que la combinaison de plusieurs Composants), d'où l'émergence des activateurs.
+	Dans notre application de dessin, par exemple, <code>View</code> partage le Composant <code>bounds</code> avec d'autres types d'Entités (c'est un attribut).
+	Son Composant activateur est ici <code>origin</code>, et c'est donc lui qui octroie la capacité à “représenter les Entités contenues dans un rectange donné”.
+	L'association d'un activateur à chaque Système est ce qui permet aux développeurs de choisir les Systèmes qui vont influer sur une Entité.
+	Si un activateur est partagé par deux Systèmes, il sera impossible de faire fonctionner l'un sans l'autre pour toute Entité.
+</p>
+<p>
+	De façon générale le modèle ECS de base ne possède pas de liens clairs entre les Systèmes et les Composants qu'ils utilisent.
+	Leur séparation est pourtant importante, car elle permet de remplacer les Systèmes à tout moment, que ce soit pour optimiser leur implémentation ou l'augmenter.
+	En suivant la description faite par Leonard [<a href=#leonard_postmortem_1999>Leo99</a>], les Composants seraient en fait une <i>spécification des comportements</i> (en particulier les activateurs), qui sont ensuite implémentés dans les Systèmes.
+	Leur nommage est donc essentiel, car il doit informer le comportement acquis avec chacun, et épargne la nécessité d'une documentation complémentaire pour expliquer leurs rôles (bien que ce soit utile pour les comportements complexes).
+	À l'avenir, nous envisageons donc de spécifier deux types de Composants, les <i>attributs</i> et les <i>comportements</i>, afin d'inciter les développeurs à nommer les seconds comme des comportements (ex. <code>clickable</code>, <code>draggable</code>, <code>drawableAs</code>).
+	Ils pourraient bénéficier en outre de mots clés de déclaration, et de colorations syntaxiques pour les distinguer dans du code.
+<!-- 	<del>Certaines implémentations les spécifient, mais une autre évolution intéressante serait de spécifier les deux types de Composants ci-dessus : <i>attributs</i> et <i>activateurs</i>.</del> -->
+</p>
+
+<!-- <del><h3>Travaux futurs</h3>
+<sh>Pas certain qu'une section Travaux Futurs ait sa place ici, plutôt tout mettre à la fin du manuscrit ?</sh>
+
+<p>
+	Parmi les atouts potentiels du modèle ECS pour l'implémentation d'interfaces graphiques, il y en a un certain nombre que nous n'avons pas encore explorées, qui sont par exemple : l'utilisation de dispositifs multiples et changeants, la gestion des contraintes de positionnement, et l'inspection des Entités et Systèmes actifs à l'exécution.
+</p>
+<p>
+	Enfin, bien que nous ayons détaillé et présenté dans cet article une implémentation entièrement fonctionnelle d'ECS pour la programmation d'interfaces, Polyphony reste un prototype et un banc d'essai pour adapter ECS à la programmation d'interactions.
+	À ce titre, nous n'avons pas encore eu l'occasion de le valider expérimentalement avec des utilisateurs extérieurs à ses auteurs [<a href=#olsen_evaluating_2007>Ols07</a>].
+	Notre souhait est de diffuser les résultats préliminaires de recherche auprès des développeurs de jeux qui utilisent déjà ECS.
+	En effet nous avons pu observer un engouement naissant pour l'existence de bibliothèques d'interfaces basées sur ECS, principalement sur des forums en ligne.
+	Le contexte de notre travail étant le prototypage et la programmation de nouvelles techniques d'interaction, il nous incombe de chercher à influencer l'évolution d'ECS pour inclure le support des interactions avancées (hors du couple clavier/souris) proposé dans Polyphony.
+</p></del> -->
+
+<link rel=stylesheet href=style.css>
+<link rel=stylesheet href=prism.css>
+<script src=scripts.js></script>
+<script src=prism.js></script>
+<script>prefix_headers(3, 5)</script>

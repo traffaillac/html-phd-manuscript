@@ -1,0 +1,356 @@
+<!--
+	_ support des entrées et sorties dans les langages de programmation
+	_ la programmation évènementielle
+	_ le dessin direct et indirect
+-->
+
+<h2 class=break>L'environnement d'interaction de toute application</h2>
+<!--
+	_ Qu'est-ce que l'environnement d'interaction ?
+	_ Pourquoi est-ce essentiel aux applications interactives ?
+	_ Quelle est la simplicité ? -> 
+	_ Quel est le problème principal ? (manque de cohérence entre tous les outils, qu'on impute à l'absence d'un langage commun)
+-->
+<p>
+	L'<i>environnement d'interaction</i> d'une application désigne l'ensemble des fonctions et structures de données lui permettant d'interagir avec les périphériques d'interaction (clavier, souris, écran, etc.), et avec les utilisateurs par l'intermédiaire des périphériques.
+	Il désigne les bibliothèques logicielles qui permettent d'intercepter les évènements de la souris et du clavier, d'interroger leurs caractéristiques physiques, ou encore de dessiner à l'écran.
+	La simplicité d'utilisation de ces outils <!-- <del><notesh>c'est quoi "ces outils" ?</notesh></del> --> détermine les efforts qu'investiront les programmeurs pour concevoir des techniques d'interaction.
+	Malheureusement, on peut considérer aujourd'hui que ces outils sont généralement complexes et peu accessibles, et qu'ils entravent le travail des chercheurs en IHM.
+	Les problèmes sont multiples et ont été mis en évidence dans le premier chapitre de ce manuscrit.
+	D'abord, les programmeurs sont confrontés à un vaste choix de bibliothèques logicielles, et doivent consacrer du temps à les choisir correctement à partir d'informations partielles ou incomplètes.
+	Ensuite, les bibliothèques et les systèmes interactifs en général sont arrangés en couches interdépendantes, qui posent des problèmes de cohérence d'information, et compliquent le choix des couches auxquelles s'adresser.
+	Enfin, la plupart des bibliothèques d'interaction manquent d'extensibilité, et se prêtent difficilement à des travaux de recherche qui explorent — par définition — des solutions inédites.
+</p>
+<p>
+	Dans cette section, nous argumentons en faveur d'une définition des fonctions et structures de données dédiées à l'interaction avec les utilisateurs, qui puissent être intégrées à un langage ou framework de programmation, afin de répondre aux problèmes soulevés.
+	Les sous-sections qui suivent sont consacrées à l'étude de trois aspects de la programmation d'entrées et sorties avec les utilisateurs, qui nous amènent à définir comme Essentiel d'Interaction <b>un environnement d'interaction minimal et initialisé au démarrage de toute application</b><!-- <del>orientent notre définition d'un Essentiel d'Interaction <notesh>qui est ?</notesh></del> -->.
+</p>
+
+<h3>Le support de l'interaction dans les langages de programmation</h3>
+
+<!--
+	_ Un langage de programmation est une syntaxe et des règles de grammaire, permettant de commander un ordinateur
+	_ La complexité des tâches réalisées dépend de la puissance du langage, et est déterminée en fonction des contextes d'utilisation pour lesquels le langage est conçu
+	_ Le problème est que la plupart des langages utilisés aujourd'hui ont été conçus pour des contextes de calcul scientifique et de communication de données (HDD, Internet)
+	_ En pratique cela implique que les concepts véhiculés par les langages sont très adaptés au calcul : opérations arithmétiques, variables stockant des valeurs, fonctions prenant des arguments et renvoyant une valeur, paradigme map/reduce
+	_ Les concepts liés aux communications sont : lecture/écriture dans des flux, abstraction en descripteurs de fichiers, attente active dans un modèle requête/réponse
+-->
+<p>
+	Le langage de programmation consiste a priori en une syntaxe ainsi que des règles de grammaire, qui permettent d'exprimer des ordres à donner à une machine.
+	La complexité des ordres donnés dépend de la puissance d'expression du langage, et est conditionnée par les types de problèmes ciblés par le langage.
+	La plupart des langages de programmation aujourd'hui ciblent en priorité le calcul scientifique et la communication de données (avec les périphériques de stockage, ou entre machines).
+	En pratique cela signifie que leurs concepts de base sont très adaptés au calcul (opérations arithmétiques, fonctions mathématiques, paradigme MapReduce de traitement de données, etc.), et aux communications (lecture/écriture dans des flux de données, abstraction des descripteurs de fichiers, attente asynchrone, etc.).
+	Outre ces concepts, l'<i>interaction</i> ne semble pas être supportée explicitement dans les langages de programmation courants.
+</p>
+<!-- De quels concepts a-t-on besoin ?
+	_ Par support de l'interaction, on entend faciliter la programmation d'applications interactives
+	_ En entrée, les applications de bureau sont majoritairement contrôlées au clavier et à la souris, et les applications mobiles sont principalement contrôlées au doigt
+	_ En sortie, la majorité des applications interactives utilisent un écran
+	_ [Différence terminal/bitmap]
+	_ Les caractéristiques de ces périphériques varient en fonction des appareils, et il est important de les mettre à disposition des applications pour qu'elles s'y adaptent
+	_ D'autres types de périphériques sont utilisés dans certains systèmes et dans des contextes de R&D (manettes, audio, haptique, voix, regard), cependant le support limité des périphériques de base nous incite à nous concentrer d'abord dessus
+	_ Un support essentiel de la programmation de l'interaction consiste donc en le triplet clavier/souris/écran
+-->
+<p>
+	<i>Qu'entend-on par supporter l'interaction dans un langage de programmation ?</i>
+	Il s'agit de faciliter la programmation d'applications interactives à bas niveau — c'est-à-dire la création de programmes qui reçoivent des données issus de périphériques d'entrée, et émettent des données vers des périphériques de sortie, afin de réaliser une boucle de <i>perception-action</i> du point de vue de l'utilisateur.
+<!-- 	<del><notesh>çå c'est  le bas niveau, OK. À plus haut niveau, une application interactive est à mon avis une application qui permet à l'utilisateur de réaliser une tâche, de résoudre un problème, en utilisant l'application comme un outil voire un assistant. Cela s'oppose aux applications où c'est la machine qui va résoudre le problème à partir d'entrées pour donner un résultat en sortie (et donc avec une interaction très limitée à du "passage de plats").</notesh></del> -->
+	En entrée, on contrôle principalement les ordinateurs au clavier et à la souris pour les ordinateurs de bureau, et au doigt pour les smartphones.
+	En sortie, la majorité des applications interactives utilisent un écran matriciel (une matrice de points colorés).
+	D'autres types de périphériques sont utilisés dans des contextes spécifiques (manettes, voix, regard, audio, haptique, etc.), cependant le support limité des périphériques de base nous incite à nous concentrer d'abord sur eux.
+	Un support <i>essentiel</i> de la programmation d'interactions consiste donc en le triplet clavier/souris/écran.
+	<!-- <del><notesh>OK, why not, même si l'un n'empêche pas l'autre (cf. thèse de Pierre).</notesh></del> -->
+</p>
+<!-- Où ne sont-ils pas ?
+	_ Exemple du langage C, car c'est un exemple clair, et le 2e langage le plus utilisé aujourd'hui (d'après l'index TIOBE https://www.tiobe.com/tiobe-index/)
+	_ Le langage lui-même supporte entre autres : les variables, les types, les pointeurs, les structures, les tableaux, les énumérations, la portée lexicale, les fonctions, les blocs conditionnels, les boucles, les branchements goto, les opérations arithmétiques/binaires/logiques, les entiers, les nombres à virgule flottante, les nombres complexes, les chaînes de caractères, l'import/export de symboles externes, et un préprocesseur (iso/iec_information_2018)
+	_ Ensuite, chaque langage possède une bibliothèque "standard", qui implémente les fonctionnalités qui ne nécessitent pas de support syntaxique du langage, et peuvent s'exprimer à l'aide de fonctions
+	_ Le langage C propose les bibliothèques : assert.h, complex.h, ctype.h, errno.h, fenv.h, float.h, inttypes.h, iso646.h, limits.h, locale.h, math.h, setjmp.h, signal.h, stdalign.h, stdarg.h, stdatomic.h, stdbool.h, stddef.h, stdint.h, stdio.h, stdlib.h, stdnoreturn.h, string.h, tgmath.h, threads.h, time.h, uchar.h, wchar.h, et wctype.h
+	_ À ces deux niveaux, le C ne spécifie aucun support du triplet clavier/souris/écran
+	_ Par les conventions UNIX et POSIX, le C supporte une entrée partielle du clavier (les caractères imprimables), et une sortie uniquement dans le terminal
+-->
+<p>
+	Pour expliquer notre idée d'un meilleur support des périphériques d'interaction, il convient d'abord de décrire leur support dans les systèmes informatiques actuels.
+	Commençons par prendre l'exemple du langage C, car c'est un exemple clair, et le second langage le plus utilisé aujourd'hui (septembre 2019) d'après l'index TIOBE [<a href=#tiobe_tiobe_2019>Tio19</a>].
+	Le cœur du langage supporte principalement : les variables, les types, les pointeurs, les enregistrements <code>struct</code>, les tableaux, les énumérations, la portée lexicale, les fonctions, les blocs conditionnels, les boucles, les branchements <code>goto</code>, les opérations arithmétiques/binaires/logiques, les entiers, les nombres à virgule flottante, les nombres complexes, les chaînes de caractères, l'import/export de symboles externes, et un préprocesseur [<a href=#iso/iec_information_2018>ISO18</a>].
+	Ensuite, tout langage possède une bibliothèque “standard”, qui implémente les fonctionnalités ne nécessitant pas de support syntaxique du langage, et s'expriment simplement par des fonctions.
+	Le langage C fournit les modules suivants : <code>assert.h</code>, <code>complex.h</code>, <code>ctype.h</code>, <code>errno.h</code>, <code>fenv.h</code>, <code>float.h</code>, <code>inttypes.h</code>, <code>iso646.h</code>, <code>limits.h</code>, <code>locale.h</code>, <code>math.h</code>, <code>setjmp.h</code>, <code>signal.h</code>, <code>stdalign.h</code>, <code>stdarg.h</code>, <code>stdatomic.h</code>, <code>stdbool.h</code>, <code>stddef.h</code>, <code>stdint.h</code>, <code>stdio.h</code>, <code>stdlib.h</code>, <code>stdnoreturn.h</code>, <code>string.h</code>, <code>tgmath.h</code>, <code>threads.h</code>, <code>time.h</code>, <code>uchar.h</code>, <code>wchar.h</code>, <code>et wctype.h</code>.
+</p>
+<!-- Où sont-ils ?
+	_ C'est à partir du système d'exploitation qu'on dispose d'un support suffisant de l'interaction, cependant de nombreuses alternatives sont présentées aux programmeurs, et les recommandations en ligne pointent vers toutes
+	_ Les alternatives sont : conio.h (clavier), ncurses (Unix), Newt (Linux), GNU Readline, X11 (UNIX), Wayland, OpenGL, ANGLE, Framebuffer, DirectFB, DRM, KMS, evdev (Linux), udev (Linux), libinput, GDI (Windows), Direct2D (Windows), DirectDraw (Windows), DirectWrite (Windows), QuickDraw GX (macOS), Carbon Event Manager (macOS), Quartz 2D (macOS), Metal (macOS), ..., avec un très grand nombre de bibliothèques s'intercalant et qui compliquent la topologie
+-->
+<p>
+	Parmi ces deux niveaux (syntaxe et bibliothèque standard), le langage C ne spécifie <i>aucun</i> support du triplet clavier/souris/écran.
+	Seules les conventions UNIX et POSIX permettent d'intégrer un support rudimentaire avec l'utilisation de fichiers : l'entrée de texte au clavier et le retour visuel dans un terminal textuel.
+	C'est à partir du système d'exploitation qu'on dispose d'un support suffisant des périphériques d'interaction, cependant de nombreuses alternatives existent et compliquent le choix des programmeurs : GNU Readline, OpenGL, conio.h (MS-DOS), ncurses (UNIX), Newt (Linux), X11 (UNIX), Wayland (Linux), Framebuffer (Linux), DRM (Linux), KMS (Linux), evdev (Linux), udev (Linux), libinput (Linux), GDI (Windows), Direct2D (Windows), DirectDraw (Windows), DirectWrite (Windows), QuickDraw GX (macOS), Carbon Event Manager (macOS), Quartz 2D (macOS), Metal (macOS).
+	Ici nous n'avons énuméré que des bibliothèques <i>natives</i> des différents systèmes.
+	En outre il existe un grand nombre de bibliothèques qui se basent sur les précédentes, fournissent des services similaires, et contribuent à compliquer la topologie des outils de programmation d'interaction dans les systèmes informatiques.
+</p>
+<!-- <del><sh>Un peu long, mais pas mal ces 2 paragraphes, en tous cas la chute est convaincante !</sh></del> -->
+<!-- Pourquoi cette situation ?
+	
+	_ Considérés comme des besoins volatils
+	_ Souvent sous-estimés
+	_ Historiquement difficile avec la multiplicité des systèmes
+	_ Exemple de Java qui avait inclus JavaFX puis maintenant en fait un package séparé
+-->
+<p>
+	Cette situation peut s'expliquer par les changements historiques des modalités d'interaction en entrée et sortie.<!-- <del>la volatilité historique des modalités d'interaction en entrée et sortie. <notesh>Qu'entends-tu par volatilité ? Hétérogénéité plutôt, non ?</notesh></del> -->
+	Bien que l'usage du clavier et de la souris soient standards depuis maintenant plus de 40 ans, leurs caractéristiques ont beaucoup évolué.
+	Les claviers ont évolué principalement dans les dispositions des touches et les touches “spéciales” (commandes, contrôle multimédia).
+	Les souris ont évolué dans les types de capteurs, la précision de la molette, les boutons présents, ainsi que les fonctions de transfert entre déplacement physique et position du curseur à l'écran.
+	De plus, de nombreux périphériques ont été développés qui ont tenté de faire évoluer ces modalités d'interaction standard, comme par exemple la souris 3D, le trackpad, ou le clavier “méduse”.
+	Face à ces évolutions, les fonctionnalités d'interaction ont pu être considérées comme instables dans le temps, et dissuader les concepteurs de langages à les intégrer dans les bibliothèques standard.
+	En outre, il est courant que certains périphériques d'interaction fonctionnent partiellement (audio muet, absence d'accélération matérielle, touches multimédia non reconnues), sans empêcher le système d'exploitation de fonctionner correctement.
+	Or la spécification de <i>toute</i> fonctionnalité d'un langage implique qu'elle doive fonctionner sur tous les systèmes, donc qu'elle est sous la responsabilité des concepteurs de compilateurs.<!-- <del><notesh>et  donc ?</notesh></del> -->
+	Dans ces conditions, un support de l'interaction dans les langages obligerait les concepteurs de compilateurs à suivre les évolutions des périphériques d'interaction, et demanderait un travail de maintenance conséquent, ce qui peut expliquer que l'interaction n'y figure finalement pas.
+</p>
+<!-- Que peut-on faire ?
+	_ Intégrer les besoins stables aujourd'hui
+	_ Fournir un contexte initialisé et fonctionnel pour des APIs majeures et recommandées (OpenGL, FreeType)
+	_ Proposer une architecture d'interaction qui puisse être intégrée aux langages, plutôt que des fonctions
+-->
+<p>
+	<i>Comment formuler une recommandation réaliste et réalisable dans cette situation ?</i>
+	Nous proposons trois pistes de solutions<!-- <del> <notesh>mettre les 3 pistes en gras dans la suite</notesh></del> -->, sans en choisir une en particulier pour le moment.
+	La première possibilité est d'<b>inclure dans les langages les fonctionnalités stables depuis plusieurs décennies</b> :
+</p>
+<ul>
+	<li>pour le clavier, les évènements d'appui et relâchement de touche, avec le code de position de la touche et le caractère imprimable correspondant</li>
+	<li>pour la souris, les évènements de déplacement physique relatif, d'appui et relâchement de bouton, et de déplacement physique de la molette</li>
+	<li>pour l'écran, l'évènement de synchronisation avec le rafraîchissement de l'affichage, avec la matrice de couleurs à éditer</li>
+</ul>
+<!-- <notesh>OK, et quoi faire avec ça ? L'inclure au langage ? Dit le...</notesh> -->
+<p>
+	Ces fonctionnalités sont basiques, mais faciliteraient le développement de bibliothèques logicielles robustes et multi-plateformes.<!-- <del><notesh>Comment ?</notesh></del> -->
+	En effet, elles ne nécessiteraient pas d'utiliser une bibliothèque dédiée pour chaque périphérique et chaque système, et réduiraient ainsi l'apprentissage nécessaire.
+	Ensuite, par leur inclusion dans le langage elles ne nécessiteraient pas l'installation de bibliothèque tierce, ni d'actions spécifiques pour les activer, ce qui améliorerait leur accessibilité.
+	Enfin, nous conjecturons que leur inclusion dans un langage (aux côtés de fonctionnalités basiques telles que la manipulation de texte ou les accès aux fichiers) les forcerait à adopter une interface simple, qui puisse raisonnablement être supportée par les compilateurs tout en conservant une certaine puissance d'expression.
+</p>
+<!-- <sh>Une remarque que tu peux te préparer à avoir est que potentiellement, cette inclusion du support de périphériques particuliers mais standards tel souris/clavier à très bas niveau dans le langage risque de réduire la flexibilité et l'adaptabilité à plus haut niveau en "câblant" encore plus fortement les interactions à des périphériques donnés qu'actuellement, à l'image des "MouseEvent" que tu reçois en Swing, même quand l'évènement vient d'une surface tactile ou d'un stylet (ce que l'on qualifie de fonctionnement par compatibilité)... et donc ça ne risque pas de stéréotyper encore plus l'interaction ?</sh>
+<traf>Si, c'est vrai. Ce point est plus destiné aux applications "standard". Faciliter la programmation pour souris/clavier va certainement favoriser ce type d'interfaces. Mais la réponse pour ne pas stéréotyper ne devrait pas être de laisser la programmation difficile comme elle est. Il s'agirait plutôt de faire évoluer ce support avec les usages, pour susciter le développement de plus d'applications, qui génèreraient plus rapidement de nouveaux besoins. On pourrait conjecturer qu'on raccourcit ainsi le cycle de co-évolution technologie/besoins.</traf> -->
+<p>
+	Une seconde possibilité est de <b>reconnaître la longévité de certaines bibliothèques logicielles liées à l'interaction, et de faciliter l'utilisation de leur API</b>.
+	<!-- <del><notesh>Qu'entends-tu par "faciliter" ?</notesh></del> -->
+	On pourrait ainsi imaginer que le compilateur initialise automatiquement ces bibliothèques, s'il détecte que leurs fonctions sont utilisées.
+	De plus il ne serait pas nécessaire d'installer ces bibliothèques en plus d'un compilateur, pour avoir à les utiliser.
+	Enfin, la standardisation de ces bibliothèques faciliterait le dilemme du choix lorsque des alternatives existent, et contribuerait à les renforcer ainsi que leurs communautés en ligne.
+	Parmi ces bibliothèques, nous pouvons citer :
+</p>
+<ul>
+	<li>OpenGL (1994), pour le rendu 3D</li>
+	<li>FreeType (1996), pour le rendu des polices de caractères</li>
+	<li>SDL (1998), pour la gestion des fenêtres et entrées</li>
+</ul>
+<p>
+	Enfin, une troisième possibilité est d'<b>intégrer le support de l'interaction dans la syntaxe des langages, plutôt qu'en utilisant des fonctions</b>.<!-- <del>de développer d'autres mécanismes pour intégrer le support de l'interaction, plutôt qu'avec l'utilisation de fonctions exportées depuis une bibliothèque logicielle.</del> -->
+	Ces mécanismes étendraient les langages de programmation, pour exprimer l'interaction de façon plus “native”.
+	Un exemple d'une telle extension est le support de la souris dans le langage Processing [<a href=#reas_processing_2014>Rea14</a>], qui consiste en des variables globales comme <code>mouseX</code> et <code>mouseY</code>, et des noms de fonctions comme <code>mousePressed()</code> qui sont appelées automatiquement lors d'un appui de la souris.
+</p>
+<!-- <del><sh>Finit un peu en queue de poisson, non ?</sh></del> -->
+<p>
+	La troisième piste nous semble la plus intéressante, car elle reconnaît le caractère essentiel de l'interaction dans la programmation.
+	Après tout, il nous serait impossible d'observer le fonctionnement d'un programme, ni d'agir dessus, sans un support minimal du triplet clavier/souris/écran.
+	Nous nous sommes donc attachés à proposer des concepts qui puissent s'intégrer naturellement dans les langages de programmation, non pas en tant qu'appels de fonction mais comme syntaxes natives.
+	Dans ce travail de thèse, nous proposons une extension du langage Smalltalk dédiée à l'animation, que nous présentons en <a href=#sec2x4>section 2.4</a>.
+	Enfin dans le framework présenté au <a href=#sec3>chapitre 3</a>, nous représentons les périphériques d'interaction comme des objets globaux, que l'on peut interroger à tout moment pour observer les évènements d'entrée.
+</p>
+<!-- Faire un encadré à la fin de chaque partie, synthétisant son apport "IE 2.1 - ..." -->
+
+<h3>Des alternatives à la programmation évènementielle</h3>
+
+<!-- Qu'est-ce que la programmation évènementielle ?
+	_ La programmation évènementielle est un concept souvent cité en IHM, cependant c'est aussi l'un des concepts les plus flous
+	_ On l'associe à l'inversion de contrôle et le patron observateur, avec l'enregistrement de callbacks pour gérer différents types d'évènements
+	_ On l'associe à la programmation réactive, dans la capacité à réagir instantanément à des évènements
+	_ On l'associe aussi à la propagation à la demande, avec la notion de file d'évènements (event queue), par exemple dans des contextes de gestion des requêtes à des serveurs
+	_ Dans toutes ses définitions, la programmation évènementielle se base sur la manipulation d'évènements (events), des enregistrements de données qui représentent chacune une action traitée par le système
+	_ Notre définition : La programmation évènementielle consiste à matérialiser chaque évènement (action de l'utilisateur, message entre processus, changement d'états) par un enregistrement unique, qui permet aux programmes de les inspecter, les stocker, et les partager.
+-->
+<!-- Exemple
+	_ Par exemple, pour modéliser les mouvements de souris en programmation évènementielle, on définit une structure MouseMoveEvent, contenant le déplacement relatif de la souris, voire d'autres informations
+	_ [code de la structure]
+-->
+<p>
+	La programmation évènementielle est un concept populaire en IHM, mais qui est aussi très peu défini.
+	Elle se caractérise principalement par la manipulation d'évènements (<i>events</i>), qui peuvent représenter des actions de l'utilisateur (ex. mouvement de souris), des messages entre processus ou machines, ou tous types de changements d'état.
+	Par exemple, pour modéliser les mouvements de la souris en programmation évènementielle, on définirait une structure <code>MouseMoveEvent</code>, contenant le déplacement relatif de la souris, ainsi que d'éventuelles informations comme le nom du périphérique ou sa précision.
+</p>
+<pre><code class="lang-c line-numbers">struct MouseMoveEvent {
+	int dx;
+	int dy;
+	String productID;
+	int dpi;
+	...
+}
+</code></pre>
+<!-- Qu'est-ce qu'un event handler ?
+	_ Un gestionnaire d'évènements (event handler) est une fonction appelée par callback lorsqu'un évènement se produit, et reçoit en argument la structure de l'évènement
+	_ Avec le patron de conception observateur, un gestionnaire d'évènements est installé sur un widget, et réagit aux évènements relatifs à celui-ci (clic sur un bouton, appui de touche dans un champ de texte; etc.)
+	_ Les event handlers correspondent à la propagation poussée
+-->
+<p>
+	La programmation évènementielle est souvent utilisée pour qualifier des systèmes qui écoutent leur environnement, cependant la <i>manière</i> de gérer les évènements varie.
+	Lorsqu'elle est utilisée pour propager des évènements avec attente passive, on l'associe avec le patron observateur (<i>listener</i>) pour enregistrer des fonctions de rappel (<i>event handler</i>) traitant chaque type d'évènement.
+	Avec ce mécanisme, chaque widget stocke une fonction de rappel pour chaque type d'évènement qu'il peut recevoir (clic de souris dans sa zone, appui de touche lorsqu'il est actif, etc.).
+	Lorsque le framework détecte la survenue d'un évènement, il remplit les champs d'une structure d'évènement, trouve le widget sur lequel l'évènement s'est produit, et exécute la ou les fonctions de rappel qui y sont enregistrées pour le type d'évènement en question.
+	Les fonctions reçoivent en argument la structure initialisée.
+</p>
+<!-- Qu'est-ce qu'une event queue ?
+	_ Certains systèmes propagent tout évènement dès qu'il est généré (à l'aide du patron observateur).
+	_ D'autres stockent les évènements dans une file (FIFO), qui doit être vidée à intervalles réguliers
+	_ Ce type de propagation à la demande est courant dans les jeux vidéo, lorsqu'ils sont synchronisés avec un tickrate particulier (celui d'un serveur dans le cas des jeux multijoueurs)
+-->
+<p>
+	Lorsque la programmation évènementielle est utilisée en propagation avec attente active, on lui associe une file d'évènements (<i>event queue</i>), qui les accumule afin de les traiter périodiquement par paquets.
+	La file est alors parcourue dans l'ordre d'arrivée des évènements, ceux-ci sont traités un par un, puis la file est vidée pour accueillir les prochains évènements.
+	Ce type de stockage des évènements est courant dans les jeux vidéo, lorsqu'ils sont synchronisés avec un tickrate particulier — celui d'un serveur dans le cas des jeux multijoueurs.
+</p>
+<!-- Le continuum de la différentiation
+	_ La modélisation des évènements est un compromis entre nombre de gestionnaires (ou nombre de files) et spécificité des traitements [figure continuum]
+	_ À une extrémité, tous les évènements sont représentés par une même structure, et chaque gestionnaire doit filtrer les évènements qui ne l'intéressent pas.
+	_ À l'autre extrémité, chaque type d'évènement est représenté par sa propre structure, et chaque gestionnaire n'a jamais à filtrer d'évènement qui ne l'intéresse pas.
+	_ Le premier cas est utile lorsque des traitements sont communs à plusieurs types d'évènements (comme pour les applications multimodales), cependant il implique souvent l'usage de blocs conditionnels.
+	_ Le second cas est utile pour séparer les responsabilités entre traitements indépendants, cependant il génère beaucoup de types de structures, et tend à contribuer à la fragmentation de la logique, en divisant les techniques d'interaction multimodales en plusieurs gestionnaires
+-->
+<p>
+	La modélisation des évènements dans une application interactive est un compromis entre la taille des structures d'évènements, et la spécialisation des traitements, qui forme un continuum de granularité des solutions allant de <i>monolithique</i> (avec un type d'évènement complexe et unique) à <i>fine</i> (avec une grande variété de types d'évènements à la structure simple).<!-- <del>solutions entre <i>complexité</i> et <i>variété</i> (<a href=#fig-evenements>figure</a>). <notesh>Est-ce que le vocabulaire <i>complexité</i> et <i>variété</i> est de toi ? Si oui, je proposerai de le changer en faisant plutôt référence à la granularité des évènements: "[...] qui forme un continuum de solutions de granularité allant de <i>monolithique</i> (avec un type d'évènement complexe et unique) à <i>fine</i> (avec une grande variété de types d'évènements à la structure simple).". Ça c'est un continuum car sur la même dimension. Complexité et Variété, c'est plus un compromis qu'un continuum.</notesh></del> -->
+	Ce continuum est représenté en <a href=#fig-evenements>figure</a>.
+	À une extrémité, tous les évènements sont représentés par une même structure, et chaque gestionnaire doit filtrer les évènements qui ne l'intéressent pas.
+	En contrepartie, on ne conserve qu'une seule liste de gestionnaires d'évènements, ou une seule file d'évènements.
+	Des exemples d'application de ce principe sont le framework SDL [<a href=#lantinga_simple_1998>Lan98</a>] ainsi que le protocole TUIO [<a href=#kaltenbrunner_tuio_2005>Kal05</a>].
+	À l'autre extrémité, chaque type d'évènement est représenté par sa propre structure, et un gestionnaire d'évènements n'a jamais à filtrer d'évènement qui ne l'intéresse pas.
+	En contrepartie, il faut maintenir autant de listes de gestionnaires, de files d'évènements, et de canaux de transmission d'évènements que le nombre d'évènements possibles.
+	<!-- <del>Un exemple d'application de ce principe est</del> -->Des exemples d'application de ce principe sont les frameworks AWT et Swing, ainsi que le framework GLFW [<a href=#the_glfw_development_team_glfw_2002>GLF02</a>] (celui-ci ne déclare aucune structure mais passe les variables directement en arguments des fonctions de rappel).<!-- <del><notesh>Java AWT et SWING aussi, non ? Tu peux les mentionner avant GLFW, car un peu plus connus quand même.</notesh></del> -->
+</p>
+<figure id=fig-evenements>
+	<img src=figures/evenements.svg style="width:16cm">
+	<figcaption>Le continuum de granularité des types d'évènements, illustré par un exemple de code supportant les mouvements de souris et les appuis/relâchements de touches du clavier.</figcaption>
+</figure>
+<p>
+	Dans le cas des évènements fins, le type de chaque évènement n'est pas stocké explicitement mais correspond au nom de la structure.
+	Il épargne au programme l'utilisation de structures conditionnelles (<code>if/else</code> et <code>switch</code>) pour filtrer les évènements, et laisse cette responsabilité au framework et au langage.
+	En pratique la plupart des frameworks orientés objets définissent des hiérarchies d'évènements (<a href=#fig-hierarchie-evenements>figure</a>), qui leur permettent de proposer des gestionnaires à tous les niveaux du continuum, au prix d'un code plus complexe.
+</p>
+<!-- Problèmes :
+	_ en attente passive, favorise une logique répartie avec les callbacks sur différents types d'évènements
+	_ abstrait le type de périphérique et tend à inclure les données relatives à l'évènement plutôt que les données sur le périphérique
+-->
+<p>
+	Cependant, en pratique l'utilisation d'évènements fins favorise la fragmentation de la logique discutée en <a href=#sec2x2x4>section 2.2.4</a>.
+	En effet, les différents types de traitements sont séparés en différentes fonctions (ex. <code>onMouseMotion(...)</code>, <code>onMouseScroll</code>, <code>onKeyPress</code>, <code>onKeyRelease</code>).
+	Ces fonctions contribuent à séparer tous les comportements correspondant aux actions possibles dans l'interface, en une multitude de fonctions individuelles qui compliquent la maintenance globale de l'application.
+	En outre, la programmation évènementielle abstrait les caractéristiques de chaque périphérique, en le réduisant en une <i>modalité</i> d'interaction.
+	Bien qu'elle ait ainsi permis, par exemple, d'adapter facilement des interfaces de bureau à l'utilisation du doigt (en générant des évènements de souris), ce type d'abstraction réduit la richesse de l'interaction au doigt (précision, intensité de pression, orientation) en le réduisant à un pointeur.
+	Enfin, les structures d'évènements communiquent par définition les données relatives à l'action observée, et omettent souvent les données relatives aux périphériques d'entrée.
+	Elles rendent ainsi plus difficile l'adaptation de l'interaction aux types de périphériques qui génèrent des évènements.
+</p>
+<figure id=fig-hierarchie-evenements>
+	<img src=figures/hierarchie-evenements.svg style="width:16cm">
+	<figcaption>Exemple de hiérarchie d'évènements supportant les mouvements de souris et les appuis/relâchements de touches du clavier, et le code correspondant</figcaption>
+</figure>
+<!-- Que peut-on faire ?
+	_ La programmation évènementielle nous paraît être un mécanisme dont il faudrait trouver des alternatives
+	_ En effet, d'un côté elle permet l'utilisation de files d'évènements, qui induisent de la latence en dépit de leur simplicité d'utilisation.
+	_ De l'autre côté, elle favorise la fragmentation de la logique, et nuit à la simplicité des frameworks lorsqu'ils définissent beaucoup de types d'évènements
+	_ Dans un système interactif, tout changement d'état s'accompagne de données décrivant ce changement (bouton cliqué, déplacement relatif de souris), et doit nécessairement être stocké quelque part.
+	_ Ces données peuvent être stockées autre part qu'un objet d'évènement : en état global, sur l'objet recevant l'interaction, ou sur le périphérique à l'origine de l'interaction.
+-->
+<!-- <del><p>
+	Dans ce travail de thèse nous avons cherché à nous défaire de la programmation évènementielle, et à en chercher une alternative.
+	En effet, avec les frameworks définissant des évènements variés, elle favorise la fragmentation de la logique en séparant les différents types de traitements en différentes fonctions (ex. <code>onMouseMotion(...)</code>, <code>onMouseScroll</code>, <code>onKeyPress</code>, <code>onKeyRelease</code>).
+	De plus, la matérialisation d'évènements en structures <i>permet</i> leur stockage dans des files d'attente, qui est une pratique de nous désapprouvons puisqu'elle induit de la latence dans le traitement des évènements d'entrée <notesh>pas tant que ça en fait en pratique... tu devrais plutôt dire "peut induire de la latence...". Est-ce que ça ne peut pas plutôt entrainer à "perdre" des évènements, ou à perdre aussi leur ordre ?</notesh>.
+	Enfin, la définition de structures d'évènements communes à plusieurs types d'évènements <i>permet</i> la mise en commun de champs (comme illustré par la classe <code>KeyboardEvent</code> en <a href=#fig-hierarchie-evenements>figure</a>)
+	Ces structures communes facilitent l'abstraction des spécificités des périphériques en faveur d'évènements communs (par exemple, <code>TouchEvent</code> hériterait de <code>MouseEvent</code>).
+	Bien que nous puissions difficilement la démontrer, nous émettons l'hypothèse selon laquelle la programmation évènementielle <i>favorise</i> l'utilisation de files d'évènements et l'abstraction des caractéristiques des périphériques.  <notesh>Et donc ? Qu'est-ce que cela pose comme problème ?</notesh>
+</p></del> -->
+<p>
+	Nous considérons donc comme essentiel de <b>propager les données d'entrée en conservant les caractéristiques des périphériques qui les ont générées</b>, et avons cherché des alternatives à la programmation évènementielle au cours de ce travail de thèse.
+	Dans un système interactif, tout changement d'état s'accompagne de données décrivant ce changement (quel bouton est pressé, de combien d'unités la souris se déplace, etc.).
+	Ces données doivent être mises à disposition du programme.
+	Des alternatives à la programmation évènementielle consistent donc en leur stockage autre part que des structures d'évènements :
+</p>
+<ul>
+	<li>sur l'objet recevant l'interaction (bouton cliqué, champ de texte actif)</li>
+	<li>sur le périphérique à l'origine de l'interaction (souris, clavier)</li>
+	<li>comme arguments aux gestionnaires d'évènements</li>
+	<li>dans des variables globales, accessibles depuis tout gestionnaire d'évènement</li>
+</ul>
+<!-- <sh>Sont-ce les seules possibilités ? E.g., où situes-tu les binding dans ces 4 alternatives ?</sh>
+<traf>La question relève d'un état de l'art complet, or ici l'idée était d'avoir quelques pistes et d'en sélectionner une.</traf> -->
+<p>
+	Dans le <a href=#sec3>chapitre 3</a>, nous présentons une alternative dans laquelle ces données sont stockées dans des objets représentant les périphériques à l'origine de l'interaction.
+</p>
+
+<h3>Le rendu immédiat et différé</h3>
+
+<p>
+	Pour dessiner des formes géométriques, du texte et des images à l'écran, on distingue deux méthodes de dessin adoptées par diverses bibliothèques graphiques, le mode immédiat (<i>immediate</i>) et le mode différé (<i>retained</i>).
+	En dessin immédiat, on exécute des instructions de dessin comme on donnerait des ordres au système graphique.
+	Celui-ci peint les instructions à l'écran immédiatement lors de leur exécution, ou peut les ajouter à une file d'attente pour les exécuter en groupe plus tard.
+	Les bibliothèques de dessin immédiat fournissent un “canevas” dans lequel les instructions viendront peindre, et qui sera ensuite affiché sur tout ou partie de l'écran.
+</p>
+<p>
+	En pratique les bibliothèques de dessin de bas niveau (OpenGL, Skia, Cairo) se contrôlent avec des instructions immédiates.
+	La plupart des frameworks d'interaction fournissent aussi des modes de dessin immédiat (<code>canvas</code> pour HTML/JS, <code>QPainter</code> pour Qt, ou <code>Canvas</code> pour JavaFX).
+	Enfin le framework ImGui est notable pour avoir étendu le mode immédiat à la définition d'interfaces graphiques, et clarifié la distinction entre les deux modes [<a href=#muratori_immediate-mode_2005>Mur05</a>].
+	Le mode immédiat est généralement perçu comme offrant le meilleur contrôle, car les instructions sont exécutées à un moment et dans un ordre déterminés.
+	Cependant, il n'offre aucune persistance aux instructions de dessin, elles devront être renvoyées à nouveau pour le rendu de chaque nouvelle trame.
+</p>
+<p>
+	En dessin différé, on fournit une description des éléments à dessiner au système (un <i>modèle</i>), et celui-ci se charge de les afficher sans contrôle explicite du programmeur.
+	Les descriptions incluent la couleur de fond des éléments, leur forme géométrique, ou encore du texte à afficher<!-- <del>forme des éléments, leur couleur, ou encore l'épaisseur des traits</del> -->.
+	Le système décide l'ordre de leur affichage, la fréquence de rafraîchissement à l'écran, ainsi que des détails visuels comme le lissage sous-pixel ou l'utilisation de flou de mouvement.
+	Le modèle est généralement structuré au-delà d'une simple liste, en un <i>arbre de scène</i> qui ne se limite pas au rendu visuel, mais sert aussi à la distribution des évènements d'entrée et la résolution des contraintes de positionnement.
+	L'apparence des éléments est aussi parfois spécifiée en code (de rendu immédiat), pour contrôler précisément leur apparence.
+	Ce code est alors spécifié dans une méthode de rappel (ex. <code>paintComponent</code> avec Swing), déléguée au framework par Inversion de Contrôle.
+</p>
+<!-- On veut le contrôle du rendu immédiat, avec la persistence du rendu différé (sinon on doit stocker toutes ses formes à la main - bookkeeping) -->
+<p>
+	Notre objectif dans cette partie serait de concilier le contrôle fin du rendu immédiat, avec la persistence du rendu différé.
+	En effet, l'ordre indéterminé dans lequel le framework exécute les instructions de dessin en rendu différé limite le contrôle donné aux développeurs de techniques d'interaction, car ils doivent spécifier explicitement les relations d'ordre entre éléments dessinés (ce qui nécessite plus de code).
+	Nous cherchons donc à <b>supporter un modèle de rendu différé, mais dans lequel les étapes de rendu soient explicites et non réservées à la discrétion du framework</b>.
+</p>
+<!-- <del><p>
+	En pratique, le dessin différé est une caractéristique essentielle des frameworks d'interaction.<notesh>OK, mais il n'est pas non plus forcément toujours structuré (en e.g. graphe de scène): par exemple, dans Java2D, on ne peut dessiner qu'avec des primitives de bas niveau dans un Graphics2D mais que dans les méthodes "paintX" des widgets, qui seront-elle appelée quand le veut le framework (dessin différé).</notesh>
+	Il permet de réduire chaque interface en une structure de données, et ainsi d'exprimer son apparence et son interactivité comme des valeurs à choix multiples, afin de les orienter vers des standards prédéfinis et éprouvés.
+	Le dessin différé facilite aussi l'implémentation d'optimisations par les frameworks, grâce à l'utilisation de structures de données optimisées.
+</p>
+
+<sh>Pas fini, right?</sh></del> -->
+
+<h3>Le support d'un environnement d'interaction minimal et initialisé</h3>
+
+<p>À partir des discussions développées dans cette section, nous voulons formuler un Essentiel d'Interaction avec les caractéristiques suivantes :</p>
+<ul>
+	<li>rend disponible dans le langage un support simple du triplet clavier/souris/écran</li>
+	<li>intègre des concepts liés à l'interaction dans la syntaxe même d'un langage</li>
+	<li>propage les données des dispositifs d'entrée en conservant leurs caractéristiques</li>
+	<li>supporte un rendu graphique différé, avec des étapes de rendu explicites (voire flexibles)</li>
+</ul>
+
+<!-- Justifier le fait que le développement d'applications interactives est facilité :
+	_ enlève l'étape initialisation des périphériques
+	_ réduit l'apprentissage lié à une bibliothèque supplémentaire (à condition que le support de l'interaction soit bien intégré)
+	_ favorise l'appropriation des concepts (conjecture)
+	_ réduit le nombre d'objets nécessaires pour dessiner une même technique, ainsi que le nombre de relations explicites d'ordre d'affichage
+-->
+<p>
+	Nous arguons que ces points pourraient faciliter le développement d'applications interactives, et plus particulièrement celui de nouvelles techniques d'interaction dans un contexte de recherche.
+	Tout d'abord, en enlevant l'étape d'initialisation des différentes bibliothèques de périphériques, nous réduisons le code d'une application (ce que font déjà la majorité des frameworks).
+	De plus, en intégrant les périphériques au plus près du langage, nous comptons réduire l'apprentissage nécessaire à chaque bibliothèque supplémentaire.
+	Il est important alors que cette intégration repose sur des concepts qui la rendent plus claire que l'utilisation classique des fonctions d'une API.
+	Nous conjecturons que la définition de concepts intégrant l'interaction dans la syntaxe du langage favoriserait leur appropriation par les développeurs, ce qui est essentiel aux pratiques de développement opportunistes.
+	Nous illustrons ces principes avec le concept d'<i>animation de fonction</i> présenté dans la section suivante, ainsi que celui de <i>réification des périphériques en objets globaux</i> présenté dans le <a href=#sec3>chapitre 3</a>.
+	Ainsi, notre second Essentiel d'Interaction est le suivant :
+</p>
+<div style="border:2px solid black; margin:1cm 0 1.5cm 0; padding:1cm .5cm; text-align:center"><span style="font:bold 15pt Palatino">Essentiel d'Interaction n°2</span><br><br>
+	Fournir un support minimal des entrées et sorties dans l'environnement de toute application, supporté par des concepts intégrés de façon cohérente avec le langage de programmation
+</div>
+
+<link rel=stylesheet href=style.css>
+<link rel=stylesheet href=prism.css>
+<script src=scripts.js></script>
+<script src=prism.js></script>
+<script>prefix_headers(2, 3)</script>

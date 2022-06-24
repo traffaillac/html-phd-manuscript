@@ -1,0 +1,294 @@
+<!-- Intégrer la remarque qu'on est coincés au R de BRETAM, en partie parce qu'on en a une interprétation libre et qu'on omet que la Réplication doit être menée par les autres chercheurs (ce qui peut inclure d'autres chercheurs dans un même laboratoire, mais sur une période de temps plus longue). Il est donc crucial de les aider à répliquer (s'approprier) pour permettre à l'idée de se diffuser. -->
+<!-- Il y a une hypothèse implicite dans la plupart des validations de toolkits, qui est que la preuve d'utilité/usabilité implique que l'outil sera utilisé/répliqué. -->
+<!-- Une toolkit ne devrait être en fait que le point de départ du travail (1e publication), les travaux suivants devant s'attacher à expliquer comment répliquer. -->
+<!-- S'inspirer de marquardt_hcitools_2017 pour trouver des questions de recherche intéressantes auxquelles tenter de répondre dans le chapitre 2 -->
+<!-- Quelle est la différence entre toolkit et framework ? (radle_paper_2017) -->
+<!-- Citation dans eagan_malleable_2017 : “The reality, of course, is different: design choices made by the original developers—and their rationale—are invisible.” -->
+<!-- “Last, I wanted to raise the issue that most toolkits research I know ended with the release of the toolkit for download. This is necessary but not sufficient. It is necessary to enable others to try out toolkits and do comparative evaluations, which is often asked by reviewers despite the fact that many previous systems are not actually available and only “exist” in research papers. It is not sufficient, however, because in most cases this is where the toolkits research actually begins. To truly understand the capabilities and value proposition of a toolkit, it is important to study how it is used by others than the toolkit authors and a few study participants.” (nebeling_playing_2017 p3) -->
+
+<h1 class=break-right>Programmer l'interaction</h1>
+
+<!-- Plan du contexte en questions :
+	_ Pourquoi a-t-on besoin d'inventer de nouvelles techniques d'interaction et interfaces ?
+	_ Qu'est-ce qu'une interface ? (bonne/mauvaise, hors du cadre de cette thèse)
+	_ Comment crée-t-on une interface ? (dans différents domaines, points communs)
+	_ Qu'est-ce qu'une technique d'interaction ? (nouvelle ?)
+	_ Comment crée-t-on une technique d'interaction ?
+	_ Pourquoi les interfaces actuelles ne suffisent pas ?
+	_ Comment ont-elles évolué, et où vont-elles ? (incl. techniques)
+	_ Qu'est-ce que la recherche en interfaces et techniques d'interaction ?
+	_ Comment la recherche supporte-t-elle le développement de nouvelles interfaces et techniques d'interaction ? (démonstrations, architectures, langages, toolkits, dynamisme des communautés de recherche/conférences)
+-->
+<!-- Pourquoi a-t-on besoin d'inventer de nouvelles techniques d'interaction et interfaces ?
+	_ Évolution des capacités techniques des ordinateurs et périphériques d'entrée/sortie (plus petits/portables, plus légers, plus rapides, plus de DoF, plus versatiles)
+	_ Évolution des usages liés aux ordinateurs (1 pour N, 1 pour 1, N pour 1)
+	_ Multiplication des contextes d'utilisation et spécialisation des interfaces
+-->
+<p>
+	Nos manières d'interagir avec les ordinateurs ont fortement évolué au cours des dernières décennies.
+	Leurs capacités techniques ont beaucoup progressé, et continuent de s'améliorer.
+	Ils sont capables de <!-- <del>travailler plus vite, résoudre des problèmes plus complexes, <notesh>travailler plus vite ? calculer plus vite plutôt ? ou effectuer un grand nombre d'opérations complexes plus rapidement ?</notesh></del> -->calculer plus vite, et réaliser des opérations plus complexes, tout en consommant moins d'énergie.
+	Ils sont plus petits, plus légers, et sont capables aujourd'hui de tenir dans une poche ou dans le creux de la main.
+	Ils sont plus versatiles, et multiplient les capteurs interagissant avec l'homme et leur environnement (souris, écrans tactiles, boutons physiques, microphones, accéléromètres, etc.).
+	<!-- <del><notesh>ils sont aussi "sortis de leurs boîtes": ne sont plus que sur un bureaux, mais nous accompagnent partout ou sont intégrés à l'environnement; mélanges le numérique avec le physique (réalité mixte) comme l'avait envisagé Wellner avec le <a href="https://dl.acm.org/citation.cfm?id=159630">Digital Desk</a>, mais même jusque dans la rue, pas que sur un bureau...</notesh></del> -->
+	Enfin ils ne sont plus circonscrits à un boîtier dédié, mais sont intégrés aux objets du quotidien, dans notre environnement, voire accessibles par Internet.
+</p>
+<p>
+	Dans un même temps, les usages liés aux ordinateurs ont évolué à mesure que ceux-ci devenaient plus puissants.
+	Alors que dès les années 50 on trouvait une machine pour plusieurs utilisateurs, à partir des années 70 se sont développés les ordinateurs à usage personnel, dès les années 90 on pouvait trouver plusieurs machines pour un utilisateur [<a href=#weiser_coming_1997>Wei97</a>], et de nos jours il est courant que plusieurs utilisateurs se partagent plusieurs machines.
+	<!-- <del><notesh>Et même maintenant plusieurs machines pour plusieurs utilisateurs. Pour ces 3 "vagues", ou ères, l'usage est  de citer Weiser "" <ahref="http://citeseerx.ist.psu.edu/viewdoc/summary?doi=10.1.1.129.2275">The Coming Age of Calm Technology</a></notesh></del> -->
+	De même les contextes dans lesquels on utilise des ordinateurs se sont très largement multipliés (calcul scientifique, bureautique, production industrielle, télécommunications, divertissements, etc.), et ont contribué à faire évoluer les interfaces entre humains et ordinateurs.
+</p>
+
+<h2>Contexte</h2>
+
+<p>
+	Aujourd'hui, alors que les contextes d'utilisation des ordinateurs continuent de changer, nous avons toujours besoin de développer de nouveaux types d'interfaces, et d'améliorer nos manières d'interagir avec des ordinateurs.
+	Ainsi, le contexte de ce travail de thèse est la <b>recherche et le développement de nouvelles interactions avec les ordinateurs</b>, afin d'étudier et de proposer des outils adéquats pour cette activité<!-- <del><notesh>et la question  dans ce contexte est de réfléchir sur les outils nécessaires ?</notesh></del> -->.
+	Mais alors, <i>qu'est-ce que l'interaction ?</i>
+	Et qu'entend-on par <i>programmer l'interaction</i> ?
+</p>
+
+<h3>Caractérisation de l'interaction</h3>
+
+<p>
+	La définition de l'interaction est depuis longtemps un sujet de discussions dans la communauté du domaine Interaction Homme-Machine (IHM).
+	Cette définition est importante, car elle doit idéalement englober toutes les productions humaines liées à l'interaction entre des personnes et des machines — passées, présentes, et prospectives.
+	Elle délimite le domaine IHM, en caractérisant de qu'il <i>est</i> et ce qu'il <i>n'est pas</i>.
+	Nous n'avons pas l'ambition d'en fournir une définition ici, cependant il nous faut la caractériser afin de clarifier l'objet de cette thèse — la <i>programmation</i> d'interactions.
+	Ainsi le Dictionnaire de l'Académie Française définit l'interaction par :
+</p>
+<dl>
+	<dt>INTERACTION n. f. <sc>xix</sc><sup>e</sup> siècle.</dt>
+	<dd><sc>phys</sc>. Action réciproque de deux ou plusieurs corps. <i>La gravitation est un phénomène d'interaction entre deux corps</i>. <i>Interaction électromagnétique</i>. <i>Interaction forte</i>, action attractive entre particules, qui assure la cohésion des noyaux atomiques. <i>Interaction faible</i>, qui se manifeste par des forces d'attraction ou de répulsion entre particules, responsables en particulier de la radioactivité bêta. • Par ext. Influence qu'exercent les uns sur les autres des phénomènes, des faits, des objets, des personnes. <i>L'interaction des faits économiques et politiques</i>.</dd>
+</dl>
+<p>
+	Cette définition, issue de la physique, s'applique par extension à l'Interaction Homme-Machine, et nous pouvons la résumer par “influence réciproque”.
+	Or elle ne précise en aucune mesure quels types d'influences l'homme et la machine peuvent avoir l'un sur l'autre.
+	Elle est donc insuffisante pour caractériser les travaux en IHM et leurs besoins.
+</p>
+<p>
+	Dans leur article <i>What is Interaction?</i> paru en 2017, Hornbæk et al. s'attachent à présenter les principaux “courants de pensée” qui donnent des définitions de l'interaction [<a href=#hornbaek_what_2017>Hor17</a>].
+	Ils en tirent la tentative de définition suivante : « <i>Following Bunge, interaction concerns two entities that </i>determine<i> each other’s behavior over time. In HCI, the entities are computers (ranging from input devices to systems) and humans (ranging from end effectors to tool users). Their mutual determination can be of many types, including statistical, mechanical, and structural. But their causal relationship is teleologically determined: Users, with their goals and pursuits, are the ultimate metric of interaction</i> ».
+</p>
+<p>
+	Cette définition abandonne la notion d'action ou d'influence, au profit de celle de détermination — ou d'observation pour acquérir une compréhension.
+	En ce sens elle nous semble compléter la définition donnée par l'Académie Française, plutôt que la remplacer.
+	À partir de ces définitions, nous pouvons préciser en quoi consistent les recherches de “nouvelles interactions” avec les ordinateurs, et ainsi raffiner le sujet d'étude de cette thèse.
+	Ces recherches se caractérisent par :
+</p>
+<ul>
+	<li>de nouvelles manières pour les Hommes d'agir sur les Machines — ou <!-- <del>pour être en phase avec l'</del> -->dans la terminologie Informatique, de leur transmettre de l'information ;</li>
+	<li>de nouvelles manières pour les Machines de transmettre de l'information aux Hommes ;</li>
+	<li>de nouvelles manières de lier réception et émission d'informations (chez l'Homme ou la Machine), afin d'aider l'autre à interpréter un comportement cohérent à partir de ces échanges.</li>
+</ul>
+<p>
+	Les deux premiers points réfèrent principalement au développement de nouveaux <i>périphériques d'interaction</i><!-- <del> <notesh>mais aussi des traitements qui leurs sont liés ?(e.g. fonctions de transfert pour les périphériques de pointage...)</notesh></del> -->, ainsi que les traitements qui leur sont liés (ex. fonctions de transfert pour les périphériques de pointage).
+	<!-- <del>Ce</del> -->Les périphériques d'interaction sont des dispositifs (physiques ou virtuels), qui captent des actions (physiques ou virtuelles), et les traduisent pour qu'elles puissent être perçues par le receveur.
+	Par exemple, la souris est un dispositif physique, qui capte les mouvements de la main, et les transmet à l'ordinateur sous forme de déplacements relatifs.
+	Le clavier de smartphone est un dispositif virtuel, qui capte les appuis sur écran tactile, et les transmet à l'ordinateur sous forme d'entrée de texte.
+	Enfin, l'écran est un périphérique physique, qui capte des matrices de couleurs (les pixels), et les transmet à l'utilisateur sous forme de points lumineux.
+</p>
+<p>
+	Le dernier point — la cohérence entre réception et émission — fait référence aux <i>techniques d'interaction</i>.
+	Ce sont généralement des programmes informatiques, qui expriment des réactions complexes à partir de règles simples “<i>si je reçois A, alors j'émets B</i>”.
+	Les techniques d'interaction sont idéalement <i>cohérentes</i>, c'est-à-dire que les utilisateurs peuvent anticiper leur fonctionnement avant d'avoir interagi<!-- <del> <notesh>mais aussi comprendre ce qui se passe pendant l'interaction. Là tu peux citer le <a href="https://www.interaction-design.org/literature/book/the-glossary-of-human-computer-interaction/gulf-of-evaluation-and-gulf-of-execution">"Gulf of Evaluation"</a> de Norman (et aussi probablement faire un rapprochement avec le Gulf of Execution sur la phrase précédente)</notesh></del> -->, et comprendre ce qui se passe pendant l'interaction.
+	Par exemple si on clique sur un menu déroulant, on s'attend à ce qu'une liste d'options s'affiche, et que l'option visuellement mise en valeur soit celle sélectionnée.
+	Lorsque l'intention de l'utilisateur ne correspond pas très bien à ce que propose la technique, on parle de “Gulf of Execution”, et lorsque la technique ne communique pas très bien son état courant, on parle de “Gulf of Evaluation” [<a href=#norman_design_1988>Nor88</a>].
+	Notons enfin qu'on parle majoritairement du comportement de la Machine vue par l'Homme, et rarement l'inverse, ce qu'Hornbæk et al. synthétisent par « <i>There is little “C” in HCI</i> » [<a href=#hornbaek_what_2017>Hor17</a>].
+</p>
+
+<!-- <del><sh>Pas mal du tout cette première section... on se demande encore où et comment tu vas aller, mais c'est une bonne synthèse concise qui donne très envie de lire la suite !</sh></del>
+
+<del><sh id="rqueCtx">Ça manque tout de même d'une transition avec la suite, tu passes d'une réflexion de haut niveau sur l'interaction à une définition beaucoup plus pragmatique et caractérisée "technologie" d'une technique d'interaction. Il faudrait peut-être une phrase ou deux pour lier tout ça en expliquant par exemple rapidement pourquoi tu te concentres sur les aspects pratiques et que tu as besoin d'une définition/caractérisation des techniques d'interaction plutôt que de "l'interaction" (notion encore de trop haut niveau pour la modéliser, mais ce serait quand même intéressant...). Ça me fait penser que globalement, il faudrait aussi discuter une peu de la notion du contexte de développement de l'interaction, qui ne nécessite peut-être pas les mêmes outils et approches selon les cas (e.g. mobile vs bureau vs RV vs tangible, etc.) et que donc cela soulève la question d'un outil/modèle pour tout (qui nécessitera donc d'arriver à mieux définir et caractériser la notion d'interaction dans un système, et pour ça il y par exemple les modèles comme l'Interaction Instrumentale, mais c'est compliqué à concrétiser sous forme d'outils) ou de plusieurs outils pour des contextes données (et pour cela il y a les caractérisations que tu donnes ensuite, des études de contextes particuliers, etc. mais qui  peuvent éventuellement avoir une base/un modèle unifiant commun: ECS ?).</sh></del> -->
+<!--
+	_ Pourquoi se concentre-t-on sur les techniques d'interaction plutôt que les périphériques ?
+		-> elles sont les plus représentatives de la programmation d'interactions
+	_ Peut-on réduire la programmation d'interactions à celle de techniques d'interaction ?
+	_ Et les interfaces dans tout ça ?
+-->
+<p>
+	Parce qu'elles s'expriment généralement en programmes, les techniques d'interaction sont les plus représentatives de la programmation d'interactions : ce sont des programmes qui interagissent avec des utilisateurs.
+	Quant aux périphériques d'interaction, ce sont souvent des objets physiques plutôt que des programmes, et dans notre caractérisation ci-dessus ils ont pour rôles de transmettre plutôt qu'interagir — d'où leur qualité de “périphériques”.
+	En pratique lorsqu'ils sont l'<i>objet</i> de l'interaction plutôt que le <i>moyen</i>, nous les considérons comme des techniques d'interaction.
+	Par exemple, nous pouvons dire que le clavier virtuel est un périphérique d'interaction, mais que l'étude de l'utilisation de gestes pour y saisir des mots est une technique d'interaction [<a href=#zhai_word-gesture_2012>Zha12</a>].
+	Ainsi dans cette thèse nous nous concentrons principalement sur les techniques d'interaction.
+</p>
+<p>
+	Enfin, nous parlons souvent de programmation d'<i>interfaces</i> conjointement aux interactions.
+	La distinction entre les deux termes est historique : on parlait autrefois d'Interfaces Homme-Machine, puis le sens s'est généralisé avec Interactions Homme-Machine (bien que le premier sens soit encore souvent utilisé).
+	En effet, l'interface matérialise l'objet d'interconnexion entre humain et machine, alors que l'interaction désigne plus largement la situation autour.
+	Dans notre cas, la programmation résulte toujours en du code concret.
+	En conséquence, lorsque nous programmons de l'interaction, elle sera nécessairement matérialisée par une interface.
+	Lorsqu'elle est visible sur un écran, on parle d'interface graphique (<i>Graphical User Interface</i>).
+	Dans le sens commun, la différence entre une interface et une technique d'interaction est que la première est le siège d'un plus grand nombre d'interactions — on développe souvent une technique d'interaction <i>pour</i> une interface.
+	Nous choisissons donc de nous intéresser à cette brique de base, qu'il nous faut à présent décrire plus précisément, pour comprendre l'activité de prototypage qui nous intéresse.
+</p>
+
+<h3>Caractérisation des techniques d'interaction</h3>
+
+<p>
+	Tucker [<a href=#tucker_computer_2004>Tuc04</a>] définit les techniques d'interaction ainsi : « <i>An interaction technique is the fusion of input and output, consisting of all software and hardware elements, that provides a way for the user to accomplish a task</i> »<!-- <del> <notesh>Tu peux aussi mentionner que c'est une définition pragmatique et bas-niveau, assez centrée technologie, communément admise depuis celle du Foley Vandamme Feiner Hughes (Computer graphics Principles and Practice) en 1991 ("le moyen de se servir d'un périphérique d'entrée pour accomplie une tâche")</notesh></del> -->.
+	Cette définition est une caractérisation pragmatique et liée à la technologie, qui délimite bien l'objet initial de notre étude.
+	Il existe de très nombreux travaux pouvant être qualifiés de techniques d'interaction, qui ont donné lieu à de nombreuses classifications dans la littérature scientifique [<a href=#jaimes_multimodal_2007>Jai07</a>, <a href=#jankowski_survey_2013>Jan13</a>, <a href=#bailly_visual_2016>Bai16</a>].
+	De plus, il existe des contextes de développement distincts pour chaque technique d'interaction, avec des modalités d'interaction distinctes (ex. applications de bureau avec clavier/souris/écran, applications mobiles avec doigt/écran, Réalité Virtuelle avec manette/casque).
+	Pour donner une vue d'ensemble des techniques d'interaction sans entrer dans les détails des différents contextes, nous les associons par les <i>types de tâches</i> qu'elles permettent d'accomplir, qui sont représentés partout.
+	<!-- <del>Nous pouvons néanmoins en distinguer plusieurs types :</del> -->
+	Ainsi nous pouvons distinguer :
+</p>
+<ul>
+	<li>les techniques de menus (voir <a href=#fig-menus>figure</a>)</li>
+	<li>les techniques de pointage (voir <a href=#fig-pointage>figure</a>)</li>
+	<li>les techniques de navigation (voir <a href=#fig-navigation>figure</a>)</li>
+	<li>les techniques de sélection (voir <a href=#fig-selection>figure</a>)</li>
+	<li>les techniques d'apprentissage/<i>feedforward</i> (voir <a href=#fig-feedforward>figure</a>)</li>
+	<li>les techniques d'édition (voir <a href=#fig-edition>figure</a>)</li>
+</ul>
+<figure id=fig-menus>
+	<img src=figures/menu1.jpg style="width:5.5cm">
+	<img src=figures/menu2.png style="width:3cm">
+	<img src=figures/menu3.png style="width:5.5cm">
+	<figcaption>Illustation de trois techniques de menus, de gauche à droite : menu déroulant de macOS, menu circulaire, et <i>Flower Menu</i> [<a href=#bailly_flower_2008>Bai08</a>]</figcaption>
+</figure>
+<figure id=fig-pointage>
+	<img src=figures/pointage1.png style="width:2cm">
+	<img src=figures/pointage2.png style="width:7cm">
+	<img src=figures/pointage3.svg style="width:5cm">
+	<figcaption>Illustration de trois techniques de pointage, de gauche à droite : pointage par survol, <i>Bubble Cursor</i> [<a href=#grossman_bubble_2005>Gro05</a>], et <i>Semantic Pointing</i> [<a href=#blanch_semantic_2004>Bla04</a>]</figcaption>
+</figure>
+<figure id=fig-navigation>
+	<img src=figures/navigation1.png style="width:5cm">
+	<img src=figures/navigation3.jpg style="width:6cm">
+	<figcaption>Illustration de deux techniques de navigation, de gauche à droite : onglets de navigateur Web, et téléportation d'avatar en Réalité Virtuelle dans Unity</figcaption>
+</figure>
+<figure id=fig-selection>
+	<img src=figures/selection1.png style="width:5.5cm">
+	<img src=figures/selection2.jpg style="width:2.5cm">
+	<img src=figures/selection3.png style="width:6cm">
+	<figcaption>Illustration de trois techniques de sélection, de gauche à droite : sélection de texte, sélection par lasso de Photoshop, et sélection d'éléments par <i>relaxation de requête</i> [<a href=#heer_generalized_2008>Hee08</a>]</figcaption>
+</figure>
+<figure id=fig-feedforward>
+	<img src=figures/feedforward1.png style="width:3.5cm">
+	<img src=figures/feedforward2.jpg style="width:4.5cm">
+	<img src=figures/feedforward3.png style="width:4.5cm">
+	<figcaption>Illustration de trois techniques d'apprentissage/<i>feedforward</i>, de gauche à droite : infobulle lors du survol du curseur sur un élément interactif, <i>ExposeHK</i> [<a href=#malacria_promoting_2013>Mal13</a>], et <i>Octopocus</i> [<a href=#bau_octopocus_2008>Bau08</a>]</figcaption>
+</figure>
+<figure id=fig-edition>
+	<img src=figures/edition1.png style="width:4.5cm">
+	<img src=figures/edition2.png style="width:4.5cm">
+	<img src=figures/edition3.png style="width:4cm">
+	<figcaption>Illustration de trois techniques d'édition, de gauche à droite : écriture de texte au clavier, dessin au pinceau dans Gimp, et <i>Toolglass</i> [<a href=#bier_toolglass_1993>Bie93</a>]</figcaption>
+</figure>
+<p>
+	Enfin, lorsqu'on parle de techniques d'interaction aujourd'hui il faut mentionner l'influence majeure du paradigme WIMP (<i>Windows, Icons, Menus, Pointer</i>).
+	Ce paradigme, développé dès 1973 avec le système Xerox Alto, et popularisé par le Macintosh en 1984, a posé les bases de nos manières d'interagir avec les ordinateurs.
+	Il définit un environnement virtuel <!-- <del><notesh>inspiré du "bureau" et à l'origine destiné aux employés de bureaux</notesh></del> -->inspiré du bureau de travail, et à l'origine destiné aux employés de bureau. Celui-ci est constitué de <i>fenêtres</i> déplaçables et redimensionnables, d'<i>icônes</i> interactives représentant les éléments à manipuler (fichiers, programmes), de <i>menus</i> permettant d'énumérer, sélectionner et exécuter des commandes, ainsi qu'un <i>curseur</i> contrôlé par la souris, qui permet d'interagir directement avec l'environnement virtuel.
+	Grâce à sa simplicité d'apprentissage et d'utilisation, ainsi que son adaptabilité à de nombreux contextes, le paradigme WIMP s'est très largement imposé sur les systèmes interactifs modernes, devenant une norme <i>de facto</i>.
+	La plupart des techniques d'interaction s'<i>intègrent</i> donc avec ce paradigme, en proposant des artefacts qui puissent cohabiter au sein de systèmes WIMP.
+</p>
+<p>
+	Le succès du paradigme WIMP a permis l'uniformisation de l'expérience d'utilisation sur les différents systèmes (Windows, MacOS, Linux, etc.).
+	En revanche il a aussi été suivi d'une cristalisation des techniques d'interaction autour de concepts bien établis, donnant lieu à des interfaces graphiques stéréotypées, et à des innovations en apparence moins ambitieuses qu'autrefois.
+	En réaction à ce phénomène, des techniques d'interaction dites “post-WIMP” ont été développées [<a href=#van_dam_post-wimp_1997>Dam97</a>], avec pour ambitions de redéfinir plus profondément nos manières d'interagir avec les ordinateurs.
+	Ces travaux ont en outre mené à reconsidérer les manières de <i>programmer</i> des techniques d'interaction, et sont le point d'origine du sujet de cette thèse [<a href=#huot_flexibilite_2006>Huo06</a>].
+</p>
+
+<h3>Programmation d'interactions</h3>
+
+<!--
+	_ développement -> programmation
+	_ Qu'est-ce qu'un programme ?
+	_ Comment crée-t-on une technique d'interaction ?
+	_ Comment la recherche supporte-t-elle le développement de nouvelles interfaces et techniques d'interaction ? (démonstrations, architectures, langages, toolkits, dynamisme des communautés de recherche/conférences)
+-->
+<p>
+	Nous en venons au développement de nouvelles interaction, et plus particulièrement à leur programmation.
+	Dans un système informatique, la majorité des réactions aux actions de l'utilisateur sont exprimées par des programmes.
+	Certaines réactions sont spécifiées mécaniquement (la sensation du “clic” de souris), et d'autres électriquement (l'allumage d'une led lorsque l'ordinateur est sous tension), mais une fois conçues il est très difficile de les modifier.
+	Ce sont donc principalement par des programmes que les <!-- <del><notesh>concepteurs et les</notesh></del> --> chercheurs et concepteurs développent de nouvelles interactions avec les systèmes informatiques.
+	Nous parlerons aussi de programmation d'IHMs, ou lorsqu'elles sont spécifiques aux interfaces graphiques, de programmation d'interfaces.
+</p>
+<p>
+	Un programme est une séquence d'instructions, qui envoyées une par une au processeur central (CPU), permettent de le contrôler en lui faisant exécuter des tâches simples (lire/écrire vers la mémoire, faire des opérations sur des nombres, communiquer avec des périphériques branchés).
+	Chaque programme s'exprime dans un <i>langage de programmation</i>, qui définit une syntaxe par laquelle on spécifie les différentes instructions à exécuter.
+	Il existe de très nombreux langages de programmation, qui se distinguent par les manières de raisonner avec, ainsi que leurs contextes d'utilisation.
+	Cependant, nous pouvons citer les langages principalement utilisés aujourd'hui pour exprimer des techniques d'interaction : C/C++, Java, Python, C#, JavaScript, et Objective-C.
+</p>
+<p>
+	La conception d'une nouvelle technique d'interaction implique de décrire au préalable son fonctionnement, voire de le modéliser à l'aide d'outils mathématiques.
+	Nous nous intéressons uniquement à la programmation, c'est-à-dire une fois que la technique est modélisée, son expression en code.
+	La programmation d'une nouvelle technique d'interaction met en œuvre un certain nombre d'étapes :
+</p>
+<ul>
+	<li>On crée des éléments “visibles” (le plus souvent à l'écran), qui suggèrent par leur présence qu'une interaction avec eux ou l'environnement est possible.</li>
+	<li>On énumère les actions sur les éléments visibles auxquelles réagir, et pour chacune on définit un sous-programme à exécuter lors de son déclenchement.</li>
+	<li>Après exécution du sous-programme d'une action, on met à jour les éléments visibles et on en crée éventuellement de nouveaux.</li>
+</ul>
+<p>
+	Pour réaliser ces étapes, on utilise un langage, ainsi qu'une bibliothèque logicielle permettant de détecter les actions des utilisateurs et d'enregistrer des programmes à exécuter sur actions.
+	Ce type de bibliothèques fournit des services liés à la gestion des entrées et des sorties avec les périphériques d'interaction, qui les rendent indispensables pour programmer des interactions.
+	On y distingue communément les <i>frameworks</i> et les <i>boîtes à outils</i>.
+</p>
+
+<!--<traf>La section suivante est déplacée depuis la section 1.5</traf>
+<sh>Oui, ça marche bien d'avoir mis cette section ici</sh>-->
+
+<h3>Frameworks et boîtes à outils</h3>
+
+<!-- Qu'est-ce qu'un framework ?
+	_ La manière dont on l'emploie est floue et relève du sens commun
+	_ De façon générale, un framework est associé à : une bibliothèque qu'on ne peut pas utiliser avec d'autres frameworks, une bibliothèque qui conserve le contrôle quand la machine ne fait rien, une bibliothèque qui est conçue comme un cadre de développement (cadriciel) plutôt que comme une collection de fonctions, nécessite d'adapter les autres bibliothèques à son fonctionnement (concepts) par des mécanismes d'extensions
+	_ Beaucoup considèrent l'inversion de contrôle comme une caractéristique définissant, et c'est vrai que ça caractérise bien l'exclusivité des frameworks
+	_ Cependant, il faut clarifier l'inversion de contrôle par rapport à l'utilisation de callbacks
+-->
+<p>
+	Les “frameworks” et “boîtes à outils” sont des termes relativement flous, utilisés pour désigner des bibliothèques logicielles respectivement de grandes et petites tailles.
+	Pour simplifier dans ce manuscrit, nous qualifions de boîte à outils ce qui n'est pas un framework, et nous tâchons de clarifier ce qu'est un framework.
+	De façon générale, un framework est une bibliothèque logicielle qui facilite la création d'interfaces, en les déclarant comme des structures de données plutôt qu'avec du code brut.
+	Elle fournit des éléments réutilisables permettant d'assembler ou de composer avec un minimum d'efforts.
+	Dans le sens commun, un framework est une bibliothèque qui :
+</p>
+<ul>
+	<li>ne peut pas s'utiliser conjointement à d'autres frameworks ou versions d'elle-même</li>
+	<li>conserve le contrôle de l'exécution lorsque la machine ne fait rien (“ne rend pas la main”)</li>
+	<li>fournit un cadre de développement (<i>cadriciel</i>) plutôt qu'une simple collection d'outils ou de fonctions</li>
+	<li>nécessite d'adapter les autres bibliothèques à son fonctionnement (par des mécanismes d'extensions) plutôt que l'inverse</li>
+</ul>
+<p>
+	On associe parfois aux frameworks l'apport de concepts et <i>styles</i> de programmation (ex. <i>widgets</i>, <i>listeners</i>, signaux/slots dans Qt), mais ces caractéristiques ne sont pas systématiquement présentes.
+	De même, les bibliothèques qualifiées de frameworks sont souvent des projets d'envergure, dotés de fonctionnalités nombreuses et variées, mais sans qu'on puisse s'appuyer sur ces observations pour les caractériser.
+	Une seule caractéristique semble lier les points énumérés ci-dessus, c'est l'<i>Inversion de Contrôle</i>, qui est généralement reconnue comme distinctive des frameworks [<a href=#fowler_inversionofcontrol_2005>Fow05</a>, <a href=#johnson_designing_1988>Joh88</a>].
+	Avec l'Inversion de Contrôle, une application confie son code au framework pour exécution, plutôt que de l'exécuter elle-même.
+	On l'illustre par le principe d'Hollywood [<a href=#sweet_mesa_1985>Swe85</a>] : « <i>Don't call us, we'll call you</i> ».
+	Le contrôle est ainsi inversé, puisque c'est le framework qui se charge d'organiser les différentes fonctions sous sa responsabilité.
+</p>
+<p>
+	Cependant, aujourd'hui plusieurs formes d'Inversion de Contrôle existent, qui compliquent la classification des différentes bibliothèques.
+	Ainsi, dans le cas d'une bibliothèque comme JavaFX, il s'agit de fournir des objets dont les méthodes sont exécutées par le framework (les <i>widgets</i>), et aussi de fournir des blocs de code à exécuter lors du déclenchement d'évènements (les <i>callbacks</i>).
+	La bibliothèque répond aux points énoncés plus haut, on peut parler de framework.
+	Dans le cas d'une bibliothèque comme SDL [<a href=#lantinga_simple_1998>Lan98</a>], on peut aussi fournir des <i>callbacks</i> pour réagir aux évènements d'entrée, cependant la bibliothèque ne conserve pas le contrôle de l'exécution lorsque la machine ne fait rien.
+	En effet, on doit appeler la fonction <code>SDL_PollEvent()</code> régulièrement, qui exécute les <i>callbacks</i> enregistrés puis rend immédiatement le contrôle.
+	Dans ces conditions, ici on ne parle pas de framework.
+	Nous pouvons donc préciser notre définition d'un framework, qui est <b>une bibliothèque logicielle qui s'approprie de façon permanente le contrôle d'exécution de l'application, et permet l'exécution de code tiers en recevant des fonctions et méthodes de <i>callback</i></b>.
+</p>
+<p>
+	Lorsque les chercheurs prototypent de nouvelles techniques d'interaction, ils se basent nécessairement sur une ou plusieurs bibliothèques logicielles, qui leur permettent d'accéder aux périphériques d'interaction.
+	Le prototypage en IHM est donc étroitement lié aux frameworks et boîtes à outils.
+	On leur associe différents types de travaux facilitant la programmation d'interaction :
+</p>
+<ul>
+	<li>la création de nouvelles boîtes à outils d'interaction, qui peuvent à terme évoluer en <i>frameworks</i></li>
+	<li>l'invention d'outils de modélisation à haut-niveau des techniques d'interaction, qui sont ensuite éventuellement <i>transpilés</i> vers des langages de plus bas-niveau</li>
+	<li>le développement de nouvelles architectures logicielles pour les <!-- <del>boîtes à outils <notesh>et pour les systèmes interactifs en général ?</notesh></del> -->systèmes interactifs, qui peuvent en faciliter le développement et l'utilisation</li>
+	<li>le développement ou la modification de langages de programmation, qui facilitent l'utilisation de frameworks existants ou nouveaux</li>
+</ul>
+
+<!-- <del><sh>C'est bien, mais là on s'attend à des discussions sur les problématiques et l'état de l'art liés à ce que tu décris. Je suppose que ça va arriver dans la suite, il faudrait donc une petite transition pour le dire</sh></del> -->
+<p>
+	Dans ce contexte, les chercheurs ont à leur disposition de nombreux outils pour mener à bien l'exploration et le développement de nouvelles techniques d'interaction.
+	Pourquoi alors cette situation n'est-elle pas satisfaisante ?
+</p>
+
+<link rel=stylesheet href=style.css>
+<script src=scripts.js></script>
+<script>prefix_headers(1, 1)</script>

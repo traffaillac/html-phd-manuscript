@@ -1,0 +1,567 @@
+<!-- TODO: Discussion sur l'échec de l'analyse hacking -> le mot a un sens devenu assez vague (beaucoup d'utilisations, donc de sens) -->
+
+<h2>Interviews de chercheurs du domaine</h2>
+<!--
+	_ Après l'état des connaissances précédent, qu'avons nous besoin de savoir ?
+		. Un aperçu actuel de ce en quoi consiste le développement de nouvelles techniques d'interaction, pour se faire une première impression des points à améliorer
+		. Quels problèmes les chercheurs rencontrent-ils le plus, qui expliquent (avec la Problématique) pourquoi l'implémentation de techniques d'interaction innovantes est perçue comme limitante
+		. Comment pourrait-on améliorer l'état des outils dédié à la programmation d'interactions, pour favoriser le développement de NTI ?
+	_ Qu'avons-nous choisi de faire ? Context Inquiry (grounded approach)
+	_ Qu'espérions-nous obtenir ? (réponse à la 1e question, en partie la 2e)
+	_ Plan des sous-sections suivantes
+-->
+<p>
+	La première étude durant ce travail de thèse a consisté à observer et interroger des chercheurs sur la programmation de techniques d'interaction.
+	En premier lieu, nous avions besoin d'un aperçu de ce en quoi consiste le développement de techniques d'interaction dans un contexte de recherche, pour identifier des pistes de points à améliorer.
+	En second lieu, il nous fallait énumérer les problèmes que les chercheurs rencontrent le plus, qui nous aideraient à expliquer pourquoi l'implémentation de techniques d'interaction est si difficile.
+	En effet, peu de travaux on étudié en particulier la population des chercheurs en IHM.
+	De plus, alors que beaucoup se sont concentrés sur l'activité de prototypage en général, nous visons spécifiquement les frameworks utilisés par les chercheurs.
+	Ce type d'étude est inédit à notre connaissance, et nous espérons ainsi contribuer à l'amélioration des frameworks dans des contextes de recherche.
+	<!-- <del>Nous avons donc</del> -->Ainsi, nous avons d'abord choisi de conduire des <i>interviews</i> de chercheurs en IHM.
+<!-- 	<del><notesh>Justifier un peule choix de cette population, me serait-ce qu'en disant que c'est au vu des discussions de la section précédente (et en rappeler les 2-3 points importants). Il ne faut pas se priver de répéter un petit peux pour bien faire passer les idées, et aussi parce que une thèse, c'est long à lire, c'est dense, ça se lit souvent en plusieurs fois, et donc il ne faut pas hésiter à faire des synthèses et des rappels(on est cons quand on lit, on perd vite le fil  et on oublie vite les idées lues un peu avant).</notesh></del> -->
+	Nous détaillons d'abord le protocole d'étude des interviews, puis en présentons les résultats, et enfin les analysons.
+</p>
+
+<h3>Protocole de l'étude</h3>
+
+<p>
+	Cette étude se base sur les principes de la théorie ancrée (<i>grounded theory</i>) [<a href=#glaser_decouverte_2017>Gla17</a>]<!-- <del><notesh>REF</notesh></del> -->, qui consiste à collecter des données phénoménologiques, sans a priori, et y chercher des motifs récurrents et du “sens”.
+	Nous avons donc conduit des interviews de concepteurs de techniques d'interaction, en cherchant à comprendre l'activité de conception dans son ensemble.
+</p>
+
+<h4 class=break>Sélection des participants</h4>
+
+<!--
+	_ Quels types de profils de façon générale ?
+	_ Où et comment avons-nous recruté les participants ?
+	_ Quelles menaces à la validité et comment les controns-nous ?
+-->
+<p>
+	Notre étude se place dans le contexte du prototypage de nouvelles techniques d'interaction.
+	Nous avons donc cherché des participants développant ou ayant développé de nouvelles techniques d'interaction.
+	Comme critère de sélection nous demandions aux éventuels participants s'ils s'étaient sentis limités par leurs outils de programmation.
+	Ce critère n'était pas strictement nécessaire mais favorisait la sélection des candidats, car nous nous attendions à ce qu'ils aient des besoins à énoncer.
+	Nous avons recruté des chercheurs parmi les membres de notre équipe de recherche, et en priorité ceux avec le plus d'expérience.
+	Cette proximité a pu créer un “biais de proximité”, où les participants exagéreraient certains problèmes pour nous satisfaire.
+	Or la majorité des participants aux interviews étant des experts internationaux en IHM, ils sont familiers de ce type de problèmes, et nous considérons qu'ils ont su rester objectifs pour ne pas biaiser les résultats de l'étude.
+<!-- 	<del>Nous avons interrogé des chercheurs et ingénieurs en IHM, en priorité parmi ceux avec le plus d'expérience.<notesh>Dire comment ils ont été recrutés et ou.Ne pas cacher que ce sont des personnes de ton labo, et donc potentiellement au courant de tes travaux. Et tu peux balancer ce "biais de proximité" en disant que ce sont avant tout pour la plupart des experts internationaux du domaine, et qui donc sont pertinents pour cette étude, et que de plus, leur expérience des études en IHM fait qu'ils ont pu savoir comment rester objectifs d'eux-même pour ne pas biaiser l'étude (et au final, ça aurait été pareil avec des experts/chercheurs en IHM d'autres labos qui de toutes façons "comprennent" ce que tu fais).</notesh></del> -->
+	Au total, 9 interviews ont été réalisées (6 chercheurs, un ingénieur, un doctorant, et un étudiant de Master), pour une expérience moyenne en programmation de 14 ans.
+</p>
+
+<h4>Plan des interviews</h4>
+
+<!--
+	Mentionner la Critical Incident Technique
+-->
+<p>
+	Durant chaque interview, nous passions en revue 2~3 projets du participant.
+	Pour faciliter le choix, nous proposions a priori une sélection de projets, choisis parmi ceux référencés sur la page personnelle de chaque participant.
+	Nous<!-- <del>Nous proposions a priori une sélection de projets pour faciliter le choix<notesh>Comment ? Dit que c'est parmi leurs projets/publications que tu as fait une sélection</notesh>, et</del> --> demandions en particulier des projets pour lesquels ils avaient eu le sentiment de “hacker”, ou avaient été limités par leurs outils.
+	Le plan d'interview était conçu comme un guide dans le cycle de conception de chaque projet et les différentes activités mises en oeuvre, en se concentrant sur les problèmes rencontrés liés à l'utilisation de bibliothèques d'interaction.
+	Ce plan accompagnait une analyse exploratoire, destinée à abstraire les problèmes du cadre d'une bibliothèque d'interaction en particulier.
+	Néanmoins, nous avons aussi cherché à comprendre comment les programmeurs perçoivent leur activité, dans le cadre de la conception de nouvelles techniques d'interaction.
+	Le plan prévoyait donc aussi de demander à chaque participant de définir les notions de <i>hacking</i> (ou bidouillage) et <i>bas niveau</i> dans ses projets (voir le plan en <a href=#Ax1>annexe</a>).<!-- <del><notesh>mettre le plan d'interview en annexe et le référencer ici</notesh></del> -->
+</p>
+<p>
+	Les interviews étaient semi-directives [<a href=#wengraf_qualitative_2001>Wen01</a>]<!-- <del><notesh>REF</notesh></del> -->, pour laisser à l'interrogateur le soin d'approfondir un aspect pertinent si nécessaire.
+	Le plan abordait les points suivants : choix du framework, nature et nombre des réécritures de code<!-- <del><notesh>réécritures de quoi, du code ?</notesh></del> -->, nature du prototype initial, ambitions initiales et réalisation effective<!-- <del>réalité<notesh>et réalisation effective?</notesh></del> -->, perception du <i>hacking</i> et du bas niveau, perception de la propreté du code, ressources pour l'apprentissage du framework, et partage du code pour une communauté.
+	Ce plan était conçu comme un guide dans les différentes “étapes” d'un projet, en commençant par le choix des outils, puis les premiers prototypes, et en finissant par la diffusion du travail.
+	Il supportait ainsi une étude exploratoire de l'activité de programmation, et plus particulièrement l'utilisation de frameworks dans un contexte de recherche.
+<!-- 	<del><notesh>dire pourquoi ce plan ? de la discussion de la section précédente ? Et des hypothèses ci-dessous ?</notesh></del> -->
+	Nous avons utilisé la méthode des incidents critiques (<i>Critical Incident Technique</i>) [<a href=#chell_critical_1998>Che98</a>]<!-- <del><notesh>REF</notesh></del> --> pour aider les participants à se remémorer chaque projet ainsi que leurs principales difficultés.
+</p>
+<p>
+	De plus, nous avions un nombre d'hypothèses à tester, issues de l'expérience personnelle, pour lesquelles nous avons pris soin d'éviter d'encourager des réponses positives ou négatives de la part des participants :<!-- <del><notesh>dire d'où viennent ses hypothèses... de la discussion de la section précédente ?</notesh></del> -->
+	<ul>
+		<li>que les ambitions initiales sont souvent revues à la baisse à cause de limites des frameworks</li>
+		<li>que les participants considèreraient leur code plus sale s'ils pensaient avoir fait du <i>hacking</i><!-- <del><NOTESH>plus?</notesh> les participants considèreraient leur code "sale", plus ils ont le sentiment de faire du <i>hacking</i></del> --></li>
+		<li>que les participants préfèreraient une meilleure documentation à une meilleure API</li>
+		<li>que les participants préfèreraient partager leur code en tant que projet indépendant plutôt que l'intégrer à un projet existant</li>
+	</ul>
+</p>
+<p>
+	En pratique, les participants nous ont souvent spontanément partagé les <i>techniques</i> (ou <i>stratégies</i>) qu'ils avaient utilisées pour surmonter chacun des problèmes.
+	Bien que le plan n'était pas initialement conçu pour recueillir ces techniques, nous les avons trouvées intéressantes, et avons considéré que leur connaissance pourrait contribuer à l'amélioration des outils de programmation.
+	Nous les avons donc étudiées et classifiées durant ce travail.
+</p>
+
+
+<h4>Déroulement de l'étude</h4>
+
+<!--
+	_ Où se déroulent les entretiens ?
+	_ Avec quel matériel se déroule chaque entretien ?
+	_ Combien de personnes interviewent/répondent ?
+	_ Dans quelle langue ?
+-->
+<p>
+	Pour chaque entretien, nous avons demandé au participant d'utiliser son ordinateur de travail (portable ou de bureau), afin d'aider à remémorer le projet, et montrer du code lorsqu'approprié.
+	Les interviews se sont déroulées dans les bureaux des participants lorsqu'ils étaient inoccupés, autrement nous nous déplacions dans une pièce calme pour réduire les interférences à l'enregistrement audio.
+	Chaque entretien était mené par un seul intervenant, et un seul participant.
+</p>
+<p>
+	Tous les entretiens ont été conduits en français (langue maternelle de 8 participants), puis transcrits et analysés dans cette langue, afin de ne pas introduire de biais lié à une éventuelle traduction intermédiaire en anglais.
+	De plus, l'usage de langage familier nous a permis d'observer les <i>nuances</i> dans les propos des participants, et d'identifier avec quelles importances les différents problèmes étaient perçus.
+</p>
+
+<h4>Collecte des données</h4>
+
+<!--
+	_ Quelles données recueille-t-on ?
+	_ Pourquoi chacune des données ? (à quoi servent-elles ?)
+	_ Quelle quantité de données ?
+-->
+<p>
+	Tous les entretiens ont été enregistrés, à l'aide d'une application de microphone sur smartphone.
+	Les interviews ont duré plus d'une heure en moyenne, pour un total de 9,6h de fichiers audio.
+	Nous les avons ensuite intégralement transcrites, pour faciliter l'analyse, et pour en assurer la transparence en citant précisément l'origine de chaque observation.
+	Ces transcriptions ont dû être effectuées manuellement, faute d'outils de transcription adéquats.
+	En effet les voix enregistrées manquaient de clarté et étaient parasitées par des bruits de fond, certains participants parlaient vite, et leurs phrases étaient parfois fragmentaires.
+	Des notes prises sur papier durant chaque entretien ont facilité le travail de transcription, pour lever les ambiguïtés lorsque l'audio était difficile à interpréter.<!-- <del><notesh>Pas de prise de notes écrites en plus ?</notesh></del> -->
+</p>
+
+<h3>Analyse des données</h3>
+<!-- <del><sh>pourquoi "premiers" résultats ?</sh></del> -->
+<!--
+	De quelles connaissances sommes-nous curieux ?
+	Quel est le but de l'analyse ?
+	Comment avons-nous analysé les données pour cibler ce but ?
+	Quelles conventions éventuelles doivent être mentionnées avant de continuer ?
+-->
+<p>
+	Nous avons concentré notre analyse sur l'utilisation d'outils de programmation pour prototyper de nouvelles techniques d'interaction.
+	Notre but était de comprendre de façon générale <i>comment</i> les participants utilisaient les outils à leur disposition.
+	Nous cherchions en particulier à identifier les difficultés qu'ils avaient éprouvées, et les aspects limitants dans leurs outils.
+	Bien que les interviews soient orientées vers les problèmes rencontrés, en pratique les participants nous ont souvent décrit les moyens mis en oeuvre pour les résoudre.
+	Ce faisant, ils détaillaient leurs “astuces”, ainsi que les outils qu'ils avaient trouvés utiles pour les mettre en oeuvre.
+	Il nous a semblé que ces moyens pourraient être une connaissance utile à la communauté IHM.
+</p>
+<p>
+	Nous avons donc divisé les analyses en quatre types d'observations : problèmes, besoins, utilitaires, et stratégies.
+	À ces types s'ajoutent trois thèmes que nous cherchions à clarifier avec l'aide des participants : le bas niveau, le <i>hacking</i>, et la propreté du code.
+	L'analyse des données s'est faite dans un premier temps en extrayant des observations de chaque type depuis les transcriptions, et dans un deuxième temps en les synthétisant.
+</p>
+
+<h4>Extraction des observations</h4>
+
+<!--
+	Résumé de la première passe sur les transcriptions
+	Quelles données stockons-nous pour chaque transcription ?
+	Quels critères nous permettent de sélectionner des phrases pour chaque catégorie ?
+	Exemples de telles sélections
+	Quelles sont les différences/liens entre problèmes et besoins ?
+	Exemples d'observations à cheval entre les deux
+-->
+<p>
+	Durant cette première étape, nous avons parcouru les transcriptions de chaque interview, et extrait des observations de chaque type, dans sept fichiers.
+	Chaque observation est précédée d'un numéro de participant, et d'un numéro de ligne dans la transcription correspondante — par exemple P2:L1.
+	Le participant 1 (pilote) n'est pas inclus dans cette étude, le fichier audio n'ayant pas été correctement enregistré, et perdu ensuite.
+</p>
+<p>
+	Les <b>problèmes</b> ont été sélectionnés en relevant ce que les participants ont décrit qu'ils ne pouvaient pas faire, ou les limites perçues.
+	Par exemple, P10:L80 décrit « <i>Le mode d'interaction fonctionne, sauf que je n'avais pas le contrôle sur la vitesse de défilement</i> ».
+	Les problèmes importants ayant souvent été formulés plusieurs fois avec des termes différents, nous avons ignoré les occurences multiples.
+</p>
+<p>
+	Les <b>besoins</b> ont été principalement sélectionnés à partir des requêtes explicites des participants, par exemple P4:L206 « <i>il y aurait un machin où le système sait pour chaque méthode quel est le pourcentage d'utilisation par les développeurs en général</i> ».
+	Nous les avons également interprétés à partir de ce que les participants cherchaient à obtenir, avant d'être confrontés à des problèmes.
+	Par exemple, P3:L126 « <i>Et il y a des fréquences que je galérais à faire. Des fréquences lentes c'est difficile, parce que [...]</i> » a donné lieu au besoin “<i>Contrôler un compteur hardware en fréquence</i>”.
+	Bien que l'observation ci-dessus puisse aussi être interprétée comme “<i>Paramétrer un compteur hardware plus lent</i>”, nous avons toujours choisi le besoin le plus général pour faciliter la synthèse ensuite.
+</p>
+<p>
+	Les <b>utilitaires</b> sont les ressources et bibliothèques utilisées par les participants <i>en compléments</i> des bibliothèques d'interaction, pour le prototypage de nouvelles techniques d'interaction.
+	Nous avons relevé des bibliothèques, comme P2:L34 « <i>API d'accessibilité pour intercepter les activations de commandes</i> ».
+	Nous avons aussi relevé des patrons de conception, comme P6:L47 « <i>Et après on a aussi utilisé décorateur, il n'était pas là, c'est moi qui l'ai ajouté [...]</i> ».
+	Plus loin dans cette analyse, nous classifions les différents types de ressources utiles énumérées dans cette étude.
+</p>
+<p>
+	Les <b>stratégies</b> sont les actions prises après chaque problème ou limitation énoncés.
+	Comme pour les utilitaires, ce type d'observation est sujet à interprétation.
+	Nous avons relevé de façon générale les actions mettant en oeuvre les frameworks, qui allaient à l'encontre des pratiques recommandées et documentées.
+	Plus loin nous identifions des motifs récurrents et les classifions.
+</p>
+<p class=break>
+	Les points sur le <b>bas niveau</b>, le <b>hacking</b>, et la <b>propreté du code</b>, ont été relevés à partir des réponses aux questions dédiées.
+	Par la nature semi-directive des interviews, ces questions étaient secondaires et n'ont pas systématiquement été posées.
+	Elles nous servent principalement à clarifier les différents aspects de l'activité de conception de techniques d'interaction.
+</p>
+
+<h4>Synthèse des observations</h4>
+
+<!-- TODO: Expliquer que certains points sont borderline mais qu'au pire on a essayé de ne pas sur-interpréter (ajouter des problèmes alors qu'ils n'ont pas été explicitement dits) -->
+<!--
+	_ Quel est l'état des données ?
+	_ Les observations sont encore très factuelles
+	_ Il s'agit maintenant de les regrouper en catégories, pour pouvoir les synthétiser dans une page
+	_ Problèmes formulés en fonction des domaines d'ingénierie des frameworks
+	_ Stratégies formulées à partir d'aspects de l'activité de recherche, qui s'appliquaient à de nombreux points
+	_ Le nombre d'occurences n'est pas le nombre de fois qu'un type de problème a été mentionné, mais le nombre de problèmes /uniques/ s'y rapportant, d'où le faible nombre en apparence
+-->
+<p>
+	À l'issue de la phase d'extraction des observations, nous sommes passés de 2519 lignes de transcriptions dans 9 fichiers, à 276 lignes d'observations dans 7 fichiers.
+	À ce niveau les observations sont factuelles, il a fallu les regrouper en catégories, pour pouvoir les synthétiser ensuite.
+	Nous avons donc cherché des motifs récurrents entre les observations, et avons classifié les quatre types d'observations dans des tableaux inspirés de [<a href=#duala-ekoko_asking_2012>Dua12</a>], en se concentrant sur l'importance relative entre les items plutôt que leur prévalence dans le groupe de chercheurs étudiés.
+	Dans chaque tableau, le nombre de participants ayant été concernés par chaque point est indiqué, ainsi que le nombre total d'observations s'y rapportant.
+	Chaque point est illustré par une des observations qu'elle synthétise.
+	Enfin il faut rappeler que le nombre d'observations n'est pas le nombre de fois que chaque type d'observation a été mentionné, mais bien le nombre d'observations <i>uniques</i>, d'où les nombres faibles en apparence.
+</p>
+<p>
+	Pour les <b>problèmes</b> (<a href=#tab-problemes>tableau</a>), nous avons formé un premier niveau de catégories à partir des différentes étapes d'ingénierie d'une bibliothèque logicielle : définition des fonctionnalités, API, documentation, évolutivité, correction de bugs, et architecture interne.
+	Dans ces catégories, nous avons classé les observations en 25 sous-catégories, formant les <i>types de problèmes</i> rencontrés par les personnes que nous avons interrogées.
+</p>
+<p>
+	Pour les <b>besoins</b>, après l'extraction des observations il nous est apparu que les problèmes en étaient fortement corrélés.
+	Par exemple, au problème “<i>P2 : La tooltip est un objet statique au framework, qui ne peut être instanciée qu'une fois, et ne peut donc pas être utilisée simultanément en plusieurs endroits</i>” correspond le besoin “<i>P2 : Afficher un texte à côté de plusieurs boutons, dans le style des tooltips</i>”.
+	<!--Certains besoins n'étaient toutefois pas liés à des problèmes énoncés, par exemple “<i>P6 : Pouvoir bloquer les évènements système, et réinjecter de nouveaux</i>”.-->
+	Comme nous avons relevé plus de problèmes que de besoins (principalement grâce à la méthode des incidents critiques), nous avons choisi de nous concentrer sur les premiers.
+</p>
+<p>
+	Pour les <b>utilitaires</b> (<a href=#tab-utilitaires>tableau</a>), nous avons classé les observations en fonction de ce que permettent les outils de programmation, en nous aidant du premier niveau de catégories des types de problèmes.
+	Étant donné que seules 28 observations ont été recueillies, cette classification n'a pas pour but d'être exhaustive, mais d'alimenter les suggestions d'outils pour aider au prototypage de techniques d'interaction.
+</p>
+<p>
+	Pour les <b>stratégies</b> (<a href=#tab-strategies>tableau</a>), nous avons formulé des catégories initiales à partir de verbes d'action (ex. intercepter, reproduire, détourner, ou combiner).
+	Nous les avons ensuite raffinées et regroupées en trois groupes (Obtention de données, Interaction avec d'autres bibliothèques/outils, et Utilisation opportuniste), afin de faciliter leur lecture dans le tableau.
+</p>
+<!-- 
+<del><sh>RàS depuis un moment, je trouve que c'est bien écrit et décrit ton protocole d'analyse !</sh></del> -->
+
+<table id=tab-problemes style="font-size:x-small">
+	<tr><th>Problèmes</th><th>participants</th><th>observations</th></tr>
+	
+	<tr style="border-top: 1pt solid black"><th colspan=3>Fonctionnalités</th></tr><!-- Qu'est-ce que le système peut faire -->
+	<tr><td>Comportement insuffisamment déterministe/spécifié — <i>P3 : Parfois le framework laisse passer des press sans release, parfois des release sans press</i></td><td>4</td><td>6</td></tr><!-- 7,16,43,56,65,66 -->
+	<tr><td>Absence d'une fonctionnalité utile au prototypage — <i>P7 : diff ne supporte pas les déplacements</i></td><td>4</td><td>5</td></tr><!-- 8,48,52,55,74 -->
+	<tr><td>Mauvais choix d'ingénierie compliquant le travail — <i>P3 : L'horloge sur Arduino est gérée en software, la rendant sensible aux ralentissements user</i></td><td>4</td><td>5</td></tr><!-- 14,15,27,54,73 -->
+	<tr><td>Inadéquation entre offre et demande — <i>P6 : Les trackpads Apple donnent un déplacement relatif plutôt qu'absolu</i></td><td>3</td><td>3</td></tr><!-- 30,46,69 -->
+	
+	<tr style="border-top: 1pt solid black"><th colspan=3>API</th></tr><!-- Comment on peut demander au système de le faire -->
+	<tr><td>API incohérente/illogique — <i>P7 : Un appui long sur une flèche clavier se traduit par une séquence d'évènements, plutôt qu'un évènement avec durée</i></td><td>3</td><td>4</td></tr><!-- 5,49,50,82 -->
+	<tr><td>API insuffisamment contrôlable — <i>P10 : Impossibilité de contrôler la vitesse de scroll lors d'un drag</i></td><td>3</td><td>6</td></tr><!-- 45,72,75,78,79,86 -->
+	<tr><td>Fonctions/données cachées/interdites au programmeur — <i>P2 : Certains évènements système ne sont pas observables par les applications (ex: coins actifs)</i></td><td>5</td><td>6</td></tr><!-- 6,12,22,38,42,58 -->
+	<tr><td>API fournissant trop de données — <i>P4 : Les structures de données des APIs Windows sont "un peu barbares", il est difficile de savoir comment les utiliser</i></td><td>1</td><td>1</td></tr><!-- 24 -->
+	<tr><td>API trop complexe à l'usage — <i>P4 : Le GridBagLayout est trop complexe pour être utilisable</i></td><td>1</td><td>2</td></tr><!-- 23,30 -->
+	<!--<tr><td>Trop de moyens d'obtenir la même information</td><td>1</td><td>1</td></tr>--><!-- 21 -->
+	
+	<tr style="border-top: 1pt solid black"><th colspan=3>Documentation</th></tr>
+	<tr><td>Manque de contexte et d'exemples — <i>P5 : Manque de documentation claire pour créer un évènement custom pour Qt</i></td><td>3</td><td>6</td></tr><!-- 33,37,44,62,80,85 -->
+	<tr><td>Documentation fragmentée/parcellaire — <i>P4 : L'information est "parcellaire", on la récupère au fur et à mesure depuis différentes sources</i></td><td>2</td><td>2</td></tr><!-- 9,26 -->
+	<tr><td>Outils de documentation insuffisants/passifs — <i>P4 : A partir du nom d'une méthode, "ok je fais comment"</i></td><td>2</td><td>3</td></tr><!-- 31,32,61 -->
+	<tr><td>Comportement significatif non documenté — <i>P9 : Vicon ne documente pas tous ses formats de données utiles</i></td><td>3</td><td>4</td></tr><!-- 53,68,81,84 -->
+	<tr><td>Recherche demandant trop d'investissement — <i>P5 : Étendre les signaux/slots à des évènements custom demande beaucoup de travail</i></td><td>3</td><td>5</td></tr><!-- 25,35,36~,63,64 -->
+	
+	<tr style="border-top: 1pt solid black"><th colspan=3>Limites et inconsistances</th></tr>
+	<tr><td>Problème de changement d'échelle — <i>P2 : La tooltip est un objet statique au framework, qui ne peut être instanciée qu'une fois, et ne peut donc pas être utilisée simultanément en plusieurs endroits</i></td><td>4</td><td>4</td></tr><!-- 2,11,28,76 -->
+	<tr><td>Limitation artificielle (codée) du framework — <i>P2 : Le dessin d'un bouton est clampé aux bornes du bouton</i></td><td>2</td><td>2</td></tr><!-- 3,41 -->
+	<tr><td>Comportement inconsistant dans le temps (versions) — <i>P8 : Abandon par Apple de la rétro-compatibilité avec l'API Carbon</i></td><td>2</td><td>4</td></tr><!-- 19,57,58,60 -->
+	<tr><td>Fonctionnalité inconsistante entre Systèmes — <i>P7 : L'utilisation du scrolling (molette) sous Java est difficile entre Windows et Mac</i></td><td>2</td><td>2</td></tr><!-- 45,51 -->
+	
+	<tr style="border-top: 1pt solid black"><th colspan=3>bugs et ralentissements</th></tr>
+	<tr><td>Fonction documentée donnant un mauvais résultat — <i>P4 : Sous Windows, la densité de pixels donnée par les fonctions système est fausse</i></td><td>2</td><td>2</td></tr><!-- 17,47 -->
+	<tr><td>Erreur/plantage non déterministe — <i>P5 : Les callbacks des sockets réseau de Qt ne fonctionnent pas tout le temps</i></td><td>1</td><td>1</td></tr><!-- 39 -->
+	<tr><td>Comportement inutilement/anormalement lent — <i>P5 : L'utilisation d'un thread dédié pour lire un port série fait lagger Qt</i></td><td>4</td><td>5</td></tr><!-- 10,40,67,71~,82 -->
+	<tr><td>Instrumentation coûteuse en performances — <i>P5 : Pour des applications interactives lourdes, le debugger et Valgrind nécessitent trop d'efforts et de ressources machine</i></td><td>1</td><td>1</td></tr><!-- 34 -->
+	
+	<tr style="border-top: 1pt solid black"><th colspan=3>Aspects internes</th></tr><!-- Situations où le participant a interagi avec les données internes d'une couche -->
+	<tr><td>Interférence non anticipée d'un comportement interne — <i>P3 : Les timers préconfigurés par Arduino interfèrent avec les timers utilisateurs</i></td><td>2</td><td>3</td></tr><!-- 13,14,84 -->
+	<tr><td>Manque de stockage des traces d'exécution — <i>P2 : Un déclenchement de commande ne conserve pas l'historique des activations qui ont conduit à son occurence</i></td><td>1</td><td>1</td></tr><!-- 1 -->
+	<tr><td>Complexité interne compliquant l'introspection — <i>P2 : Deux éléments activant la même commande le font parfois avec des indirections</i></td><td>1</td><td>1</td></tr><!-- 4 -->
+	<caption>Différents types de problèmes observés durant les interviews</caption>
+</table>
+
+
+
+<table id=tab-utilitaires style="font-size:x-small">
+	<tr style="border-bottom: 1pt solid black"><th>Utilitaires</th><th>participants</th><th>observations</th></tr>
+	<tr><td>Outil permettant d'accéder à des données privées — <i>P2 : API d'accessibilité pour savoir quelle commande est exécutée</i></td><td>3</td><td>3</td></tr><!-- 1,6,27 -->
+	<tr><td>Classe ou protocole extensible du framework — <i>P9 : Le protocole OSC, pour ajouter des évènements custom à un flux existant</i></td><td>6</td><td>8</td></tr><!-- 3,9,10,12,16,24,25,26 -->
+	<tr><td>Comportement implicite utile — <i>P2 : Animation automatique entre des états dans CALayer</i></td><td>3</td><td>3</td></tr><!-- 4,13,20 -->
+	<tr><td>Outil de déboggage/visualisation — <i>P3 : printf pour débugr son protocole de communication basé sur du texte</i></td><td>1</td><td>1</td></tr><!-- 5 -->
+	<tr><td>Patron de conception/ingénierie — <i>P8 : Les conventions de nommage, pour économiser du temps à converger sur ses propres règles</i></td><td>5</td><td>6</td></tr><!-- 2,7,8,15,17,22 -->
+	<tr><td>Documentation active ou bien conçue — <i>P4 : Complétion de noms de méthodes pour aider à découvrir une API</i></td><td>3</td><td>4</td></tr><!-- 11,14,21,~23 -->
+	<caption>Différents types d'utilitaires relevés durant les interviews</caption>
+</table>
+
+
+
+<table id=tab-strategies style="font-size:x-small"><!-- Phénomènes liés à la programmation de NTI -->
+	<tr><th>Stratégies</th><th>participants</th><th>observations</th></tr>
+	
+	<tr style="border-top: 1pt solid black"><th colspan=3>Obtention de données</th></tr>
+	<tr><td>Instrumentation/Intrusion dans un objet/application existant — <i>P2 : Injection de code pour instrumenter les exécutions de commandes et déterminer leurs déclencheurs</i></td><td>5</td><td>5</td></tr><!-- 8,21,27,50,58 -->
+	<tr><td>Accès à des données/fonctions privées ou non-exposées — <i>P3 : Écriture de code assembleur pour accéder à des modes alternatifs des timers sur Arduino</i></td><td>5</td><td>5</td></tr><!-- 1,12,21,31,50 -->
+	<tr><td>Reconstitution de donnée à partir d'états antérieurs/bruts — <i>P4 : Décodage du descripteur HID à la main</i></td><td>5</td><td>7</td></tr><!-- 3,13,15,19,25,32,50 -->
+	<tr><td>Récupération/combinaison d'information de différentes sources — <i>P4 : Lecture des différentes APIs systèmes pour trouver celle qui renvoie les informations bas-niveau dont on a besoin</i></td><td>1</td><td>1</td></tr><!-- 18 -->
+
+	<tr style="border-top: 1pt solid black"><th colspan=3>Interaction avec d'autres bibliothèques/outils</th></tr>
+	<tr><td>Réimplémentation fonctionnelle d'un widget/mécanisme existant — <i>P5 : Dessiner ses propres widgets pour pouvoir faire des formes "bizarres"</i></td><td>7</td><td>9</td></tr><!-- 6,11,22,28,29,36,37,47,55 -->
+	<tr><td>Inhibition/remplacement d'un comportement existant — <i>P6 : Filtrage des évènements système pour bloquer et déplacer le curseur manuellement</i></td><td>3</td><td>3</td></tr><!-- 22,34,51 -->
+	<tr><td>Augmentation/modification d'un mécanisme existant — <i>P7 : Modification du widget de progress bar pour rafraîchir plus souvent</i></td><td>4</td><td>4</td></tr><!-- 23,38,44,52~ -->
+	<tr><td>Superposition d'un overlay à une application existante — <i>P2 : Utilisation d'un overlay Canvas sur le home screen d'une tablette Android pour intercepter les appuis tactiles</i></td><td>3</td><td>3</td></tr><!-- 1,39,56 -->
+	<tr><td>Extension à l'aide des outils dédiés du framework — <i>P5 : Création d'évènements custom pour Qt, avec de nouvelles métadonnées</i></td><td>1</td><td>1</td></tr><!-- 26 -->
+	<tr><td>Rétro-ingénierie (extraction de connaissances) de boîte noire — <i>P8 : Détermination de la MTU du réseau par diminution adaptative et statistiques</i></td><td>5</td><td>8</td></tr><!-- 9,16,17,20,43,54,57,58 -->
+	<tr><td>Modification de l'environnement d'un outil pour l'altérer — <i>P7 : Modifier l'horloge de son PC pour continuer à utiliser le framework</i></td><td>4</td><td>4</td></tr><!-- 30,35,40,42 -->
+
+	<tr style="border-top: 1pt solid black"><th colspan=3>Utilisation opportuniste</th></tr>
+	<tr><td>Reproduction factice d'application existante — <i>P5 : Reproduction d'une application Google Maps factice</i></td><td>2</td><td>3</td></tr><!-- 2,7,33 -->
+	<tr><td>Duplication pour contourner une limite en nombres — <i>P9 : Brancher 4 souris sur 4 ordinateurs et envoyer les évènements à un programme principal, pour gérer 4 curseurs dans une application Swing</i></td><td>2</td><td>3</td></tr><!-- 4,46,48~ -->
+	<tr><td>Détournement d'un outil/paramètre hors de son cadre prévu — <i>P2 : Ajout d'espaces dans les noms de menus pour pouvoir tous les dérouler sans qu'ils se recouvrent</i></td><td>4</td><td>5</td></tr><!-- 5,20,41,45,46 -->
+	<tr><td>Introduction d'un nouveau paradigme d'API — <i>P3 : Développement d'un parseur+protocole générique de communication basé texte (pour débugr) flexible, avec interrogation de "qui est branché à ce port" et commandes extensibles</i></td><td>3</td><td>3</td></tr><!-- 10,28,53 -->
+	<tr><td>Utilisation complémentaire d'un outil/source de bas niveau — <i>P4 : Récupération des informations brutes sur l'écran dans la base de registres</i></td><td>4</td><td>5</td></tr><!-- 12,14,25,31,41 -->
+	<tr><td>Combinaison d'outils pour réaliser une tâche plus complexe — <i>P4 : Combinaison de plusieurs gestionnaires de placement en widgets imbriqués pour réaliser un placement impossible avec chacun</i></td><td>2</td><td>2</td></tr><!-- 24,45 -->
+	<caption>Différents types de stratégies observées durant les interviews</caption>
+</table>
+
+<!--<sh>En plus du nombre de participants pour chaque observation, mettre le nombre total de participants à côté, ou le pourcentage pour donner une idée de la prévalence de l'observation ?</sh>
+
+<traf>Pas fan de ça, un ratio sous-entendrait que la prévalence peut s'extrapoler à une population plus large. Ici on ne s'intéresse qu'aux importances relatives entre items, qui nous permettent de formuler les items du questionnaire. Le layout du tableau est copié sur [<a href=#duala-ekoko_asking_2012>Dua12</a>].</traf>
+
+<sh>"un ratio sous-entendrait que la prévalence peut s'extrapoler à une population plus large" => non, je ne suis pas d'accord. Un ratio n'est qu'un ratio, il ne sous-entend rien, il ne fait que montrer le % par rapport au groupe concerné. Mais OK, mais alors il faudrait mettre la référence avant les tableaux, en disant par exemple "Nous rapportons nos analyses sous la forme de tableaux inspirés de [<a href=#duala-ekoko_asking_2012>Dua12</a>], afin de se concentrer sur l'importance relative entre les items et non de leur prévalence dans le groupe de chercheurs étudiés."</sh>-->
+
+<!-- <del><sh>Après avoir lu la suite, je trouve que ça manque encore d'un niveau d'abstraction et de discussion de ces observations... tu t'en sers bien pour le bas-niveau, mais c'est tout... Il faudrait revenir à tes 4 points/présomptions du début et les discuter en regard de ces résultats. Dans tous les cas, un niveau d'abstraction en plus ne ferai pas de mal. Là, on a l'impression qu'il y a de la matière, mais que tu ne l'exploites pas, c'est dommage. 
+Alors soit, tu expliques à la fin que c'est une étude préliminaire et ensuite que tu as approfondi avec un questionnaire, mais quand même, ça fait un peu "pas fini" dans les conclusions. 
+Et ça n'a pas besoin de faire 10 pages de plus, ce n'est pas une question de longueur, mais de niveau d'abstraction/d'interprétation.</sh></del> -->
+
+
+<h3 class=break>Résultats de l'étude</h3>
+
+<p>
+	À présent, il s'agit de discuter et interpréter ces résultats et observations afin d'en tirer les causes et implications possibles.
+	Nous abordons séparément les problèmes, utilitaires, et stratégies, puis nous nous attachons à clarifier le bas-niveau, le <i>hacking</i>, et son lien à la propreté du code.
+</p>
+
+<h4>Causes des problèmes rencontrés lors de l'utilisation d'un framework</h4>
+
+<p>
+	Dans la classification du <a href=#tab-problemes>tableau</a>, nous remarquons que de nombreux problèmes peuvent s'expliquer par une mauvaise compréhension réciproque entre les utilisateurs et les concepteurs de frameworks.
+	Tout d'abord, les problèmes <i>Comportement insuffisamment déterministe/spécifié</i>, <i>API insuffisamment contrôlable</i>, et <i>Fonctionnalité inconsistante entre Systèmes</i> montrent que les participants ont utilisé des fonctionnalités dans des conditions qui n'avaient pas été anticipées (par les concepteurs de frameworks), et probablement pas testées.
+	De plus, avec les problèmes <i>Mauvais choix d'ingénierie compliquant le travail</i> et <i>Problème de changement d'échelle</i>, les participants ont utilisé plus de ressources du framework que prévu, ce qui n'avait pas été anticipé.
+	Il y a donc un décalage entre les besoins auxquels répondent les frameworks, et les besoins des participants.
+	On ne peut néanmoins pas en conclure que ce décalage concerne la <i>perception</i> des besoins par les concepteurs de frameworks, car on peut penser qu'ils ne les prennent simplement pas en compte.
+</p>
+<p>
+	Ensuite, les problèmes <i>Recherche demandant trop d'investissement</i>, <i>Outils de documentation insuffisants/passifs</i>, et <i>API trop complexe à l'usage</i> nous montrent que certains participants ne sont pas prêts à consacrer autant de temps et d'efforts qu'il le faudrait, pour utiliser un framework comme ses développeurs l'ont prévu.
+	Il y a ainsi un décalage entre les hypothèses des développeurs sur les utilisateurs (ainsi que leur expérience d'utilisation), et la réalité.
+</p>
+<p>
+	Enfin, par les problèmes <i>Inadéquation entre offre et demande</i> et <i>API incohérente/illogique</i> nous remarquons un décalage entre ce que les participants ont voulu faire, et ce que les bibliothèques pouvaient faire.
+	Dans ce cas, il ne s'agit pas seulement de considérer le nombre de fonctionnalités de chaque bibliothèque, car les besoins des participants ont pu être influencés par ce qu'ils pensaient pouvoir faire avec.
+	Il s'agit aussi d'un manque de cohérence dans l'interface des frameworks, qui trompe les utilisateurs dans ce qu'ils veulent y faire.
+	De plus, nous considérons que le problème <i>Manque de contexte et d'exemples</i> montre que le modèle conceptuel du framework n'est pas suffisamment explicité, pour une utilisation avancée dans notre contexte d'étude.
+	Il est possible que les développeurs considèrent leur documentation plus claire qu'elle ne l'est réellement, faute d'avoir interrogé les utilisateurs concernés.
+	Ce point se rapporte ainsi au “Gulf of Execution” de Norman [<a href=#norman_design_1988>Nor88</a>].
+</p>
+
+<h4>Artefacts contribuant à l'activité de prototypage</h4>
+
+<p>
+	Parmi les outils de programmation ayant été classifiés comme utilitaires (<a href=#tab-utilitaires>tableau</a>), nous remarquons que la plupart se rapportent à des conventions et des principes unifiants, que les utilisateurs peuvent s'approprier.
+	Par exemple, dans le cas <i>Classe ou protocole extensible du framework</i>, les participants bénéficient d'une interface spécifiée explicitement.
+	Une telle interface est utile pour les développeurs du framework, qui savent précisément quels types de sous-classes ou données vont s'y attacher, les cas imprévus étant exclus.
+	Elle est aussi utile pour les utilisateurs du framework, qui y découvrent comment communiquer avec le framework, de façon complète et non ambiguë.
+	Dans le cas <i>Comportement implicitement utile</i>, ce sont des conventions du framework, définies explicitement ou non, mais qui sont normalement appliquées de façon cohérente dans tout le framework.
+	Par exemple, pour <i>P2 : Animation automatique entre des états dans CALayer</i>, le participant a pu considérer que toute animation souhaitée pourrait s'exprimer par une simple assignation de variable, plutôt que d'avoir à vérifier au cas par cas comment animer chaque propriété.
+</p>
+<p>
+	De telles conventions sont essentielles dans un framework.
+	Elles forment les éléments du <i>langage</i> avec lequel les utilisateurs expriment des interfaces et des interactions.
+	Lorsqu'elles sont suffisamment bien spécifiées, il est possible de les extrapoler dans des situations inédites, en sachant comment elles vont s'y appliquer.
+	Elles permettent donc aux chercheurs de s'approprier le framework, voire de le détourner pour y exprimer de nouveaux usages.
+	Nous illustrons ce point en <a href=#sec2x4>section 2.4</a>, avec la convention de nommage des propriétés des widgets.
+</p>
+
+<h4>Interprétations des types de stratégies observées</h4>
+
+<p>
+	Dans le <a href=#tab-strategies>tableau</a>, de nombreuses stratégies s'apparentent à la pratique du développement de <i>mashups</i> évoquée dans l'état de l'art.
+	En particulier, <i>Détournement d'un outil/paramètre hors de son cadre prévu</i>, <i>Combinaison d'outils pour réaliser une tâche plus complexe</i>, <i>Superposition d'un overlay à une application existante</i>, et <i>Modification de l'environnement d'un outil pour l'altérer</i>.
+	Les participants abstraient ainsi le fonctionnement des différents outils et fonctions, pour les combiner et les détourner.
+	Ce faisant, ils peuvent éventuellement construire un modèle mental approximatif simplifié d'un composant, afin de faciliter son appropriation - cf. stratégie <i>Rétro-ingénierie (extraction de connaissances) de boîte noire</i>.
+	Par exemple, pour <i>P8 : Détermination de la MTU du réseau par diminution adaptative et statistiques</i>, le participant a pu réduire un comportement complexe (la taille maximale des paquets pouvant transiter par Internet varie en fonction des routes prises), à une donnée simple à mémoriser (une valeur maximale de cette taille).
+</p>
+<p>
+	Par ailleurs, nous observons que les participants ont souvent pris l'opportunité de réutiliser leurs propres connaissances, en particulier avec les stratégies <i>Introduction d'un nouveau paradigme d'API</i>, <i>Duplication pour contourner une limite en nombres</i>, et <i>Réimplémentation fonctionnelle d'un widget/mécanisme existant</i>.
+	Ils travaillent ainsi en terrain familier, souvent au prix d'une entorse aux pratiques recommandées du framework.
+	Avec cette observation, nous considérons que les frameworks devraient faciliter leur réappropriation par les programmeurs, plutôt que de chercher à contraindre une manière unique de programmer.
+	Nous rejoignons ici l'Interaction Instrumentale de Beaudouin-Lafon [<a href=#beaudouin-lafon_instrumental_2000>Bea00</a>], et en particulier les principes de <i>réification</i>, <i>polymorphisme</i>, et <i>réutilisation</i>, qui sont très pertinents dans notre contexte [<a href=#beaudouin-lafon_reification_2000>Bea00</a>].
+</p>
+<p>
+	Pour finir, nous remarquons qu'avec les stratégies <i>Inhibition/remplacement d'un comportement existant</i>, <i>Réimplémentation fonctionnelle d'un widget/mécanisme existant</i>, et <i>Reproduction factice d'application existante</i>, les participants ont amené le système dans un état contrôlé avant de développer dessus.
+	Il s'agit dans ce cas de <i>réinitialiser</i> une partie du framework, pour éliminer toute interférence de comportements existants.
+	Dans le cas de la réimplémentation d'un widget, on part ainsi d'une base neutre, qui ne s'affiche pas et ne réagit pas aux évènements d'entrée.
+	Il nous semble donc important de minimiser les comportements existants, lors de la conception de nouveaux widgets, ce que nous illustrons avec le mécanisme de composition utilisé pour Polyphony, dans le <a href=#sec3>chapitre 3</a>.
+</p>
+
+
+<!--<sh>Bien cette discussion !</sh>-->
+
+<h4>Clarification du bas-niveau</h4>
+<!--
+	Rappel de ce qu'on voulait savoir sur les trois
+	Pourquoi c'est important ? d'abord pour mieux comprendre ce contexte, ensuite à partir de comment il est perçu chercher à l'améliorer
+	Pourquoi ces trois termes ? parce qu'ils revenaient souvent dans le domaine, sans être clairement définis
+	Quelles sont les définitions formelles ?
+	Quels sont les aspects généralement perçus, mais pas évoqués dans ces définitions ?
+	Qu'est-ce que les interviews nous ont appris ?
+	Comment peut-on résumer ces connaissances ?
+	Où va-t-on ensuite ?
+-->
+<p>
+	Durant les interviews, nous avons demandé aux participants de définir ce qu'ils considéraient être <i>de bas-niveau</i> dans leur projet — dans leur code ou dans les outils qu'ils utilisaient.
+	En effet, le qualificatif “de bas niveau” revient souvent dans le domaine du développement d'applications avancées, et revêt parfois une connotation négative, synonyme de “source de difficultés”.
+	Sa clarification nous permettra donc d'apporter un nouveau point de vue sur les difficultés rencontrées par les développeurs de nouvelles techniques d'interaction, mais aussi pourquoi ils choisissent de se tourner vers le bas niveau durant leurs projets.
+</p>
+<p>
+	Le bas niveau ne possède pas de définition dans le dictionnaire de l'académie française (en dénote l'absence de trait d'union entre les deux mots).
+	Cependant on l'utilise comme locution adverbiale (travailler <i>à bas niveau</i>), locution adjective (une bibliothèque <i>de bas niveau</i>), et locution nominale (caractériser <i>le bas niveau</i>).
+	Le bas niveau s'emploie rarement seul et est utilisé en Informatique pour caractériser des types d'artefacts logiciels.
+	On parle souvent de <i>langage de bas niveau</i>, de <i>protocole de communication de bas niveau</i>, ou de <i>bibliothèque de bas niveau</i>.
+</p>
+<p>
+	On observe que le bas niveau est quasi systématiquement associé à une organisation en couches, dans laquelle des couches de haut niveau <i>dépendent</i> des couches de bas niveau.
+	Effectivement, les langages de programmation sont organisés en couches séparées par des phases de compilation (traduction) — par exemple Python vers C, puis C vers Assembleur, et Assembleur vers Code machine.
+	Le bas niveau désigne ici les langages <b>plus proches de la machine</b>.
+	Par extension, on dira qu'un langage est de plus bas niveau qu'un autre s'il permet d'exprimer des opérations plus proches de ce que permet le Code machine, même si les deux langages n'appartiennent pas aux couches d'une même chaîne de compilation (ex. C++ est de plus haut niveau que C mais compile directement vers Assembleur).
+</p>
+<p>
+	Dans le cas des protocoles de communication, les couches sont séparées par des relations d'inclusion des données de haut niveau dans les canaux de communication de bas niveau.
+	On parle généralement du modèle OSI simplifié en 5 couches — transmission physique (câbles), liaison (MAC), réseau (IP), transport (TCP et UDP), et application (HTTP et FTP).
+	Ici, le bas niveau désigne les protocoles plus fondamentaux, qui héritent peu des caractéristiques d'autres protocoles.
+	Ils sont donc généralement <b>moins fiables</b>, car ils accumulent moins de fonctionnalités de robustesse aux erreurs et contrôle de réception.
+	Mais ils ont une <b>meilleure latence</b>, car celle-ci s'accumule et augmente à chaque nouvelle couche de communication.
+</p>
+<p>
+	Enfin dans le cas des bibliothèques logicielles, les couches sont séparées par des relations de dépendance.
+	Ces relations comprennent l'inclusion et la compilation évoquées pour les protocoles et les langages, donc les caractéristiques énumérées ci-dessus s'appliquent toujours ici.
+	Les bibliothèques échangent des données entre couches, et peuvent éventuellement les transformer.
+	Dans le cas des données d'entrée qui nous intéressent pour les techniques d'interaction, les bibliothèques de bas niveau manipulent des données <b>plus brutes</b> puisque plus proches du matériel, moins transformées.
+	Ces bibliothèques sont aussi <b>plus rapides</b>, puisqu'elles exécutent moins de code issu d'autres bibliothèques.
+	Cependant elles sont aussi <b>moins puissantes</b>, c'est-à-dire qu'à taille de code équivalente elles réalisent des comportements moins complexes.
+</p>
+<p>
+	Durant l'analyse des interviews nous avons relevé 25 observations liées au bas niveau, dont certaines apportent de nouvelles caractéristiques.
+	Le bas niveau permet ainsi d'accéder à <b>plus de données</b>, car elles ont été moins bloquées ou ignorées entre couches — <i>P10 : Une information plus nombreuse, plus précise, non modifiée en aval</i>.
+	Les fonctions et comportements réalisés sont <b>moins biaisés/stéréotypés</b> — <i>P8 : « Quand tu veux faire des trucs qui sortent un peu des sentiers battus »</i>.
+	Les bibliothèques de bas niveau requièrent <b>plus d'efforts</b> de développement — <i>P5 : Pas de widget ou librairie disponible pour réaliser un besoin précis, il faut réimplémenter soi-même</i>.
+	Elles sont aussi parfois <b>moins documentées</b> dans le système d'exploitation, pour pallier à des failles de sécurité ou forcer l'utilisation des couches hautes — <i>P5 : Fonctions cachées du système, réservées à ses développeurs, pas destinées à des développeurs extérieurs</i>.
+	Elles sont plus sujettes aux <b>limitations techniques</b> étant donné que les bibliothèques de bas niveau ciblent souvent des matériels et contextes d'utilisation spécifiques — <i>P8 : Lié à des limitations techniques</i>.
+	Enfin, elles sont <b>plus sensibles</b> à une mauvaise utilisation, par un <i>effet papillon</i> des dépendances entre bibliothèques — <i>P7 : Conséquences plus graves si on fait n'importe quoi</i>.
+</p>
+<p>À partir des points mis en évidence en gras, nous concluons que les programmeurs se tournent vers des bibliothèques de bas niveau pour :</p>
+<ul>
+	<li>accéder à des données peu filtrées, peu transformées, et rapidement après leur production</li>
+	<li>utiliser des fonctions cachées du système, moins contraintes vers un style de résultats, et plus rapides</li>
+</ul>
+<p>Cependant, ils sont confrontés à :</p>
+<ul>
+	<li>un code plus lourd, et lié plus étroitement à un matériel ou contexte d'utilisation <!-- <del><notesh>et globalement du code plus complexe car mélangeant des fonctions de plusieurs niveaux, selon les besoins ?</notesh></del> --></li>
+	<li>un investissement plus important en temps et en énergie pour apprendre et développer avec le bas niveau</li>
+	<li>une moindre fiabilité aux imprévus, et des conséquences plus graves des mauvaises utilisations</li>
+</ul>
+<!--<traf>J'éviterais de mentionner la "complexité" du code ici, parce que l'idée de ces points est d'être très précis, or la complexité c'est assez flou et ça demande forcément de préciser. Ce qui est peut-être un peu bancal ici c'est qu'on s'intéresse au bas niveau <i>per se</i>, on n'est pas vraiment en mesure de caractériser les conséquences de l'interaction du bas niveau avec d'autres couches (vu que c'était pas l'objet des questions).</traf>
+<sh>OK</sh>-->
+
+<h4>Hacking et propreté du code</h4>
+
+<p>
+	Durant les interviews nous avons demandé aux participants à quel point ils considéraient que leur code était propre, sur une échelle de 1 (très sale) à 5 (très propre), et d'expliquer pourquoi.
+	Nous leur avons aussi demandé d'indiquer s'ils considéraient que leur travail était du <i>hacking</i>, puis de définir cette notion dans leur travail.
+	L'action de “hacker” un système est parfois employée dans le contexte du prototypage de systèmes interactifs.
+	Elle est souvent associée à une utilisation avancée, à l'encontre des pratiques établies, cependant le terme a été utilisé dans de nombreux contextes, et est aujourd'hui vague.
+	Tout comme le bas niveau, la clarification du hacking nous permettra de mieux comprendre les besoins des programmeurs d'interactions, ainsi que les problèmes auxquels ils sont confrontés.
+	De plus, nous avons voulu évaluer la perception du code sale, et son lien à l'activité de hacking.
+</p>
+<p>
+	En tant qu'anglicisme plutôt récent, le <i>hacking</i> ne possède pas de définition dans le dictionnaire de l'académie française.
+	Nous commençons par la définition donnée sur l'encyclopédie collaborative Wikipédia [<a href=#wikipedia_hacking_2019>Wik19</a>] : « <i>Le </i>hacking<i> peut s'apparenter au piratage informatique. Dans ce cas, c'est une pratique visant à un échange “discret” d'informations illégales ou personnelles. Cette pratique, établie par les hackers, apparaît avec les premiers ordinateurs domestiques. Le hacking peut se définir également comme un ensemble de techniques permettant d'exploiter les failles et vulnérabilités d'un élément ou d'un groupe d'éléments matériels ou humains</i> ».
+	Cette définition montre que le hacking se comprend en premier lieu comme du piratage informatique, or ce n'est pas notre contexte d'étude, bien que la fin de la définition tente de généraliser l'usage du mot.
+	Elle apporte néanmoins les notions d'<b>interaction avec un système existant</b> et de <b>transgression</b>.
+	Le dictionnaire anglais Merriam-Webster nous donne plus d'informations sur le mot <i>hack</i> :
+</p>
+<dl><i>
+	<dt>hack <small>noun</small></dt>
+	<dd>1 : a tool for rough cutting or chopping : an implement for hacking</dd>
+	<dd>2 : nick, notch</dd>
+	<dd>3 : a short dry cough</dd>
+	<dd>4 : a rough or irregular cutting stroke : a hacking blow</dd>
+	<dd>5 : restriction to quarters as punishment for naval officers — usually used in the phrase <span style="font-style:normal">under hack</span></dd>
+	<dd>6a : a usually creatively improvised solution to a computer hardware or programming problem or limitation</dd>
+	<dd>6b : an act or instance of gaining or attempting to gain illegal access to a computer or computer system</dd>
+	<dd>6c : a clever tip or technique for doing or improving something</dd>
+</i></dl>
+<p>
+	Ce sont les définitions 6a et 6c qui nous intéressent et éclairent la pratique du hacking.
+	Elles soulignent les notions de <b>créativité</b>, d'<b>improvisation</b>, de <b>résolution de problème</b>, et d'<b>astuces</b>.
+</p>
+<p>
+	Ensuite, durant l'analyse des interviews nous avons relevé 12 observations sur l'activité de hacking.
+	Ainsi, elle peut impliquer une <b>mise à profit de ressources</b> sans se borner à un outil en particulier — <i>P7 : Utilisation des ressources existantes autant que possible</i>.
+	Elle consiste parfois en un <b>changement d'environnement</b> ou de contexte — <i>P9 : Utiliser une librairie pour quelque chose pour lequel elle n'est pas faite</i>.
+	Enfin, c'est une activité <b>difficile</b> — <i>P6 : Être bloqué</i>.
+</p>
+<p>À l'aide de ces caractéristiques de l'activité de hacking, nous pouvons en donner la définition :</p>
+<p style="text-align:center"><i>Dans le contexte de la programmation de techniques d'interaction, le </i>hacking<i> est la résolution opportuniste et créative d'un problème lié à un système existant, par improvisation avec toute ressource disponible, et mettant en œuvre des astuces déviant du cadre des pratiques permises.</i></p><!--<notesh>Mettre ta définition en emphase (italique, centrée)</notesh>-->
+</p>
+<!-- Scores de propreté : 3,4,4,2~4,3.5,4,2~3,4,4,3.5 -->
+<p>
+	En pratique lors des interviews, une partie des participants nous ont confié ne pas se considérer comme faisant du <i>hacking</i> — alors que les descriptions de leurs activités correspondaient beaucoup à la définition que nous avons donnée.
+	Cela peut s'expliquer par le sens moins riche en français, synonyme de piratage informatique.
+	Il est aussi envisageable que certains participants considèrent leur processus de création comme <i>systématique</i>, plutôt qu'improviste et opportuniste <!-- <del><notesh>C'est intéressant ça... mériterai peut-être d'être un peu approfondi car peut avoir des implications sur les outils futurs...</notesh></del> -->.
+	En ce qui concerne la propreté du code perçue par les participants, sur 10 projets nous avons relevé une moyenne de 3,55 ainsi qu'une médianne de 3,75.
+	Les participants considèrent donc leur code plutôt propre en pratique.
+	Faute de plus d'observations, et avec le faible intérêt des participants, nous ne pouvons donc pas conclure sur les liens entre hacking et propreté du code, et avons choisi de ne pas poursuivre cette voie.
+</p>
+<!--<traf>Pas le temps, et je n'arrive pas à imaginer quelles implications cette connaissance pourrait avoir.</traf>
+<sh>Ça voudrait par exemple vouloir dire améliorer la "customisabilité" et l'interroperabilité des langages et bibliothèques, d'avoir des structures de données et de contrôles ou des "briques de base" plus polymorphes pour favoriser leur utilisation dans des contextes différents, etc. j'en reviens toujours au mêmes choses, et tu en parles aussi, donc tu pourrais le connecter à ça sans trop développer. Mais ne le fais pas si tu ne le sens pas.</sh>-->
+
+<h4>Interprétation des résultats</h4>
+<!--
+	Quelles réponses a-t-on obtenues ?
+	Les résultats sont-il sûrs ?
+	Quelles réponses n'a-t-on pas obtenues ?
+	Quel type de connaissance se dessine de cette étude ?
+	Que veut-on à présent savoir ?
+-->
+<p>
+	À l'issue de l'analyse des interviews, nous avons obtenu deux classifications principales, des <i>problèmes</i> rencontrés par les développeurs de nouvelles techniques d'interaction, et des <i>stratégies</i> employées pour les résoudre.
+	En outre, nous avons clarifié les notions de bas niveau et de hacking, qui constituent une partie importante du contexte de travail de ces développeurs.
+	Pour revenir à la question “<b>Comment supporter au mieux le développement de nouvelles techniques d'interaction ?</b>”, le type de contribution de ce chapitre de thèse s'oriente vers la mise en évidence de problèmes majeurs à résoudre, ainsi que d'opportunités d'innovations dans les outils de développement.
+</p>
+<p>
+	Cependant à ce niveau, nous ne sommes pas en mesure d'évaluer à quels points les différents problèmes et stratégies sont importants les uns par rapport aux autres.
+	Les nombres d'observations relevées dans les <a href=#tab-problemes>tableau</a> et <a href=#tab-strategies>tableau</a> représentent un petit échantillon de personnes, sélectionnées près de notre équipe de recherche.
+	Ils ne sont donc pas représentatifs de l'ensemble des chercheurs en IHM.
+	De plus, les catégories ont été déduites à partir d'interviews qui n'avaient pas pour objectifs initiaux de formuler des classifications.
+	Nous n'avons pas conçu le plan d'interviews pour explorer systématiquement tous les problèmes et toutes les stratégies des participants.
+	Il a donc été nécessaire de complémenter cette première étude pour compléter et valider nos classifications.
+</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel=stylesheet href=style.css>
+<script src=scripts.js></script>
+<script>prefix_headers(1, 4)</script>

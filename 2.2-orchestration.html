@@ -1,0 +1,413 @@
+<!-- Expliquer le principe de l'inversion de contrôle, son histoire, ses solutions existantes, et les classifier pour clarifier. -->
+<!-- Raisonnement intéressant de Philip sur les spaghettis of callbacks dans tchernavskij_decomposing_2017 -->
+<!-- TODO: EDA de la programmation réactive dans sem-berry-serrano-20130528-2.mp4 -->
+<!-- TODO: async dans JS n'est pas adapté, vu que c'est encore un modèle question-réponse. Ce n'est pas toujours le programme qui initie l'interaction, de plus la réponse peut ne jamais venir, ou venir plusieurs fois. -->
+<!-- TODO: Ajouter l'inversion de contrôle -->
+
+<h2>Une orchestration explicite et flexible des comportements interactifs</h2>
+
+<!--
+	_ Qu'est-ce qu'un modèle d'exécution ? Son lien au langage ?
+	_ Qu'est-ce qu'on observe en IHM ? Redéfinition fréquente des modèles d'exécution dans les frameworks (signaux/slots)
+	_ Quel est le problème ? Pas adaptés, il est reconnu que l'interaction nécessite d'autres modèles d'exécution
+	_ Plan pour la suite -> présentation des différents modèles d'exécution, des différents paradigmes liés à l'exécution, et de leur prévalence dans les différentes couches des systèmes interactifs, puis EDA des travaux ayant cherché à améliorer cet état de fait, et détail de ce qu'on pourrait faire et formulation d'un IE
+-->
+<p>
+	Dans un langage de programmation, on qualifie de <i>modèle d'exécution</i> le comportement des différents éléments du langage lors de l'exécution.
+	Il s'accompagne d'un ensemble d'éléments de syntaxe et de règles de grammaire, et permet de prédire le comportement observable d'une application à partir de son code source.
+	Par exemple, le langage C spécifie que les instructions (séparées par des points-virgules) s'exécutent en séquence, chacune attendant que la précédente se termine avant de commencer.
+	Il modélise l'exécution d'un programme comme un enchaînement continu d'instructions, divisées en blocs de code, qui se suivent par des instructions de branchement telles que <code>goto</code> ou les appels de fonctions.
+	Le modèle d'exécution est une caractéristique essentielle de chaque langage de programmation, et plusieurs modèles d'exécution peuvent cohabiter dans un même langage.
+</p>
+<p>
+	Il arrive qu'une bibliothèque logicielle utilise un modèle d'exécution différent que le langage de programmation sur lequel elle s'exécute — par exemple pour exécuter les instructions en parallèle plutôt qu'en séquence.
+	Sans modifier le modèle d'exécution du langage, elle y superpose son propre modèle à l'aide d'appels de fonctions, qui forment l'API de cette bibliothèque.
+	Son modèle d'exécution est alors qualifié de <i>modèle de programmation</i>.
+	Lorsqu'on désigne le style de programmation (les manières de raisonner avec un modèle de programmation donné), on parlera plutôt de <i>paradigme de programmation</i>.
+	Par exemple, le “modèle objet” consiste à représenter les éléments du programme par des conteneurs autonomes (les objets), possédant un ensemble de données et de fonctions (les méthodes) pour opérer sur ces données et les autres objets.
+	Ici, le paradigme de “programmation orientée objet” consiste à organiser le fonctionnement d'un programme par des échanges entre objets, où chacun possède une responsabilité définie, et délègue éventuellement certaines tâches à d'autres objets.
+	En programmation orientée objet, il est courant de rencontrer des méthodes courtes, de quelques lignes de code, ce qui fait ici partie du style de programmation.
+</p>
+<p>
+	Dans le contexte de la programmation en IHM, nous qualifions de <i>comportements interactifs</i> les comportements observables en réaction à des actions des utilisateurs.
+	Dans ce domaine, on observe que de nombreux frameworks appliquent un modèle de programmation différent du modèle d'exécution du langage sur lequel ils se basent.
+	Par exemple, Qt implémente son modèle de signaux et slots par dessus le modèle procédural du C++ [<a href=#the_qt_company_qt_2019>Qt19</a>].
+	De même, Amulet implémente un modèle d'objets à prototypes par dessus le modèle à classes du C++ [<a href=#myers_amulet_1997>Mye97</a>].
+	Ces observations appuient l'idée que les modèles d'exécution natifs des langages actuels ne sont pas suffisamment adaptés pour exprimer les besoins des applications interactives [<a href=#beaudouin-lafon_interaction_2008>Bea08</a>].
+	Nous cherchons donc à répondre à la question <i>Comment concevoir un modèle d'exécution adapté à l'interaction ?</i>
+</p>
+<p class=break>
+	Dans les sous-sections qui suivent, nous présentons différentes <i>pratiques de programmation</i> courantes dans le développement d'applications interactives, et mises en pratique dans de nombreux frameworks.
+	Notre but est de les transposer en concepts généralisables aux langages, et de discuter des formes qu'ils devraient prendre à l'avenir.
+</p>
+<!-- <del><p>
+	En IHM on observe pourtant que de nombreux <i>paradigmes d'exécution</i> <notesh>Il faut que tu définisse ce que tu appelles un "paradigme d'exécution", surtout après avoir parlé de modèle d'exécution</notesh> viennent se greffer par dessus les modèles d'exécution des langages.
+	En effet, il est courant que les frameworks introduisent des mécanismes d'abonnement à des évènements, par exemple avec les signaux et slots de Qt, ou la machine réactive d'ICON [<a href=#dragicevic_input_2001>Dra01</a>].
+	En outre, il est reconnu que les modèles d'exécution natifs des langages actuels sont peu adaptés pour exprimer les besoins des applications interactives [<a href=#wegner_why_1997>Weg97</a>]<notesh>idem précédemment, pas certain de la pertinence de citer Wegner directement...</notesh>.
+	Dans les sous-sections qui suivent, nous présentons différents aspects essentiels des langages et frameworks, utilisés pour programmer de l'interaction.
+	Les problèmes relevés pour chacun de ces aspects nous permettent de formuler et de préciser ce qu'est une orchestration <i>explicite</i> de l'interaction.
+</p>
+
+<sh>Globalement bizarre cette intro... on en voit pas très bien le lien avec ce que tu as dis dans la section précédente, et surtout on ne saisi pas très bien les tenants et aboutissants de cette section. Vas-tu passer en revue les modèles (ou paradigmes ?) d'exécution pour l'interaction ? en discuter des problèmes ? Travaux existants ? et tu conclus en disant que tu va formuler et  préciser ce qu'est une orchestration <i>explicite</i> de l'interaction, mais qu'est-ce que tu appelles "orchestration de l'interaction" ? Bref, peut être améliorée...</sh></del> -->
+
+<!--<notesh>Beaucoup mieux l'intro !</notesh>-->
+
+<!-- Questions à poser :
+	_ Qu'est-ce que ce modèle ?
+	_ Comment permet-il d'orchestrer un bloc de code ? (statique/dynamique)
+	_ Comment l'utilise-t-on pour programmer des IHM ?
+	_ Qui l'a notablement utilisé en IHM ?
+	_ Quelles sont ses limites ?
+-->
+
+<h3>Les différents modèles de programmation d'interactions</h4>
+
+<p>
+	De nombreux modèles de programmation ont été utilisés pour exprimer de l'interaction.
+	Nous en dressons une liste dans cette sous-section, afin de nous positionner sur les modèles à privilégier dans nos Essentiels d'Interaction.
+	Par souci de lisibilité, nous les séparons en deux groupes, ceux qui définissent les comportements <i>individuels</i> des instructions, et ceux qui définissent les comportements de <i>groupes</i> d'instructions.
+	Les premiers modèles se concentrent sur les opérations d'un langage (ou framework) qui ne peuvent être sous-divisées.
+	Ils incluent les opérations arithmétiques, les accès à la mémoire, voire des opérations de plus haut niveau comme les accès aux fichiers.
+	Ils définissent aussi comment ces différentes opérations se succèdent entre elles (séquencement, simultanéité).
+	Les principaux modèles d'exécution utilisés pour programmer des comportements interactifs individuels aujourd'hui sont :
+</p>
+<!-- <del><p>
+	On distingue deux niveaux dans la modélisation de l'exécution d'un programme.<sh>Qui est "On" ? Toi où une communauté ayant admis ces 2 dimensions ? Si toi, il faut que tu le dises que tu proposes ces dimensions et que tu expliques pourquoi. Si communauté, il faut a minima une référence, mais une ou deux explications du pourquoi du comment de ces 2 dimensions seraient aussi les bienvenues.</sh>
+	Le niveau <i>atomique</i> désigne la définition des opérations d'un langage ou framework, qui ne peuvent être sous-divisées.
+	Il inclut les opérations arithmétiques disponibles, mais aussi les accès à la mémoire, voire des opérations de plus haut niveau comme les accès aux fichiers.
+	Il concerne aussi les relations entre les opérations atomiques (séquencement, simultanéité).
+	Les principaux paradigmes d'exécution atomiques liés à l'interaction aujourd'hui sont :
+</p></del> -->
+<ul>
+	<li>la programmation impérative (utilisée dans les langages impératifs), qui modélise les instructions comme des ordres ponctuels donnés à la machine, ordonnées en séquence et exécutées sans se chevaucher</li>
+	<li>la programmation déclarative, dans laquelle l'application est une structure de données qui spécifie son comportement (ex. l'apparence visuelle avec HTML), mais ne décrit pas <i>comment</i> l'exécuter
+	<li>la programmation par flux de données (<i>dataflow</i>), dans laquelle les instructions mettent en permanence à jour des valeurs de sortie en fonction de valeurs d'entrée, et qui est implémentée dans les langages VHDL et Max/MSP, ou le framework ICON [<a href=#dragicevic_input_2001>Dra01</a>]</li>
+	<li>les machines à états et réseaux de Petri, dans lesquels le système est à tout instant dans un état parmi un ensemble fini, et évolue par transitions atomiques entre ces états, avec comme représentants des frameworks comme CPN2000 [<a href=#beaudouin-lafon_architecture_2000>Bea00</a>] et ICO [<a href=#navarre_icos_2009>Nav09</a>]</li>
+	<!--<li>les architectures VLIW à instructions parallèles (<i>Very Long Instruction Word</i>), dans lesquelles chaque instruction contient plusieurs opérations à effectuer en parallèle, et qui est implémentée dans l'architecture Intel Itanium, ainsi que dans certains processeurs spécialisés en traitement du signal</li>-->
+</ul>
+<p>
+	Au niveau des <i>groupes</i> d'instructions, on désigne la définition des blocs de code d'un langage (ou framework).
+	Il s'agit de répondre à <i>quand</i> et <i>comment</i> ils sont exécutés, et comment le comportement global du programme s'exprime par assemblage de ces blocs.
+	Les principaux modèles d'exécution utilisés pour programmer des comportements interactifs de groupes aujourd'hui sont :
+</p>
+<!-- <del><p>
+	Le niveau <i>séquentiel</i> de l'exécution présume l'utilisation de la programmation impérative au niveau atomique. <notesh>Je ne vois pas bien pourquoi cette restriction... Ça veut dire que dans les autres niveaux atomiques, le séquentiel est défini implicitement par le type d'exécution atomique ? Je vois à la rigueur pour data-flow et state-machines, mais pour le déclaratif, ce n'est pas clair pour moi... et au final, pourquoi ces 2 échelles si l'une n'est présente que dans un cas de l'autre ? (il faudrait expliquer un peu ça en détails au début de la section ?)</notesh>
+	Il désigne la définition des blocs de code d'un langage ou framework, et répond à <i>quand</i> et <i>comment</i> ils sont exécutés.
+	Les paradigmes séquentiels de l'exécution liés à l'interaction aujourd'hui sont :
+</p></del> -->
+<ul>
+	<li>la programmation procédurale, dans laquelle les blocs de code sont des fonctions, exécutées par des appels de fonction statiques ou dynamiques (pointeurs de fonction), et qui retournent l'exécution à la fonction appelante à la fin du bloc, avec éventuellement une valeur de retour</li>
+	<li>la programmation fonctionnelle, qui modélise l'exécution du programme comme l'évaluation de fonctions mathématiques, en interdisant les effets de bord autorisés par les affectations de variables</li>
+	<li>la programmation orientée objet, qui modélise les blocs de code comme des fonctions appartenant aux objets (les méthodes), et organise le flux d'exécution par des messages envoyés entre objets</li>
+</ul>
+<ul>
+	<li>la programmation réactive, qui lie le déclenchement des blocs de code à l'activation de signaux (des évènements internes ou externes au programme), et modélise l'exécution du programme par des cascades d'activations de signaux<!-- <del>dans le cadre de la programmation impérative exécute un bloc de code immédiatement après qu'un évènement se soit produit (sans attendre d'être appelé depuis un autre bloc de code)</del> --></li>
+	<li>la programmation parallèle, utilisable en conjonction des quatre autres, et qui permet d'exécuter plusieurs flux d'exécution simultanément, en proposant divers paradigmes de programmation permettant les accès concurrents à des ressources communes</li>
+</ul>
+<p>
+	La programmation impérative est aujourd'hui omniprésente pour programmer des interfaces graphiques et interactions.
+	En effet, ce modèle correspond au fonctionnement séquentiel des processeurs les plus répandus, et permet de générer du code rapide.
+<!-- 	<del>Les frameworks et langages principalement utilisés pour prototyper de l'interaction étant basés sur la programmation impérative, nous nous concentrons sur ce modèle pour la suite.</del> -->
+	De plus, la programmation d'interfaces est largement basée sur des langages de programmation orientés objet (C++, Java, JavaScript, Swift, etc.).
+	En pratique, ces modèles sont utilisés dans la quasi-totalité des bibliothèques d'interaction que nous avons relevées dans le questionnaire en ligne (voir <a href=#sec1x5>section 1.5</a>).
+	Cependant, nous observons aussi que de nombreux frameworks supportent <i>plusieurs</i> modèles de programmation, autorisant plusieurs manières de définir une même interface.
+	Par exemple, Qt permet de construire une interface par appels de fonctions en C++, mais définit aussi le langage dédié QML pour l'y exprimer de manière déclarative.
+	De même, le framework React introduit un modèle <i>dataflow</i> sans se substituer au modèle impératif du JavaScript, ainsi que le langage dédié JSX.
+	Ces approches <i>multi-paradigmes</i> nous semblent essentielles à la programmation d'interactions.
+	Elles laissent les développeurs libres de choisir leur manière de raisonner, et de changer en fonction du type d'interface à réaliser.
+	C'est particulièrement utile pour associer un type de besoin à un modèle adapté (ex. <i>dataflow</i> pour la propagation de contraintes, réactif pour l'enregistrement aux périphériques d'interaction, déclaratif pour la construction d'interface)
+	Nous avons donc choisi de favoriser par la suite une bibliothèque qui inclut ou supporte l'utilisation de plusieurs modèles de programmation.
+<!-- 	<del>Les principaux frameworks utilisés pour programmer de l'interaction aujourd'hui se basent sur des langages de programmation orientés objet.
+	En outre, tous les paradigmes d'exécution aujourd'hui se basent sur la programmation procédurale (la notion de fonctions).
+	Nous avons donc choisi de favoriser une orchestration de l'exécution compatible avec la programmation impérative et procédurale.</del> -->
+</p>
+
+<!--<sh>Bien, beaucoup plus clair et mieux organisé !</sh>-->
+
+<!-- <del><sh>Où places tu la programmation fonctionnelle ?</sh></del> -->
+
+<h3>Les propagations d'évènements par attente active et passive</h3>
+
+<p>
+	<!-- <del>Les modèles de propagation d'évènements poussés (<i>push</i>) et à la demande (<i>pull</i>)</del> -->En programmation d'interactions, les types d'attente active (<i>polling</i>) et passive (<i>pushing</i>) désignent deux manières de propager une information d'entrée utilisateur dans un programme informatique.
+<!-- 	<del><notesh>J'ai l'impression qu'en IHM, on est plus habitué au vocabulaire "polling" / "callback". D'ailleurs, dans le code qui suit, ta fonction s'appelle "poll_input()". Même si tu gardes push et pull, tu devrait au moins mentionner l'autre vocabulaire.</notesh></del> -->
+	En attente active, on interroge de façon répétée une source d'entrées (souris, clavier, manette, etc.).
+	Lorsqu'une nouvelle entrée est détectée, on exécute du code qui va se charger des traitements consécutifs à l'entrée (commande, retour visuel, etc.).
+<!-- 	<del><notesh>pas clair... on interroge de façon répétée ou si une nouvelle entrée et détectée ? Je pense que la fin de cette phrase correspond plutôt au début de l'autre: "[...] on interroge de façon répétée une source d'entrées. Si une nouvelle entrée a été détectée, on exécute du code qui [...]"</notesh></del> -->
+	
+	Ensuite, qu'une entrée ait été détectée ou non on temporise éventuellement avant d'interroger à nouveau la source d'entrées, afin de ne pas accaparer les ressources de la machine.
+<!-- 	<del>La propagation d'évènements à la demande s'illustre par exemple avec une boucle à fréquence fixe, particulièrement utilisée pour les jeux vidéo  <notesh>ou très communément pour la gestion bas niveau des dispositifs d'entrée (niveau pilotes)</notesh> :</del> -->
+	L'attente active s'illustre communément dans la gestion de bas niveau des dispositifs d'entrée, et la synchronisation entre processus parallèles sur des machines multi-cœurs, où il est essentiel de réagir aussi vite que le permet la machine :
+</p>
+<pre><code class=lang-c>volatile int condition;		// force les accès systématiques en mémoire
+while (condition == 0) {
+	wait(10);				// temporisation de 10ms
+}
+</code></pre>
+<p>
+	En l'absence de délai, l'attente active garantit une réaction instantanée à tout évènement, au prix d'une consommation continue du processeur, qui le rend indisponible pour d'autres tâches.
+	Par extension, elle s'illustre aussi lorsqu'on interroge tous les évènements d'entrée survenus durant un laps de temps, afin de gérer les entrées dans une boucle à fréquence fixe :
+</p>
+<pre><code class=lang-clike>while (!end) {
+	while (pending_input()) {
+		event = poll_input();	// demande non-bloquante
+		process_input(event);	// traitement
+	}
+	render_scene();				// dessin
+	wait(10);					// temporisation de 10ms
+}
+</code></pre>
+<p>
+	Ce type de boucle et d'obtention des évènements est particulièrement utile lorsque l'application interactive doit réagir à plusieurs sources d'évènements concurrentes (affichage, souris, clavier, réseau).
+	La fréquence fixe est généralement synchronisée avec celle de l'écran, pour minimiser le délai entre le rendu visuel de l'application, et sa perception par l'œil de l'utilisateur.
+	Elle est utile aussi pour maîtriser le déterminisme de l'application, en particulier comme <i>tickrate</i> dans les jeux multijoueurs qui synchronisent les calculs entre toutes les machines connectées.
+	Cependant, du fait de la temporisation, <!-- <del>la propagation à la demande introduit</del> -->l'utilisation d'une attente active introduit ici une latence entre la survenue d'un évènement et son traitement, qui vaut en moyenne la moitié du délai de temporisation (5ms dans l'exemple ci-dessus).
+</p>
+<p>
+	En attente passive (<i>pushing</i>), c'est l'émetteur d'un évènement qui le “pousse” aux consommateurs, plutôt que ces derniers en fassent la demande.
+	Pour cela, une fonction de rappel (<i>callback</i>) est enregistrée au préalable, qui contient le code à exécuter lorsqu'une entrée est détectée.
+	C'est la source d'entrées qui se charge d'attendre la survenue d'un évènement, et qui exécute alors la fonction de rappel instantanément.
+	Avec ce type de propagation d'évènements, l'exemple ci-dessus deviendrait :
+</p>
+<pre><code class=lang-js>set_on_event(e -> {
+	process_event(e);
+})
+set_on_display(() -> {
+	render_scene();
+})
+</code></pre>
+<p>
+	L'attente passive est utile lorsque les évènements surviennent sporadiquement — l'interaction n'est pas continue.
+	C'est le cas du clavier et de la souris, pour lesquels il est normal n'observer des périodes de temps sans activité, pendant lesquelles des demandes répétées aux sources d'entrées seraient superflues.
+	Ce type d'attente est peu utilisé à bas niveau, du fait du coût à l'exécution des fonctions de rappel.
+	En revanche, on l'observe communément dans les frameworks, qui propagent les évènements d'entrée au code utilisateur à l'aide de <i>callbacks</i>.
+	<!-- <del><notesh>Comme dit dans mon autre remarque plus haut, on a souvent en fait dans le systèmes une combinaison des deux: polling à très bas niveau (pour ne rien rater des dispositifs, suivre des fréquences de rafraichissement éventuellement rapide et puis parce que c'est aussi souvent la seule façon de faire au plus près des dispositifs, que le polling soit embarqué dans le dispositif ou dans le pilote) et callbacks après. Il faut donc que tu situe bien ton analyse <b>au niveau des frameworks</b>.</notesh></del>
+	<del>De plus, ce type de propagation</del> -->Par rapport à une boucle à fréquence fixe, l'attente passive n'introduit aucune latence dans le traitement des entrées utilisateurs, ce qui est désirable dans les domaines où cette latence est néfaste (systèmes temps réel).
+	Cependant, alors qu'avec l'attente active c'est l'application qui reste maîtresse de l'exécution, avec les fonctions de rappel elle cède la main à l'environnement qui se charge de l'appeler à un moment indéterminé.
+	L'attente passive introduit donc un non-déterminisme <i>du point de vue de l'appelé</i>, ce qui explique que les boucles de gestion des évènements soient encore utilisées en interne dans de nombreux frameworks.
+</p>
+<p>
+	À cause de la latence induite par l'attente active dans une boucle de fréquence fixe, on lui préfèrera toujours l'attente passive.
+	C'est particulièrement vrai en IHM, où l'effet néfaste de la latence sur les performances des utilisateurs a été beaucoup étudié [<a href=#pavlovych_target_2011>Pav11</a>, <a href=#ng_blink_2014>Ng14</a>, <a href=#deber_how_2015>Deb15</a>].
+	Cependant, le non-déterminisme dû à la délégation de contrôle à l'environnement est problématique.
+	En effet, sans connaître les traitements effectués par le framework, il est impossible de savoir si un délai sépare la survenue d'un évènement, du moment où on reçoit le contrôle.
+	De même, dans le cas d'une application effectuant des calculs complexes (ex. jeu vidéo), il est impossible de garantir qu'on aura assez de temps de calcul chaque seconde, car les traitements du framework sont imprévisibles (ex. mise en cache du rendu graphique, ramasse-miettes).
+	Enfin, comme nous l'avons souligné dans la problématique de cette thèse, avec l'organisation en couches des bibliothèques d'interaction, on ne peut pas garantir que le framework fait suivre tous les évènements d'entrée, et un développeur qui interagit avec plusieurs couches devra s'assurer de la cohérence des données reçues.
+	Dans ces conditions, nous avons choisi de promouvoir une attente passive des évènements, mais où les traitements effectués par le framework sont spécifiés et observables.
+<!-- 	<del>Dans le contexte de la recherche sur de nouvelles techniques d'interaction, la latence a une influence non négligeable sur les performances des utilisateurs [<a href=#pavlovych_target_2011>Pav11</a>, <a href=#ng_blink_2014>Ng14</a>, <a href=#deber_how_2015>Deb15</a>].
+	Il est donc crucial de minimiser la latence induite par l'utilisation d'un langage ou framework dédié à l'interaction.
+	C'est pourquoi nous avons choisi de promouvoir une orchestration de l'exécution basée sur une propagation des évènements poussés.
+	<notesh>C'est dommage de discuter de ces deux méthodes pour ne conclure que sur la latence. Est-ce vraiment le seul paramètre à prendre en compte ?</notesh></del> -->
+</p>
+
+<h3>Les traitements bloquants et asynchrones</h3>
+
+<p>
+	Les modèles de traitements bloquant et asynchrone désignent deux manières de prévoir l'exécution d'un bloc de code après avoir exécuté une fonction pouvant prendre beaucoup de temps.
+	Le modèle bloquant consiste à mettre en pause l'exécution du programme tant que la fonction n'a pas fini de s'exécuter.
+	Une fois qu'elle se termine, le programme reprend son exécution.
+	Ce type de traitements est très utilisé pour les entrées/sorties avec le disque dur ou le réseau.
+	Dans le cadre de la programmation d'interactions, il est utilisé lorsqu'on attend une entrée de l'utilisateur en réponse à une requête du système (par exemple un formulaire avec bouton “Continuer”).
+	On l'illustre par exemple en C :
+</p>
+<pre><code class=lang-js>print("Quel est votre nom ?")
+nom = read_string()					// traitement bloquant
+print("Bonjour %s, quel âge avez-vous ?", nom)
+age = read_number()					// traitement bloquant
+print("Vous avez %d ans.", age)
+</code></pre>
+<p>
+<!-- 	<del>L'appel de fonction s'insère dans un flux séquentiel de code, donc il est très adapté à un modèle d'interaction <i>conversationnel</i>, dans lequel l'utilisateur et la machine communiquent par questions et réponses.
+	De plus, le blocage de l'application permet d'interdire le report d'un traitement à un moment indéterminé, et favorise donc le déterminisme de l'application.</del> -->
+	L'intérêt de ce modèle est qu'on peut représenter chaque “fil d'exécution” par un bloc de code continu, en particulier quand celui-ci s'étire dans le temps.
+	En effet, les instructions <code>print</code> ci-dessus appartient à un même bloc de code séquentiel, pourtant elles s'exécuteront à des moments très différents.
+	Le modèle bloquant synchrone permet donc très bien de modéliser une <i>conversation</i> entre l'utilisateur et la machine, dans laquelle ils communiquent par questions et réponses.
+	En revanche, on ne peut pas attendre plusieurs questions simultanément avec ce modèle (à moins d'autoriser plusieurs fils d'exécution simultanés).
+</p>
+<p>
+	Avec les traitements asynchrones, l'exécution d'une fonction prenant du temps ne bloque plus le fil d'exécution courant.
+	Au lieu de cela, les traitements coûteux de la fonction sont retardés, en attendant que la machine n'ait plus de calculs en cours.
+	C'est la fonction elle-même qui détermine les traitements à effectuer instantanément et ceux qui sont mis en attente, et c'est le “système” (framework, langage, ou système d'exploitation) qui gère les traitements en attente et choisit quand les exécuter.
+	Lorsque du code doit être exécuté <i>après</i> l'exécution de la fonction, une fonction de rappel est souvent passée en argument, qui sera appelée après les traitements en attente.
+	L'exemple précédent devient :
+</p>
+<pre><code class=lang-js>print("Quel est votre nom ?")
+read_string_async(nom -> {
+	print("Bonjour %s, quel âge avez-vous ?", nom)
+	read_number_async(age -> {
+		print("Vous avez %d ans.", age)
+	})
+})
+</code></pre>
+<p>
+	L'exécution asynchrone permet de gérer plusieurs tâches simultanément avec un seul fil d'exécution.
+	Comme chaque fonction asynchrone ne bloque pas l'exécution, on pourrait par exemple poser plusieurs questions en même temps, et réagir aux réponses dans l'ordre dans lesquelles elles sont données.
+	Dans le cas des interfaces graphiques, la programmation asynchrone est particulièrement utilisée pour les entrées/sorties dont les résultats sont <i>secondaires</i> à l'interface, par exemple pour attendre le chargement d'images qui sont insérées dans l'interface à mesure qu'elles sont reçues.
+	Pour modéliser des interactions directes avec l'utilisateur, le problème majeur est qu'on ne maîtrise pas le moment où la fonction de rappel s'exécute.
+	On introduit donc du non-déterminisme, qui peut être source de bugs lorsque le résultat des différentes tâches dépend de leur ordre d'exécution.
+	De plus, la programmation asynchrone tend à produire des fonctions de rappel en cascade, qui nuisent à la lisibilité du programme (voir l'exemple ci-dessus).
+<!-- 	<del>En pratique ce mécanisme est peu utilisé pour modéliser des “conversations” avec un ou plusieurs utilisateurs.
+	Il est très utilisé pour les entrées/sorties dont les résultats sont <i>secondaires</i> à l'interface, par exemple pour attendre le chargement d'images qui sont insérées dans l'interface à mesure qu'elles sont reçues.
+	L'inconvénient majeur de la programmation asynchrone est qu'on ne maîtrise pas le moment où la fonction de rappel s'exécute, ce qui peut être source de bugs.</del> -->
+</p>
+<p>
+	Lorsqu'on étend la conversation entre utilisateur et machine à une interface graphique, nous pouvons distinguer deux fils d'exécution principaux.
+	Le fil d'<i>interface</i> contient les traitements réalisés en séquence à intervalles réguliers, pour rafraîchir l'interface (ex. traitement des entrées, mise à jour des contraintes de positionnement, rendu visuel).
+	C'est un fil d'exécution réel, qui correspond généralement à un ou plusieurs processus sur la machine.
+	Le fil d'<i>interaction</i> représente tous les traitements réalisés (en séquence ou parallèlement) en réaction aux actions de l'utilisateur (ex. afficher un retour visuel, changer de mode d'interaction, déclencher une commande).
+	Il représente la conversation (ou les interactions) entre l'utilisateur et la machine.
+	Pourtant il correspond rarement à un processus dédié sur la machine.
+	En effet, la gestion de multiples processus est complexe pour un framework, car il faut gérer leurs éventuelles synchronisations.
+	Alors que certains frameworks séparent en processus la mise à jour de l'interface et le reste des traitements (ex. le <i>Event Dispatching Thread</i> de AWT), la gestion de l'interaction est étroitement liée à la gestion de l'interface, ce qui nécessiterait de nombreuses synchronisations.
+</p>
+<p>
+	Ainsi nous avons deux opportunités à l'issue de cette discussion.
+	La première est de représenter le fil d'interaction par un processus réel (en surmontant les défis sus-mentionnés), à la manière des graphes d'interaction de Huot [<a href=#huot_flexibilite_2006>Huo06</a>], mais dans un modèle d'exécution impératif plutôt que déclaratif.
+	La deuxième est d'intégrer plus étroitement le fil d'interaction avec le fil d'interface, afin de ne conserver qu'un unique processus.
+	La simplicité conceptuelle de cette approche nous a amenés à l'explorer dans cette thèse.
+	À cause de l'existence d'un unique fil d'exécution, nous avons exclu les traitements bloquants synchrones.
+	Pour éviter d'introduire un non-déterminisme indésirable, nous avons aussi exclu les traitements asynchrones.
+	Nous avons donc cherché à intégrer le fil d'interaction dans les traitements de l'interface.
+	En pratique ce principe est illustré dans le <a href=#sec3>chapitre 3</a>, où les changements d'état et éventuelles temporisations sont <i>réifiées</i> en données globales, sur lesquelles des blocs de code insérés dans un unique fil d'exécution peuvent réagir.
+</p>
+<!-- <traf>J'ai ouvert une boîte de Pandore là, l'idée d'un "fil d'exécution dédié à l'interaction" me semble super intéressante, du coup c'est une porte difficile à fermer.</traf>
+<sh>Je dirai oui et non... en effet, tu es monté d'un cran dans ta réflexion et c'est très bien. Ta proposition d'un "fil d’exécution" dédié à l'interaction est super intéressant et c'est une très bonne discussion. Après, pourquoi non ? Et bien ça existe déjà... En  java  par exemple, il y a le fameux Thread AWT-EventQueue, c'est une file asynchrone dédiée au dispatch des événements d'interaction/interface, utilisé pour AWT, Swing et probablement JavaFX. Et l'intérêt est exactement ce que tu dis : ne pas bloquer et donner la priorité à l'interaction. Mais ça a un impact dans l’implémentation des callbacks (e.g. le coup classique du débutant en  AWT/Swing qui ne comprend pas pourquoi son interface ne se met pas à jour à l'écran: il a changé la vue d'un widget dans un callback sans utiliser le bout de code magique qui remet dans le  bon thread pour que l'UI sois mise à jour...). J'ai l'impression que tu vois ça plus général au niveau système, mais je ne serai pas étonné que les frameworks d'interaction fonctionnent globalement comme ça...</sh>
+<traf>Ce n'est pas de l'ordre des traitements non bloquants entre threads. Ce que je veux dire c'est que d'un côté il y a le(s) processus continu qui met à jour l'interface en fonction des entrées sur les contrôles, et repeint régulièrement. Il inclut l'Event Dispatching Thread. Et de l'autre il y a le processus qui représente la <i>communication</i>/interaction entre homme et machine, et qu'on exprimerait uniquement avec des actions abstraites, genre <code>if some user clicked button1, then trigger command1</code>. Du coup l'idée c'est "et si ce processus existait réellement comme un thread ?"</traf>
+ -->
+<!-- <del><sh>Après, comme pour polling/callback, la réalité est plus "grise" et c'est plus un mélange des deux, non, selon les couches ou fonctions des systèmes et frameworks ? Par exemple, il me semble que les mécanismes sous-jacents des frameworks d'interaction ont de l’exécution asynchrone pour ne pas être bloquants pour l'interfaces e.g. calcul des repaints, alors que toute la partie plus haute (réponse aux actions des utilisateurs) va plutôt être synchrone ? Du coup, encore une fois, il faudrait peut-être contextualiser un peu plus, non ? Et ensuite, il y a aussi les modèles basés sur le réactif, qui sont aussi synchrones mais avec l'hypothèse de durée nulle des traitements (plutôt bornée que nulle en pratique) et que Pierre a repris dans ICon.</sh>
+<p>
+	Les modèles de programmation bloquant et asynchrone présument toujours que l'initiative de l'interaction est à la machine.
+	Chaque traitement lié à l'interaction est une <i>requête</i> envoyée à l'utilisateur, pour laquelle on attend une <i>réponse</i> plus tard.
+	Or ce modèle de programmation est très limitant lorsqu'on veut donner l'initiative à l'utilisateur.
+	Bien que de nombreux langages de programmation aient inclus le support de la programmation asynchrone (<code>async</code>/<code>await</code> en JavaScript et C#, <code>asyncio</code> en Python), celle-ci est insuffisante pour exprimer de l'interaction utilisateur.
+	Nous avons donc choisi de favoriser une orchestration des traitements qui donne l'initiative aux utilisateurs <notesh>mmmmm... est-ce vraiment le cas ? j'attends de voir la discussion sur ce point...</notesh>.
+</p></del> -->
+
+<h3>Les callbacks et la logique répartie</h3>
+
+<!--
+	_ Dans les langages de programmation principalement utilisés pour programmer de l'interaction, toute fonction doit être appelée explicitement pour s'exécuter
+	_ L'initiative de l'appel est donc interne à l'application
+	_ Lorsque l'initiative vient de l'extérieur, on utilise des fonctions de rappel (callback)
+	_ Ce sont des fonctions matérialisées en valeurs, qu'on peut passer en argument à d'autres fonctions et sauvegarder en variables
+	_ Cette matérialisation prend la forme d'un pointeur de fonction (adresse mémoire de la 1e instruction), ou d'un objet contenant un pointeur de fonction (fonctions lambdas).
+	_ Principe d'Hollywood
+	_ Les callbacks sont très utilisés pour spécifier des comportements à exécuter après des évènements utilisateurs, pour lesquels le programme délègue l'initiative au système
+-->
+<p>
+	Dans les langages de programmation procéduraux, toute fonction doit être appelée explicitement pour s'exécuter.
+	L'initiative d'un appel de fonction est habituellement interne à l'application, elle permet de “sauter” d'une portion du programme à une autre, et d'y revenir ensuite.
+	Lorsque l'initiative vient de l'extérieur (par exemple suite à un évènement d'entrée utilisateur), on utilise des fonctions de rappel (<i>callbacks</i>).
+	Ce sont des fonctions matérialisées par des valeurs, qu'on peut passer en argument à d'autres fonctions, et sauvegarder dans des variables.
+	Cette matérialisation prend la forme d'un pointeur de fonction (adresse de la première instruction en mémoire) dans un langage impératif comme le C, ou d'un objet contenant un pointeur de fonction (fonction <i>lambda</i>) dans un langage à objets comme Python ou Java.
+	<!-- <del>L'utilisation de callbacks s'illustre</del> -->L'utilisation de callbacks permet le principe d'Inversion de Contrôle, dans lequel on délègue le déclenchement d'une fonction au framework (ou langage).
+	On l'illustre avec le Principe d'Hollywood : « <i>Don't call us, we'll call you</i> »
+	<!-- <del><notesh>Parler explicitement d'Inversion de Contrôle et donner une Ref. ?</notesh></del> -->.
+	Ils sont utilisés pour spécifier des comportements à exécuter après des évènements utilisateurs, pour lesquels l'initiative vient nécessairement de l'extérieur de l'application (par le framework, langage, ou système d'exploitation).
+</p>
+<!--
+	_ L'utilisation de callbacks favorise une répartition décentralisée du code, puisque chaque type de traitement en réaction à l'utilisateur est contenu dans un callback distinct
+	_ On parle de logique répartie pour décrire ce qui se passe plutôt que le code lui-même
+	_ Le problème est qu'un programme interactif contient de nombreux callbacks (chaque bouton/élément clickable est un callback), la plupart triviaux, qu'il faut malgré tout gérer.
+	_ Le problème est qualifié de “spaghetti of callbacks”, du nom de l'article de Myers qui a mis en évidence ce problème.
+	_ Il a donné lieu à de nombreux travaux visant à séparer l'interface du code (HTML/JS), regrouper les callbacks (machines à états, MBUIs), voire les fusionner (callbacks communs à plusieurs boutons dans macOS).
+-->
+<p>
+	L'utilisation de callbacks favorise une répartition décentralisée du code.
+	En effet, chaque <i>type</i> de traitement en réaction à l'utilisateur (déclenchement de chaque commande, propagation de chaque contrainte) est contenu dans un callback distinct.
+	Nous parlons alors de <i>logique répartie</i> pour signifier que le comportement observable de l'application est provoqué par des séquences d'instructions fragmentées en plusieurs endroits dans le code.
+	Du point de vue du programmeur d'application, ces fragments peuvent être répartis dans plusieurs fichiers, ou en plusieurs endroits dans un même fichier.
+	La logique répartie se rapporte aussi au stockage des callbacks durant l'exécution de l'application.
+	Ceux-ci sont généralement attachés aux widgets qui les déclenchent — par exemple une commande est attachée au bouton qui la déclenche.
+	Chaque widget stocke alors les valeurs (pointeurs, ou fonctions lambdas) des callbacks qu'il déclenche, et le stockage de l'ensemble des callbacks est donc réparti entre tous les widgets.
+</p>
+<p>
+	Des interfaces réalistes peuvent contenir des centaines, voire des milliers de callbacks — au moins autant que le nombre d'éléments clickables et interactifs de l'interface.
+	Dans ces conditions, la création, la compréhension, et la maintenance de l'interface sont rendues difficiles par la multiplicité et la fragmentation des comportements interactifs.
+	Le problème est qualifié de “<i>spaghetti of callbacks</i>”, du nom de l'article de Myers qui l'a mis en évidence [<a href=#myers_separating_1991>Mye91</a>].
+	Il a donné lieu à de nombreux travaux visant à :
+</p>
+<ul>
+	<li>séparer l'interface et le code pour réduire la fragmentation dans les fichiers (HTML/JavaScript, QML/Qt, FXML/JavaFX)</li>
+	<li>regrouper le stockage des callbacks liés à une technique d'interaction en particulier (machines à états)</li>
+	<li>fusionner les callbacks réalisant des traitements similaires (voir par exemple <code>ToggleGroup</code> dans JavaFX, ou <code>NSSegmentedControl</code> dans Cocoa)</li>
+</ul>
+<!--
+	_ La décentralisation dans une application interactive est une question de point de vue, qui dépend des éléments qu'on observe.
+	_ Lorsqu'on observe du point de vue de la machine, la centralisation est la séquencialité
+	_ Lorsqu'on observe du pdv des éléments interactifs, c'est l'ensemble des actions exécutées pour chaque action sur l'élément
+	_ Lorsqu'on observe du pdv d'une technique d'interaction, c'est l'ensemble des actions qui décomposent la technique
+	_ De façon plus générale, le problème s'étend aux architectures basées sur des objets (MVC), dans lesquelles les différents comportements des éléments interactifs sont représentés par des fonctions individuelles à chaque objet
+-->
+<p>
+	La répartition de la logique dans une application interactive est une question de point de vue, en fonction de l'objet d'intérêt dont on évalue la cohésion.
+	Lorsqu'on observe la logique d'un programme du point de vue de la machine, une répartition non fragmentée est équivalente à la séquentialité des instructions exécutées, c'est-à-dire la réduction des appels de fonction et branchements conditionnels.
+	Lorsqu'on observe la logique du point de vue des widgets, elle est équivalente à regrouper toutes les actions faites sur un widget dans un seul et même objet.
+	Enfin lorsqu'on observe la logique du point de vue d'une modalité d'interaction (ex. la souris), elle est équivalente à regrouper toutes les actions pouvant être exécutées par une modalité dans un seul et même objet.
+	En pratique on observe un compromis entre ces trois points de vue dans les frameworks d'interaction, et le point de vue des widgets est souvent favorisé par rapport aux autres dans les architectures basées sur des widgets.
+<!-- 	<del><notesh>Pas mal ce raisonnement. En tires-tu profit plus tard pour justifier l'approche par Systèmes ? Comment cette approche se situe dans le compromis que tu identifies ?</notesh></del> -->
+</p>
+<!--
+	_ Problème : manque de compatibilité entre les différents points de vue, souvent la cohérence d'un pdv se fait au détriment des autres
+	_ Problèmes : qu'est-ce qui a causé un effet particulier, comment représenter visuellement l'exécution du programme
+	_ L'observation et le déboguage d'une application sont rendues difficiles par les sauts de fonction vers/hors chaque objet d'intérêt
+	_ Notre objectif est d'établir une meilleure cohérence entre l'exécution du point de vue de la machine, et du point de vue des objets et techniques d'interaction
+	_ Nous avons donc choisi une orchestration peu fragmentée de l'interaction, dans laquelle les actions relatives à un objet ou une technique d'interaction sont autant que possible séquentielles en code.
+	-> faciliter la transition entre les pdv
+-->
+<p>
+	Le problème soulevé par la fragmentation de la logique dans les applications interactives, est que les interfaces s'expriment au mieux dans un point de vue, souvent au détriment des autres.
+	Par exemple, la technique du glisser-déposer est notoirement plus difficile à implémenter lorsqu'on l'exprime par des callbacks sur des widgets [<a href=#wagner_drag_1995>Wag95</a>], que par des callbacks liés à la technique d'interaction [<a href=#appert_swingstates_2008>App08</a>].<!-- Attention pas 2006 -->
+	Le manque de centralisation de la logique du point de vue de la machine complique la compréhension et la visualisation du flux d'exécution du programme, ce qui rend particulièrement difficile le débogage des interfaces graphiques.
+	Nous souhaitons donc améliorer la centralisation de la logique pour chacun des trois points de vue, et améliorer la transition entre les trois afin de ne pas favoriser l'un au détriment des autres.
+	Dans cette optique, nous avons choisi une orchestration de l'exécution peu fragmentée, dans laquelle les actions relatives à un objet ou une technique d'interaction sont autant que possible séquentielles en code.
+<!-- 	<del><notesh>Ah beh voilà une première réponse à mon commentaire précédent... du coup, plus ça va plus je me rends compte qu'il y a beaucoup de choses intéressantes qui ont été discutées depuis le début de ce chapitre, et que l'on n'est pas encore arrivés aux essentiels d'interaction, ni à l'analyse de ton approche selon ce point de vue... du coup, je sens qu'il va falloir un bon résumé pour "fixer" un peu tout ça. EDIT: j'ai l'impression après avoir lu les premières lignes que ça arrive dans la sous-section suivante, au moins pour le résumé... Par contre, quand est-ce que tu vas faire le lien avec ton travail sur ECS ?</notesh></del> -->
+</p>
+
+<h3>Le support d'une orchestration explicite et flexible de l'interaction</h3>
+
+<p>À la lumière des aspects des paradigmes d'exécution énumérés ci-dessus dans le contexte de l'interaction, nous voulons formuler un Essentiel d'Interaction avec les caractéristiques suivantes :</p>
+<ul>
+	<li>inclut ou supporte l'utilisation de plusieurs modèles de programmation</li>
+	<li>propage les évènements de façon passive (<i>pushing</i>), mais où les traitements liés à la gestion d'évènements sont spécifiés et observables</li>
+	<li>intègre le “fil d'interface” et le “fil d'interaction” de façon cohérente dans une même procédure</li>
+	<li>réunit les traitements similaires (par type, widget d'appartenance, ou modalité d'interaction) dans des blocs séquentiels de code</li>
+</ul>
+<p>
+	Ces caractéristiques ont en commun qu'elles ont pour but de donner plus de contrôle au programmeur cherchant à exprimer des comportements interactifs.
+	Il peut s'agit d'exprimer clairement quelles actions de l'utilisateur peuvent déclencher un bloc de code, ou encore réunir tous les traitements liés à une même technique d'interaction dans un même bloc de code.
+	Nous comparons ce contrôle étendu à celui d'un chef d'orchestre.
+	L'<i>orchestration</i> se réfère à l'arrangement des différentes actions les unes par rapport aux autres.
+	Elle se compare aisément avec les orchestres de musique.
+	Chaque musicien doit jouer en rythme, dans la même tonalité (fréquences des notes), et avec la même intensité que les autres musiciens, pour apporter de la cohérence à l'ensemble de la composition.
+	Le chef d'orchestre, qui recherche cette harmonie, communique collectivement et individuellement avec les musiciens, par un vocabulaire spécifique, pour unifier leur rythme, tonalité, et intensité.
+	Nous parlons d'orchestration pour désigner les outils à la disposition du chef d'orchestre (et dans notre contexte, des programmeurs), pour arranger, ordonner, et synchroniser des musiciens (ou des processus interactifs).
+</p>
+<p>
+	L'orchestration intervient à un niveau macroscopique, comme le souligne Berry dans le développement de Hop et HipHop [<a href=#berry_hop_2014>Ber14</a>].
+	Il ne s'agit pas d'orchestrer des instructions atomiques entre elles, mais des processus complexes.
+	Les besoins liés à l'orchestration, dans le contexte des applications interactives, ont été étudiés avec les modèles d'exécution “réactifs”, avec des langages comme Esterel [<a href=#berry_programmation_1987>Ber87</a>], Lustre [<a href=#caspi_lustre_1987>Cas87</a>], et Signal [<a href=#leguernic_programming_1991>LeG91</a>].
+	Des travaux ont aussi proposé des extensions aux langages impératifs, qui facilitent leur intégration dans des écosystèmes existants.
+	Ainsi, HipHop.js s'intègre dans le langage JavaScript pour produire des applications Web distribuées entre client et serveur [<a href=#vidal_hiphop.js_2018>Vid18</a>].
+	ReactiveC s'intègre dans le langage C à l'aide d'un préprocesseur [<a href=#boussinot_reactive_1991>Bou91</a>].
+	Enfin, ReactiveML s'intègre dans le langage OCaml, et a été notablement appliqué aux simulations interactives [<a href=#mandel_interactive_2009>Man09</a>] et à la production musicale [<a href=#baudart_programming_2013>Bau13</a>].
+<!-- 	<del><notesh>La biblio n'est pas à jour ? Je n'y ai pas trouvé ces réf.</notesh></del> -->
+</p>
+<p>
+	Cependant, les travaux basés sur le modèle réactif présupposent que <i>toute</i> l'exécution se déroule dans le programme, et ne permettent pas de donner l'initiative à l'environnement — à l'exception d'ICon qui a étendu ce modèle aux évènements extérieurs pour l'appliquer aux entrées de dispositifs d'interaction [<a href=#dragicevic_modeinteraction_2004>Dra04</a>].
+	Les processus sont toujours déclenchés depuis l'application même, et c'est depuis celle-ci qu'on attend des évènements, ou qu'on synchronise des processus.
+<!-- 	<del><notesh>Exception: ICon, qui justement applique le modèle réactif à l'interaction et a donc étendu le modèle pour prendre en compte des évènements extérieurs issus de l'environnement, avec ce qu'il appelle des "entrées implicites". Ces dispositifs qui communiquent avec l'extérieur sont donc asynchrones. voir <a href="http://dragice.fr/these/html/C_5environnement.html">ICI</a></notesh></del> -->
+	Ce fonctionnement est différent de celui des frameworks d'interaction courants, dans lesquels l'application laisse la main au système, pour être appelée en retour.
+	Le problème de l'initiative influence le modèle d'interaction qui est adopté, or comme nous l'avons présenté la conservation de l'initiative dans l'application favorise un modèle conversationnel.
+	De plus, ils ne permettent pas d'exprimer des relations de causalité entre les processus, telles que proposées par les <i>bindings</i> de djnn [<a href=#chatty_reconcilier_2012>Cha12</a>], ou la Programmation Orientée Aspect [<a href=#kiczales_aspect-oriented_1997>Kic97</a>].
+	Sans trop orienter le type de solutions à adopter dans notre travail, nous formulons donc le premier Essentiel d'Interaction :<!-- <del>considérons donc comme un Essentiel d'Interaction le besoin d'<b>orchestrer des comportements interactifs procéduraux, en exprimant leur séquencement, leur causalité, et leur réaction à l'initiative d'évènements extérieurs</b>.</del> -->
+</p>
+<div style="border:2px solid black; margin:1cm 0 1.5cm 0; padding:1cm .5cm; text-align:center"><span style="font:bold 15pt Palatino">Essentiel d'Interaction n°1</span><br><br>
+	Orchestrer des comportements interactifs procéduraux, en exprimant leur séquencement, leur causalité, et leur réaction à l'initiative d'évènements extérieurs
+</div>
+
+<link rel=stylesheet href=style.css>
+<link rel=stylesheet href=prism.css>
+<script src=scripts.js></script>
+<script src=prism.js></script>
+<script>prefix_headers(2, 2)</script>

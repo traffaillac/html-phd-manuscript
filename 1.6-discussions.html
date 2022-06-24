@@ -1,0 +1,235 @@
+<h2>Discussions et implications</h2>
+
+<p>
+	Maintenant que nous avons analysé les résultats des interviews et des questionnaires, il convient de répondre à la question : <i>Que pouvons-nous faire ?</i>
+	Nous discutons donc ici des solutions qui peuvent être apportées aux problèmes évoqués dans les deux études, et quels travaux futurs nous semblent les plus pertinents.
+</p>
+
+<h3 class=break>Adéquation des frameworks avec la recherche en IHM</h3>
+
+<p>
+	<i>Les frameworks d'interaction les plus répandus<!-- <del><notesh>Les frameworks, c'est un peu large ? Préciser quels frameworks ? e.g. "Les frameworks d'interaction usuels" ? ou "les plus répandus" ou "les plus utilisés" ?</notesh></del> --> sont-ils réellement adéquats pour prototyper de nouvelles techniques d'interaction en IHM ?</i>
+	Cette question mérite d'être soulevée, car les interviews nous ont révélé que les frameworks d'interaction posaient de nombreux problèmes, et les questionnaires ont confirmé que ces problèmes étaient rencontrés par une part non négligeable de développeurs.
+	Nous avons relevé trois contradictions entre la <i>nature</i> des frameworks et celle de la recherche.
+</p>
+<p>
+	Tout d'abord, le support d'usages avancés implique un plus grand risque de bugs.
+	En effet, de tels usages impliquent d'écrire du code plus complexe, qui fasse appel à des concepts et des technologies moins maîtrisés ou peu robustes, voire liés au bas niveau (et toutes les difficultés que cela apporte).
+	Ici, les bugs concernent le code écrit par les chercheurs, et se rapportent à des comportements non souhaitables, qui incluent ainsi les problèmes de manque de précision ou de latence, bien qu'ils ne compromettent pas forcément l'exécution du programme.
+	Du côté des frameworks, le support de fonctionnalités avancées (comme la possibilité de créer de nouveaux types de widgets) revient souvent à écrire <i>plus de code</i>, soit parce qu'il faut proposer de nouvelles fonctions, soit pour exposer une interface à des fonctions internes.
+	Or de nombreux auteurs évaluent le ratio de bugs par lignes de code, défendant implicitement l'hypothèse que <i>de plus gros projets contiennent plus de bugs</i> [<a href=#mayer_ratio_2012>May12</a>, <a href=#mcconnell_code_2004>McC04</a>].
+	Dès lors, nous considérons que le support de fonctionnalités avancées contribue, au moins indirectement, à un plus grand risque de bugs.
+	Cette hypothèse met les frameworks en équilibre entre deux objectifs contradictoires : supporter de nouveaux usages liés à la recherche, et diminuer leur nombre de bugs.
+<!-- 	<del>En effet, de nombreux auteurs évaluent le ratio de bugs par lignes de code, défendant implicitement l'hypothèse que <i>de plus gros projets contiennent plus de bugs</i> [<a href=#mayer_ratio_2012>May12</a>, <a href=#mcconnell_code_2004>McC04</a>].
+	Dès lors, nous pouvons admettre que le support de fonctionnalités avancées augmente la taille des frameworks <notesh>mouais... OK, le support de fonctionnalités augmente la taille, c'est certain. Mais est-ce que le fait qu'elles soient avancées l'augmente plus ?</notesh>, donc le nombre de bugs pouvant être rencontrés par les utilisateurs avancés <notesh>de plus, dans ce cas des "fonctionnalités avancées" (terme qui resterait à définit), je ne suis pas certain que ce soit la taille qui augmente le nombre de bug, mais plutôt le fait que "avancé" implique complexe, faisant appel à des concepts ou des technologies en marge, exploratoire, ou peu maitrisées/robustes, ou plus bas niveau, etc.</notesh>.
+	Or en pratique, nous avons observé que la présence de bugs était perçue comme la plus critique par les participants de notre questionnaire.
+	Les frameworks sont donc en équilibre entre deux objectifs contradictoires : supporter de nouveaux usages liés à la recherche, et diminuer leur nombre de bugs. <notesh>pareil pour la notion de "bug", mériterai d'être éclaircie dans ce contexte... est-ce le bug lié à une erreur de programmation (e.g. null pointer ou mauvaise plage d'indice) ou plutôt une failure/manque de fiabilité/robustess/précision due à des cas limites d'utilisation de la technologie (e.g. simuler une détection de pression appliquée sur une surface tactile en utilisant la variation de la taille du blob alors que ça n'est pas pris en charge à plus bas niveau par le hardware ou le pilote de périphérique, et donc ça ne va pas être très fiable/précis et renvoyer parfois des valeurs incohérentes...)</notesh></del> -->
+</p>
+<p>
+	Ensuite, le faible nombre d'utilisateurs ne favorise pas l'exhaustivité de la documentation.
+	Pour le framework Qt le plus cité dans les réponses au questionnaire, le domaine de la recherche n'est aucunement mentionné sur la page principale de Qt [<a href=#the_qt_company_qt_2019>Qt19</a>], ni les fonctionnalités d'extension, de réutilisation, et de transparence relevées dans les questionnaires.
+	Ces absences sont un symptôme de la faible part d'utilisations de Qt à des fins de développement de projets de recherche<!-- <del>d'utilisateurs de Qt liés à la recherche <notesh>je dirais plutôt "de la faible part d'utilisation de Qt à des fins de développement de projet de recherche"</notesh></del> -->, et de l'intérêt relativement moindre que porte le développeur à ce contexte.
+	Ainsi il est probable que les développeurs consacrent moins d'énergie à fournir une documentation adaptée aux besoins des développeurs menant des projets de recherche.
+	Nous en observons principalement les conséquences, à savoir une documentation insuffisante vis-à-vis des capacités d'extension, de réutilisation, d'adaptabilité et de transparence du framework.
+<!-- 	<del>Les développeurs de frameworks sont donc faiblement incités à fournir une documentation complète <notesh>je ne vois pas le liens de cause à effet suggéré par ton "donc" entre peu utilisé pour la recherche et donc pas de documentation complète... (qu'est-ce d'ailleurs qu'une "documentation complète" ? Je dirais plutôt "fournir une documentation mieux adaptée aux besoins des développeurs menant des projets de recherche, détaillant les capacités d'extension, de réutilisation, d'adaptabilité et de transparence du framework telles que relevées dans les questionnaires")</notesh>, ce que nous observons dans les problèmes les plus fréquents du questionnaire.</del> -->
+</p>
+<p>
+	Enfin, la robustesse d'un framework tend à limiter sa flexibilité aux extensions.
+	À mesure que de nouveaux usages se développent, les besoins en données évoluent.
+	C'est ce que nous observons avec la <i>transparence</i> des données soulevée par les stratégies du questionnaire.
+	Or la mise à disposition de données autrefois cachées présente toujours un risque de sécurité.
+	Par exemple, autoriser l'interception d'évènements du clavier au niveau du système permet également d'intercepter les mots de passe.
+	C'est un jeu du chat et de la souris, dans lequel toute ouverture de données est souvent contrebalancée par une mesure restrictive.
+</p>
+<p>
+	Dans ces conditions, nous arguons que l'utilisation d'un framework sera <i>par nature</i> entravée dans un contexte de recherche.
+	Sans être rédhibitoires, les contraintes évoquées n'ont pas de raison d'évoluer favorablement à l'avenir.
+	Les frameworks ne sont donc pas inadéquats, mais ne nous semblent pas les solutions les plus prometteuses.
+	De meilleures solutions seraient plutôt :
+</p>
+<ul>
+	<li>des projets moins complexes, réduisant le nombre de bugs</li>
+	<li>dédiées à la recherche, et documentées pour</li>
+	<li>dotées d'une grande flexibilité, plutôt que la robustesse</li>
+</ul>
+
+<!-- <del><sh>OK pour la conclusion</sh></del> -->
+
+<h3>Faciliter le développement d'applications <i>ad hoc</i></h3>
+
+<p>
+	Face aux difficultés rencontrées avec les frameworks d'interaction, une solution serait de faciliter le développement d'applications <i>ad hoc</i> (ou <i>from scratch</i>), c'est-à-dire sans l'utilisation de patrons de conception réutilisables.
+	Il s'agirait alors d'utiliser directement des bibliothèques de bas-niveau, pour les entrées (SDL, TUIO [<a href=#kaltenbrunner_tuio_2005>Kal05</a>, libpointing [<a href=#casiez_no_2011>Cas11</a>], etc.) et les sorties (OpenGL, Cairo, etc.).
+</p>
+<p>
+	Une telle approche aurait l'avantage d'offrir une plus grande liberté d'adhérer aux usages contemporains, en termes d'apparence des éléments interactifs et de leur interactivité.
+	Elle favorise l'évolution des architectures d'interaction et la remise en question des fonctionnalités à inclure, n'étant pas sujette à des contraintes historiques (manque de mémoire, vitesse du rendu graphique sur CPU).
+	De plus, la quantité de travail à produire est très inférieure à celle d'un framework, car il n'est pas nécessaire d'inclure des fonctionnalités en dehors de celles dont on a besoin, ni de mécanismes d'extension, ou encore de documenter pour d'autres développeurs.
+	Enfin, du fait de l'ampleur réduite de tels projets, les outils de gestion de projets (CMake, Gradle, Maven) peuvent être épargnés, contribuant à réduire les efforts d'apprentissage et de programmation.
+</p>
+<p>
+	Cependant, la conception d'une application interactive <i>ad hoc</i>, même partielle, est un projet complexe, dont les efforts augmentent avec la taille du projet.
+	L'utilisation de méthodes de conception opportunistes adaptées aux petits projets peut se heurter à un mur de complexité, si son ambition n'a pas été correctement planifiée en amont.
+	De plus, le code produit ne sera probablement pas réutilisable pour de futurs projets, ni portable vers d'autres systèmes.<!-- <del> aussi bien par d'autres développeurs que par l'auteur du code.<notesh>Un point important en plus de la réutilisabilité est aussi la portabilité sur différents plateformes/systèmes, ce que cherchent parfois (souvent ?) les chercheurs avec leur prototypes pour les tester et les évaluer dans différents contextes. Les frameworks peuvent faciliter ça (e.g. Qt, JavaFX) alors que c'est plus compliqué avec une application ad-hoc...</notesh></del> -->
+	Enfin, une telle démarche requiert beaucoup de connaissances ou d'expérience pour être avantageuse en temps par rapport à l'utilisation d'un framework éprouvé.
+</p>
+<p>
+	En pratique lors des interviews, trois participants nous ont explicitement indiqué s'être affranchis des éléments réutilisables d'un framework : P2:L114 « <i>C'est rapide, c'est super rapide. Ça dépend comment tu le fais, mais ce que j'ai fait c'est que j'ai fait une application dans laquelle je dessine des rectangles, il charge une image, dessine des rectangles, [...]</i> », P5:L88 « <i>Beaucoup de fois oui, je redessine mes propres widgets, parce que pareil il me faut des widgets avec des formes assez... bizarres, ou... particulières</i> », P7:L149 « <i>Mais moi j'aurais fait tout connement des boutons. Je n'aurais pas cherché un code, je sais comment faire ça, à la main, from scratch</i> ».
+	En outre, P4 nous a décrit ses difficultés lorsque son projet <i>ad hoc</i> a commencé à prendre des proportions excessives : P4:L46 « <i>Là ça c'est comme ça, du coup mon application a commencé à grossir, grossir, grossir. Et après tu te rends compte qu'il te manque des trucs, donc je modifiais, et ça passait par les mêmes tuyaux, mais des fois il y avait des hacks parce que j'avais mis en place un truc qu'il prévoyait pas</i> ».
+</p>
+<p>
+	<i>Que pourrions-nous faire ?</i>
+	Selon notre interprétation des résultats du questionnaire, deux problèmes limitent principalement le développement d'applications ad hoc.
+	Tout d'abord, il y a un <b>manque de documentation sur la programmation d'interfaces ad hoc</b>.
+	En effet, les références principales sur le sujet sont des architectures d'interaction (comme MVC, MVP, et PAC), qui sont conçues pour être robustes, c'est-à-dire qui fonctionnent de façon prévue quels que soient les évènements d'entrée.
+	Il existe peu d'architectures ou de documentations dédiées à mettre <i>rapidement</i> en œuvre une application interactive.
+	À notre connaissance, seule ImGui [<a href=#muratori_immediate-mode_2005>Mur05</a>] répond à ce besoin en s'affranchissant de la construction d'un arbre de scène, mais elle est populaire uniquement dans le domaine du Jeu Vidéo.
+	Le second problème est un <b>manque de documentation et d'exemples sur l'utilisation des périphériques à bas niveau</b>.
+	Aujourd'hui, il est difficile d'utiliser des APIs de bas niveau directement, sans l'utilisation d'un framework.
+	Ceux-ci fournissent souvent leurs propres APIs internes — permettant par exemple d'initialiser une fenêtre d'affichage pour OpenGL.
+	Autrement, il faut se confronter à la complexité des fonctions du système, que nous avons détaillée dans la problématique de ce chapitre.
+	D'ailleurs, les trois participants cités ayant programmé des applications ad hoc l'ont tous fait <i>dans le cadre</i> d'un framework.
+	Des bibliothèques existent pour fournir un accès direct et simple aux périphériques d'entrée/sortie, cependant ils suffisent rarement seuls et ne cohabitent pas toujours très bien à plusieurs.
+	Par exemple, lors de l'utilisation de libpointing pour la souris [<a href=#casiez_no_2011>Cas11</a>], nous n'avons pas été en mesure de capturer les entrées du clavier avec SDL.
+	La multiplication de bibliothèques d'accès au bas niveau ne nous semble donc pas la solution la plus pérenne, car elles contribuent à la structure des APIs en couches, que nous cherchons par ailleurs à éviter.
+	Il nous semblerait préférable de <i>documenter</i> l'utilisation des APIs de bas niveau des différents systèmes d'exploitation, et de fournir des exemples de code rapides à mettre en œuvre.
+</p>
+
+<!-- <del><sh>Pas grand chose à dire sur cette section, c'est très haut niveau</sh></del> -->
+
+<h3>Rapprocher le Web des applications de bureau</h3>
+
+<p>
+	Au cours de nos recherches, nous avons observé que les technologies Web sont de plus en plus utilisées dans le domaine des applications de bureau.
+	Il peut s'agir par exemple de réaliser un prototype d'application de bureau en Web, et de l'utiliser pour effectuer une série d'expériences contrôlées.
+	Ce glissement des usages mérite d'être souligné.
+	Lorsqu'Internet s'est diffusé initialement auprès des particuliers, les technologies HTML puis CSS servaient à concevoir des <i>sites Web</i>.
+	Un site Web est une page à défilement vertical, de largeur fixe et de hauteur variable, dont le contenu (principalement des blocs de texte et des images) s'arrange automatiquement de haut en bas et de gauche à droite.
+	Ce fonctionnement est inspiré des logiciels de traitement de texte, mais sans la séparation en pages.
+	Les sites Web sont accessibles par l'intermédiaire d'un navigateur, qui convertit les pages HTML/CSS en des interfaces visibles et interactives.
+	D'un autre côté, les <i>applications de bureau</i> sont des fenêtres de largeur et hauteur variables, dont le contenu est librement déterminé par chaque application.
+	Ce sont des programmes exécutables qui ne dépendent pas d'un navigateur, mais s'intègrent directement dans le système de fenêtrage du système d'exploitation.
+	Chaque application gère donc une ou plusieurs fenêtres, dans lesquelles elle peut dessiner et capturer les évènements d'entrée.
+</p>
+<p>
+	Historiquement, les sites Web et applications de bureau étaient considérés comme des domaines distincts, avec des frameworks distincts.
+	Cependant, l'émergence des <i>applications Web</i> (webmails, systèmes de gestion de contenu, wikis, jeux en ligne, etc.) a rapproché les deux mondes.
+	Du côté Web, des widgets sont apparus pour reproduire une partie de l'expérience utilisateur de bureau — comme les boutons, onglets, ou menus.
+	Du côté bureau, les frameworks ont réutilisé des technologies à la base du Web pour bénéficier de leur robustesse héritée de nombreuses évolutions — comme JavaScript dans QML, ou CSS dans JavaFX.
+	Aujourd'hui, alors que les technologies du Web permettent de plus en plus de s'aventurer sur le terrain de la bureautique, nous arguons que des travaux futurs devraient appuyer cette tendance.
+</p>
+<p>
+	En effet, le mouvement initié par le <i>World Wide Web Consortium</i> (W3C) est une tentative de standardisation de la structure interne d'un framework.
+	Au delà de l'utilisation d'une architecture comme MVC, il s'agit de définir les classes disponibles (<i>Document Object Model</i> — DOM), les attributs de style (CSS), les instructions de dessin (<code>canvas</code> et SVG), et beaucoup d'autres.
+	Ces normes sont ainsi implémentées par plusieurs navigateurs concurrents, qui aident à détecter les ambiguïtés des spécifications à cause des détails de comportements différents.
+	Ce fut le cas aussi grâce aux tests Acid1, Acid2 et Acid3 [<a href=#hickson_acid_1999>Hic99</a>], qui ont contribué à uniformiser les comportements observables des navigateurs.
+	En interne, la spécification DOM permet d'accéder à une partie des sructures privées des navigateurs — certaines n'étant pas standardisées et spécifiques à chaque navigateur.
+	On dispose ainsi d'une certaine <i>transparence</i>, critère essentiel aux stratégies de programmation classées dans les résultats du questionnaire.
+	En outre, les technologies du Web sont conçues pour être portables entre les systèmes d'exploitations, et c'est le rôle des navigateurs de gérer les éventuelles différences.
+	Enfin, les standards du W3C sont en constante évolution, poussés par les concepteurs de navigateurs et toutes les personnes volontaires.
+	Ils peuvent ainsi corriger les éventuelles “erreurs de jeunesse”, et s'adapter aux usages contemporains.
+	C'est le cas par exemple avec les balises HTML dépréciées à chaque nouvelle version.
+</p>
+<p>
+	Les technologies Web souffrent cependant de quelques inconvénients majeurs.
+	Tout d'abord, il est difficile pour les navigateurs d'atteindre une vitesse d'exécution et empreinte mémoire comparables à celles de frameworks de bureau.
+	Ceci est dû en partie à l'utilisation du langage dynamique JavaScript, et aussi à l'<i>immense</i> complexité des spécifications nécessaires pour implémenter un navigateur Web moderne, qui compliquent les efforts d'optimisation.
+<!-- 	<del><notesh>Je pense qu'un point important aussi pour la performance, est que depuis le début du WWW et des navigateurs, il y a une contrainte et un soucis de résilience fort des moteurs de rendu: il faut afficher tout ce qu'on peut, malgré les éventuelles erreurs dans le code, et sans que ça ne plante tout le navigateur. L'idée étant que les producteurs et  consommateurs de contenu ne sont pas forcément des expertes de la programmation. Ça doit impacter sur la performance (en particulier quand le code source comporte des erreurs)</notesh></del> -->
+	Le nombre et la complexité des standards est lié à la pression importante de nombreux acteurs pour ajouter diverses fonctionnalités [<a href=#w3c_all_2019>W3C19</a>].
+	Cette complexité est encore accentuée par la permissivité des navigateurs, qui devaient historiquement interpréter le code du mieux qu'ils le pouvaient, malgré d'éventuelles erreurs, afin de faciliter la création de sites Internet par les novices.
+	La complexité des technologies Web tend néanmoins à s'auto-réguler grâce aux mécanismes de dépréciation, et les standards n'obtenant pas un succès d'usage sont à terme abandonnés ou remplacés.
+	Enfin, tout comme les frameworks de bureau, la durée de vie d'une extension accédant à des APIs internes est limitée dans le temps, et ceci même lorsque les APIs sont standardisées.
+	En effet, avec l'apparition de mécanismes d'extension trop souples, se développent de nouveaux <i>malwares</i> les utilisant pour porter atteinte aux utilisateurs.
+	Des sécurités supplémentaires apparaissent alors, qui invalident à terme les extensions précédemment développées.
+	C'est le cas par exemple avec la technologie Ajax, qui permettait d'émettre des requêtes HTTP depuis le code JavaScript, mais qui s'est vue contrainte ensuite par la technologie <i>Cross-Origin Resource Sharing</i>.
+</p>
+<p>
+	<i>Que pourrions-nous faire ?</i>
+	L'utilisation des technologies du Web pour construire des applications de bureau, et prototyper des techniques d'interaction liées à ce type d'applications, nécessite des <i>ponts</i> entre les deux domaines.
+	Le framework Electron, par exemple, permet de distribuer une application Web comme application de bureau, sans l'interface d'un navigateur [<a href=#github_electron_2013>Git13</a>].
+	Cependant, l'API pour accéder aux services du système d'exploitation est en partie spécifique à Electron, et n'est pas standardisée en tant que technologie du W3C.
+	Des standardisations des widgets en balises HTML ont été tentées par le passé, certaines ayant été adoptées (<code>button</code>, <code>progress</code>, ou <code>textarea</code>), d'autres ayant été abandonnées (<code>menu</code>, <code>command</code>).
+	Avec le développement récent des Web Components, il est possible de créer de nouvelles balises HTML pour prototyper des extensions à HTML.
+	Il nous semble donc opportun et crucial de <b>participer aux efforts de standardisation en cours du W3C</b>, pour faciliter la création d'applications de bureau avec les technologies Web.
+	Pour informer et orienter ces évolutions, il convient aussi de <b>démontrer l'implémentation de techniques d'interaction en Web</b> (voir par exemple [<a href=#roy_marking-menu_2019>Roy19</a>]).
+</p>
+<p>
+	Dans ce travail de thèse, comme nous le verrons plus tard, nous avons utilisé les technologies du Web pour leur flexibilité, ce qui nous a permis d'explorer des syntaxes de code innovantes.
+	La contribution aux groupes de travail du W3C relève des travaux futurs.
+</p>
+
+<!-- <del><sh>Là par contre, avec les techno web, on a la portabilité (voir mon commentaire dans la section précédente).</sh></del> -->
+
+<h3>Liens avec ce travail de thèse</h3>
+
+<p>
+	Les deux études présentées dans ce chapitre nous ont permis d'observer la faible utilisation des boîtes à outils d'IHM en pratique, donc l'intérêt limité d'une telle contribution dans ce travail de thèse.
+	L'important est la <i>connaissance</i> qu'on en retire.
+	Pour que nos travaux contribuent aux connaissances sur la programmation d'interactions, nous les avons toujours attachés à des projets ou communautés existants, afin de contribuer à leur développement.
+	Nous nous sommes orientés en particulier vers le développement d'interfaces ad hoc, et l'utilisation des technologies Web en lien direct avec le bas niveau (sans navigateur).
+</p>
+
+<!-- <del><sh>OK, pas grand chose à dire là non plus... ça me semble un peu décorrélé des sections précédentes sur les résultats de l'étude, j'ai l'impression qu'il manque un niveau de discussion quand même, mais bon, ça passe... reste à voir comment ça s'enchaine avec la suite et ce que tu retires de cette discussion après dans tes contributions. Je verrais quand je ferais une passe dans l'ordre sur tout, mais il faut aussi que tu le fasses en te relisant.</sh></del> -->
+<!--<traf>Répondu normalement avec l'analyse des résultats d'interviews, et l'ajout de quelques ponts réguliers à l'état de l'art et les travaux des chapitres 2 et 3.</traf>
+<sh>Oui, c'est bien mieux !</sh>-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel=stylesheet href=style.css>
+<script src=scripts.js></script>
+<script>prefix_headers(1, 6)</script>

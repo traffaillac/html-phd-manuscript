@@ -1,0 +1,375 @@
+<!doctype html>
+<!-- Rappels :
+	_ Nécessite l'installation de NodeJS ainsi que le package pagedjs-cli (brew install node && npm i -g pagedjs-cli@0.0.4 && npm i pagedjs-cli@0.0.4)
+	_ Alt-3 et Alt-Shift-3 pour les guillemets apostrophes ouvrants/fermants
+	_ Alt-7 et Alt-Shift-7 pour les guillemets chevrons ouvrants/fermants
+	_ Alt-Dash pour le Em dash (long) et Alt-Shift-Dash pour le En dash (moyen)
+	_ Alt-Space pour l'espace insécable (&nbsp;)
+	_ Éviter l'utilisation de <sup> et <sub> qui augmentent l'espacement interlignes (préférer Unicode ²ᵉ)
+	_ Couleurs: #FF9300 (orange), #0096FF (bleu), #FF2600 (rouge), #008F00 (vert), #9437FF (violet)
+-->
+<html lang=fr>
+<head>
+	<meta charset=utf8>
+	<title>Thèse Thibault Raffaillac</title>
+	<link rel=stylesheet href=style.css>
+	<link rel=stylesheet href=prism.css>
+	<style>
+		@media print {
+			@page {
+				size: A4;
+				margin: 3.5cm 2.5cm;
+				@bottom { font: 10pt Avenir Next; content: counter(page) }
+			}
+			@page :left {
+				@top-left {
+					border-bottom: 1pt solid black;
+					content: string(chapter);
+					font: italic 10pt Avenir Next;
+					margin-bottom: .5cm;
+					vertical-align: bottom;
+				}
+			}
+			@page :right {
+				@top-right {
+					border-bottom: 1pt solid black;
+					content: string(section);
+					font: italic 10pt Avenir Next;
+					margin-bottom: .5cm;
+					vertical-align: bottom;
+				}
+			}
+			
+			@page :blank {
+				@top-left { border: none; content: none }
+				@top-right { border: none; content: none }
+				@bottom { content: none }
+			}
+			@page :nth(1) {
+				@top-left { border: none; content: none }
+				@top-right { border: none; content: none }
+				@bottom { content: none }
+			}
+			@page :nth(3) {
+				@top-left { border: none; content: none }
+				@top-right { border: none; content: none }
+				@bottom { content: none }
+			}
+			@page :nth(5) {
+				@top-left { border: none; content: none }
+				@top-right { border: none; content: none }
+				@bottom { content: none }
+			}
+			@page :nth(6) {
+				@top-left { border: none; content: none }
+				@top-right { border: none; content: none }
+				@bottom { content: none }
+			}
+			@page :nth(7) {
+				@top-left { border: none; content: none }
+				@top-right { border: none; content: none }
+				@bottom { content: none }
+			}
+			@page :nth(9) {
+				@top-left { border: none; content: none }
+				@top-right { border: none; content: none }
+				@bottom { content: none }
+			}
+			@page :nth(10) {
+				@top-left { border: none; content: none }
+				@top-right { border: none; content: none }
+				@bottom { content: none }
+			}
+			@page :nth(11) {
+				@top-left { border: none; content: none }
+				@top-right { border: none; content: none }
+				@bottom { content: none }
+			}
+			@page :nth(12) {
+				@top-left { border: none; content: none }
+				@top-right { border: none; content: none }
+				@bottom { content: none }
+			}
+			
+			@page :nth(13) {
+				@top-left { border: none; content: none }
+				@top-right { border: none; content: none }
+			}
+			@page :nth(17) {
+				@top-left { border: none; content: none }
+				@top-right { border: none; content: none }
+			}
+			@page :nth(65) {
+				@top-left { border: none; content: none }
+				@top-right { border: none; content: none }
+			}
+			@page :nth(103) {
+				@top-left { border: none; content: none }
+				@top-right { border: none; content: none }
+			}
+			@page :nth(165) {
+				@top-left { border: none; content: none }
+				@top-right { border: none; content: none }
+			}
+			@page :nth(177) {
+				@top-left { border: none; content: none }
+				@top-right { border: none; content: none }
+			}
+		}
+		
+		.toc {
+			font: 10pt Avenir Next;
+			line-height: 1.5;
+			list-style: none;
+			margin: 0;
+			overflow-x: hidden;
+			padding: 0;
+			width: 16cm;
+		}
+		.toc li:before {
+			content: ". . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .";
+			float: left;
+			white-space: nowrap;
+			width: 0;
+		}
+		.toc a {
+			color: black;
+		}
+		.toc a:first-child {
+			background: white;
+			padding-right: 0.33em;
+		}
+		.toc a::after {
+			background: white;
+			content: target-counter(attr(href), page);
+			float: right;
+			padding-left: 0.33em;
+		}
+	</style>
+<body>
+	<div style="margin-bottom:2cm; overflow:auto; text-align:center">
+		<img src=figures/ULille.png style="float:left; height:1.5cm">
+		<img src=figures/cristal.svg style="height:1.5cm">
+		<img src=figures/inria.svg style="float:right; height:1.5cm">
+	</div>
+	<div style="font:small-caps 10pt Avenir Next; margin-bottom:1.8cm; text-align:center">
+		<span style="font:small-caps 28pt Avenir Next">Thèse</span><br>
+		de<br>
+		<span style="font:small-caps 23pt Avenir Next">Doctorat en Informatique</span><br>
+		École Doctorale SPI<br>
+		UMR 9189 - CRIStAL<br>
+		présentée et soutenue le 18/12/2019<br>
+		par<br>
+		<span style="font:small-caps 28pt Avenir Next">Thibault Raffaillac</span><br>
+	</div>
+	<div style="border-top:2px solid black; border-bottom:2px solid black; clear:both; font:small-caps 600 25pt Avenir Next; margin-bottom:2.2cm; padding:.5cm 0; text-align:center">Améliorer les langages et<br>bibliothèques logicielles pour<br>programmer l'interaction</div>
+	<div style="font:small-caps 10pt Avenir Next; margin-bottom:.5em; text-align:center">devant un jury composé de</div>
+	<div style="font:small-caps 10pt Avenir Next; overflow:auto; text-align:left">
+		<div style="float:left; width:21%">Présidente<br>Rapporteurs<br><br>Examinateurs<br><br>Directeur de thèse</div>
+		<div style="float:left; font-weight:600; width:29%">
+			Mme. Laurence Duchien<br>
+			Mme. Sophie Dupuy-Chessa<br>
+			M. Éric Lecolinet<br>
+			M. Stéphane Conversy<br>
+			M. Emmanuel Pietriga<br>
+			M. Stéphane Huot</div>
+		<div style="float:left; width:50%">
+			Professeure, Université de Lille<br>
+			Professeure, Université Grenoble Alpes<br>
+			Maître de conférences (HDR), Télécom ParisTech<br>
+			Professeur, École Nationale de l'Aviation Civile<br>
+			Directeur de recherche, Inria Saclay<br>
+			Directeur de recherche, Inria Lille</div>
+	</div>
+	
+	<p class=break-right style="margin-top:10cm; text-align:right"><i>À la mémoire de Janet,<br>à sa bienveillance,<br>et son amour des lettres</i></p>
+	
+	<h1 class=break-right id=remerciements>Remerciements</h1>
+	<!--
+		(Les remerciements doivent aider à comprendre pourquoi j'ai exploré cette direction.)
+		Derrière ce travail, il y a la frustration du jeune garçon il y a 20 ans qui voulait créer des jeux vidéo, mais ne réalisait pas l'ampleur de la tâche.
+		Mon parcours s'est construit pour acquérir l'expérience et la crédibilité de réaliser ses idées.
+		les choses ne sont pas comme elles devraient être
+		les personnes qui ont contribué à faire l'informatique y ont laissé une partie d'eux-mêmes
+	-->
+	<!-- Remerciements (voir thèse Fanny) : À ma grand-mère Janet, Directeur, Parents, Audrey (éducation civique), tous mes profs qui ont partagé leur passion et motivé à progresser, Yoann Dufresne, Club bidouille, Lucien M, Nicolas B, les participants du club algo, Léo, Mensa, Aurélien/Florian/Magda/Arnaud/Lela, Alex Maton, Alex Kohen, Flora Weissgerber, Damien Pollet (ECS), Bruno Beaufils (Paged.js), les concepteurs de Paged.js, Zapf et Frutiger (Palatino et Avenir Next), la communauté Open Source pour tous les logiciels que j'utilise, Hal Elrod pour le MM qui a rendu la rédaction en fait plutôt agréable, L'équipe Sical pour m'avoir accueilli durant les derniers mois, D3.js, Gimp et ImageOptimizer -->
+	<!-- Stéphane : patience, soutien inconditionnel, me guidait non pas là où il voulait que j'aille mais là où je voulais aller -->
+	<p>
+		Le document que vous avez sous les yeux est l'aboutissement de quatre années de recherches.
+		Quatre années qui ont mis mes nerfs à rude épreuve, alternant entre apprentissages pénibles, périodes de profonde mélancolie, et moments d'épiphanie.
+		Maintenant que le résultat est là, j'espère qu'il vous satisfera.
+		La programmation de systèmes interactifs graphiques (interfaces de bureau, applications pour smartphone, jeux vidéo) est un domaine qui m'a toujours été particulièrement opaque, et c'est cette frustration qui m'a poussé à creuser jusqu'à une thèse.
+		Ainsi j'ai voulu rendre ce manuscrit aussi utile que possible, en essayant de clarifier tout ce que j'avais appris sur le domaine, et en donnant parfois mon avis sur ce qu'on pourrait y apporter.
+	</p>
+	<p>
+		Ce travail n'aurait certainement pas abouti sans l'aide et le soutien de nombreuses personnes, que j'aimerais prendre le temps de mentionner.
+		Je tiens tout d'abord à remercier mon directeur de thèse, Stéphane Huot, qui a fait preuve d'une grande patience à mon égard.
+		Quand je doutais de tout, remettais en question ses conseils, et n'en faisais qu'à ma tête, il a été un soutien inconditionnel et a gardé une grande écoute.
+		J'ai beaucoup apprécié nos discussions, où il voyait souvent “plus loin” et apportait des remarques clés qui allaient faire avancer mon travail.
+		Les innovations de cette thèse ont ainsi été véritablement co-construites, à force d'itérations et échanges fructueux.
+		Je remercie Stéphane de m'avoir guidé là où je voulais aller, plutôt que là où il l'avait voulu.
+	</p>
+	<p>
+		Je tiens ensuite à remercier mes rapporteurs, Sophie Dupuy-Chessa et Éric Lecolinet, d'avoir pris le temps de relire mon manuscrit, et tous les membres du jury (incluant Stéphane Conversy, Laurence Duchien et Emmanuel Pietriga) d'avoir accepté d'évaluer mon travail.
+		Je suis honoré d'avoir pu recueillir les remarques et conseils de ceux que je considère comme les meilleurs experts français sur mon sujet de thèse !
+	</p>
+	<p>
+		Les quatre années dans l'équipe Loki (ex-Mjolnir) ont été particulièrement plaisantes, grâce à la bienveillance de tous les membres (passés et présents).
+		Merci à mes docteurs aînés, Jonathan, Alix, Justin, Amira et Hakim, pour leur sagesse et leurs conseils (administratifs, mais pas que).
+		Merci à Sébastien et Izzat, entre autres comme coéquipiers lors du Hash Code 2016.
+		Merci à Nicole, Axel, Marc, Damien, Raiza, Philippe, Grégoire, Gabriel et Pierrick, d'avoir fait du Starter <i>the place to be</i>, pour râler, manger, jouer, ou encore travailler.
+		Merci à Julien 🤘 de m'avoir accueilli dans son clan, et pour un festival mémorable.
+		Merci à tous les permanents de l'équipe, Thomas 🤘, Sylvain, Mathieu, Nicolas, Ed, Marcello, Fanny, Géry, d'avoir été super accessibles, et de m'avoir tous soutenu quand vous en avez eu l'occasion.
+		C'est peut-être insignifiant pour vous, mais chaque coup de pouce a été une immense aide à mon niveau.
+		Et merci aux assistantes d'équipe, Karine et Julie, toujours souriantes quand j'arrivais avec les demandes les plus incongrues.
+	</p>
+	<p>
+		Durant les deux premières années de la thèse je partageais mon temps avec une seconde équipe, RMoD, et je tiens à en remercier tous les membres qui m'ont soutenu dans mon travail en interaction avec le domaine du Génie Logiciel.
+		Merci à Damien de m'avoir fait découvrir ECS, et d'avoir nourri de nombreuses discussions autour de modèles à objets originaux.
+		Merci à Clément, Vincent et Brice, de m'avoir aidé à relâcher la pression avec les afterworks.
+		Merci à Olivier, Marcus, Anne, Christophe et Santiago pour votre gentillesse tout au long de mon séjour dans l'équipe, c'était salutaire.
+		Merci à Stéphane pour les critiques pertinentes sur ECS, qui m'ont incité à bétonner sa défense par rapport au modèle objet.
+	</p>
+	<p>
+		Pendant toute la durée de ma thèse j'avoue avoir eu un goût immodéré pour les projets secondaires, au désespoir de mon directeur de thèse.
+		Ces projets m'ont pourtant beaucoup apporté humainement et professionnellement, et je remercie les personnes qui y ont participé.
+		Merci en premier lieu à Yoann Dufresne, Yann Secq et Sophie Tison, qui ont formé le noyau de promotion des concours d'algorithmique à l'université, grâce auxquels on a organisé des ateliers d'entraînement hebdomadaires pendant presque trois ans, et qui m'ont soutenu ensuite pour assurer des fonctions d'enseignement.
+		Merci à Lucien Mousin pour sa formidable plateforme de code en ligne qui nous a permis de dynamiser les TDs d'algorithmique (et les ateliers d'entraînement).
+		Merci à Benjamin Torres également dans l'organisation du hub du concours Catalysts.
+		Je tiens aussi à remercier les membres de l'espace bidouille, communauté hyperactive qui m'accueillait les samedis pour coder et paporter : Yoann (à nouveau), Matthieu Falce, Pierre Marijon, Pierre Pericard, Camille Lihouck et Sophie Kaleba, en particulier pour le festival Zoo Machines qui a été un sacré moment de création !
+	</p>
+	<p>
+		En dehors de la thèse j'ai pu compter sur un ami et coloc' hors pair, Léonard 🤘, que je remercie pour m'avoir initié aux festivals de musique (... Boom-lay, BOOM !), fait découvrir pleins de super groupes, et pour la communauté des M's qui m'a redonné confiance à un tournant de mon travail.
+		Merci à Pierre pour les sessions Rock, et son goût pour les noms d'équipe de blinds tests, à défaut de les gagner (Emile Louise Attaque FTW).
+		Merci à Sandra et Amédée, Marie et Tupak, Charlotte et Guille, et tous ceux dont j'ai croisé la route durant ces quatre ans à Lille.
+		Merci à Aurélien, Florian, Magda, Arnaud et Lela pour les voyages dans le Grand Nord (Norvège), et à Antoine Tran, Alexandre Kohen et Flora Weissgerber pour les voyages dans le Grand Sud (Paris).
+	</p>
+	<p>
+		À plus haut niveau je tiens à remercier tous les enseignants qui m'ont transmis leur passion de la Science tout au long des études, et m'ont souvent soutenu pour poursuivre plus loin.
+		Je leur dois beaucoup, et espère en faire de même à mon tour un jour.
+		Merci à Olivier Guillaumin pour les discussions très instructives sur l'avenir des langages de programmation, et pour avoir soutenu ma candidature en thèse, alors même que je démissionnais de son entreprise.
+		Merci également à Wendy Mackay d'avoir fait le pari de me prendre en stage prédoctoral sans expérience préalable, et d'avoir soutenu ma candidature de thèse à Lille ensuite.
+	</p>
+	<p>
+		Enfin je ne pouvais pas remonter dans le temps sans mentionner les outils qui ont facilité ma vie durant la rédaction de ce manuscrit, et dont je suis heureux qu'ils aient existé à temps pour mon travail.
+		Je pense en particulier à Paged.js (conversion HTML vers livre), qui m'a permis de rédiger ce manuscrit intégralement en HTML, de gérer la typographie avec CSS, et de générer les éléments dynamiques (table des matières, numéros de figures, liens des références, etc.) avec JavaScript.
+		Merci à Zapf et Frutiger pour leurs travaux sur les polices Palatino et Avenir.
+		Et un grand merci à Hal Elrod pour sa méthode <i>Miracle Morning</i> qui a rendu la période de rédation particulièrement agréable et productive.
+	</p>
+	<p>
+		Pour finir, je tiens à remercier mes parents pour avoir été l'ilot de stabilité auquel je pouvais toujours me raccrocher quand les choses n'allaient pas.
+		Et je remercie tout spécialement Audrey, qui a illuminé mon existence depuis notre rencontre, et a fait preuve d'une grande lucidité lorsqu'il fallait démêler des situations inextricables.
+		Avec elle j'ai appris à désirer une vie simple, avec bienveillance, randonnées, et écologie.
+		Pour synthétiser notre épopée je terminerai sur la réplique finale de <i>Fight Club</i> : « <i>You met me at a very strange time in my life.</i> »
+	</p>
+	
+	<h1 class=break-right id=resume>Résumé</h1>
+	<p>
+		L'objectif de cette thèse est d'étudier et développer des modèles de programmation de systèmes interactifs, pour favoriser le prototypage et le développement de nouvelles techniques d'interaction.
+		Dans ce contexte, les développeurs utilisent principalement des frameworks génériques d'interfaces graphiques, qu'ils “bricolent” pour intégrer de nouvelles idées.
+		Or ces frameworks sont peu adaptés à de tels usages, et restreignent la liberté des développeurs à dévier des standards établis.
+		Une première étude basée sur des interviews relève les problèmes, besoins, utilitaires, et techniques de “bricolage” rencontrés dans ce contexte.
+		Une seconde étude basée sur un questionnaire en ligne évalue la prévalence des problèmes et techniques relevées dans la première étude, ainsi que les raisons pour lesquelles les frameworks issus de la recherche sont peu utilisés pour concevoir de nouvelles techniques d'interaction.
+		Les résultats de ces études aboutissent à la définition de trois Essentiels d'Interaction, des recommandations pratiques destinées à améliorer le support de l'interaction dans les frameworks et langages de programmation : (i) une orchestration explicite et flexible des comportements interactifs, (ii) un environnement d'interaction minimal et initialisé au démarrage de toute application, et (iii) des mécanismes et conventions standardisés et appuyés par un langage flexible.
+		Ces recommandations sont illustrées une première fois par une extension au langage Smalltalk, qui permet d'exprimer des animations en ajoutant une durée aux appels de fonctions.
+		L'application des Essentiels d'Interaction est illustrée une seconde fois par la création du framework Polyphony, qui se base sur le modèle Entité-Composant-Système issu du Jeu Vidéo, et l'adapte pour la création d'interfaces graphiques et de techniques d'interaction.
+	</p>
+	
+	<!--
+The aim of this thesis is to study and develop new ways of programming graphical interfaces in a research context.
+In practice, developers mainly use generic software libraries that are not well adapted to their needs, and that they “hack” to integrate new ideas.
+A first series of interviews and an online questionnaire allow us to identify the needs of programmers in this context.
+We deduce a set of recommendations, the Interaction Essentials, to guide the design of new languages and libraries.
+We then propose a first extension to the Smalltalk programming language, which facilitates the expression of animations.
+Finally, we present a new software library, Polyphony, designed to facilitate the creation of flexible and extensible graphical interfaces.
+	-->
+	<h1 class=break id=abstract>Abstract</h1>
+	<p>
+		The aim of this thesis is to study and develop programming models for interactive systems, to promote the prototyping and development of new interaction techniques.
+		In this context, developers mainly use generic interaction frameworks, which they “hack” to integrate new ideas.
+		However, these frameworks are poorly adapted to such uses, and restrict the freedom of developers to deviate from established standards.
+		A first study based on interviews identifies the problems, needs, utilities, and “hacking” techniques encountered in this context.
+		A second study based on an online questionnaire assesses the prevalence of the problems and techniques identified in the first study, as well as the reasons why research frameworks are rarely used to develop new interaction techniques.
+		The results of these studies lead to the definition of three Interaction Essentials, practical recommendations to improve the support of interaction in frameworks and programming languages: (i) an explicit and flexible orchestration of interactive behaviours, (ii) a minimal and initialized interaction environment at the start of any application, and (iii) standardized mechanisms and conventions supported by a flexible language.
+		These recommendations are illustrated initially by an extension to the Smalltalk language, which allows animations to be expressed by adding a duration to function calls.
+		The application of the Interaction Essentials is illustrated once more with the creation of the Polyphony framework, which is based on the Entity-Component-System model originating from Video Games, and adapted for the creation of graphical user interfaces and interaction techniques.
+	</p>
+	
+	<h1 class=break id=table_matieres>Table des matières</h1>
+	<div id=toc_tail></div>
+	
+	<script>
+		var req = new XMLHttpRequest();
+		function include(file) {
+			req.open('GET', file, false);
+			req.send();
+			document.write(req.responseText);
+		}
+	</script>
+	<script>include('introduction.html')</script>
+	<script>include('1.1-contexte.html')</script>
+	<script>include('1.2-problematique.html')</script>
+	<script>include('1.3-eda.html')</script>
+	<script>include('1.4-interviews.html')</script>
+	<script>include('1.5-questionnaire.html')</script>
+	<script>include('1.6-discussions.html')</script>
+	<script>include('2.1-eda.html')</script>
+	<script>include('2.2-orchestration.html')</script>
+	<script>include('2.3-environnement.html')</script>
+	<script>include('2.4-animation.html')</script>
+	<script>include('3.1-eda.html')</script>
+	<script>include('3.2-application.html')</script>
+	<script>include('3.3-architecture.html')</script>
+	<script>include('3.4-implementation.html')</script>
+	<script>include('3.5-conclusion.html')</script>
+	<script>include('conclusion.html')</script>
+	<script>include('bibliographie.html')</script>
+	<script>include('annexes.html')</script>
+	
+	<!-- Post-traitements -->
+	<script src=prism.js></script>
+	<script>
+		// Génération de la table des matières
+		for (let h of document.querySelectorAll('h1[id^="sec"],h2[id^="sec"],h3[id^="sec"]')) {
+			let lvl = parseInt(h.tagName.substring(1)) - 1
+			toc_tail.insertAdjacentHTML('beforebegin', `<ul class=toc><li><a href=#${h.id} style="padding-left:${lvl*1.5}em">${h.textContent}</a></li></ul>`)
+		}
+		// fill_toc(toc1, 'h2[id^="sec1"],h3[id^="sec1"]')
+		// fill_toc(toc2, 'h2[id^="sec2"],h3[id^="sec2"]')
+		// fill_toc(toc3, 'h2[id^="sec3"],h3[id^="sec3"]')
+		
+		// Vérification de la validité des liens internes
+		for (let a of document.getElementsByTagName('a')) {
+			let href = a.getAttribute('href')
+			if (href.startsWith('#')) {
+				let ids = document.querySelectorAll(CSS.escape(href).substring(1))
+				if (ids.length !== 1)
+					console.log(`Unknown or duplicate id: ${href}`)
+				else
+					ids[0].setAttribute('refcount', (ids[0].getAttribute('refcount') || 0) + 1)
+			} else if (!href.startsWith('http')) {
+				console.log(`Broken link: ${href}`)
+			}
+		}
+		for (let id of document.querySelectorAll('[id]:not([refcount])')) {
+			console.log(`Orphan id: ${id.getAttribute('id')}`)
+		}
+		
+		// Conversion de la bibliographie en liens externes
+		for (let tr of biblio.children[0].children) {
+			let s = tr.children[1].textContent
+			let i = s.indexOf('http'), j = i
+			if (i === -1) {
+				console.log(`Reference without URL: ${tr.id}`)
+				s = `https://www.qwant.com/?q=${encodeURIComponent(s)}`
+			} else {
+				while (j < s.length && "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-._~:/?#[]@!$&'()*+,;=".includes(s[j]))
+					j++
+				s = s.slice(i, j)
+			}
+			for (let a of document.querySelectorAll(`a[href="#${CSS.escape(tr.id)}"]`))
+				a.setAttribute('href', s)
+		}
+	</script>
+</body>
+</html>

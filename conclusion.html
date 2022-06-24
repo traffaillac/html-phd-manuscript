@@ -1,0 +1,235 @@
+<h1 class=break-right id=sec4>Conclusion</h1>
+
+<!-- Synthèse de l'argumentation :
+	_ Nous nous intéressons à la programmation de prototypes de recherche en IHM, qu'on cherche à rendre moins difficile et moins stéréotypée
+	_ Nous avons d'abord étudié l'activité de programmation des chercheurs en IHM -> interviews
+	_ Nous en avons tiré des problèmes, outils jugés utiles, et techniques utilisées pour contourner les limitations
+	_ Nous voulions évaluer la pertinence des problèmes et techniques relevés, et étudier les critères selon lesquels les chercheurs choisissent les bibliothèques -> questionnaire en ligne
+	_ Nous en déduisons que (i) les chercheurs utilisent principalement des frameworks, (ii) ils recherchent en priorité ce qui est le mieux documenté et le plus utilisé, (iii) les problèmes de documentation sont les plus fréquents à l'usage et les problèmes de fiabilité les plus critiques, et (iv) les caractéristiques supportant le mieux leurs techniques avancées sont l'extensibilité, la réutilisation, et la transparence des bibliothèques.
+	_ Nous choisissons d'explorer la conception de bibliothèques logicielles pour améliorer la programmation de prototypes de recherche, et élaborons des principes de conception afin de guider notre travail.
+	_ Les Essentiels d'Interaction permettent ainsi de clarifier et différencier notre démarche de recherche par rapport à l'état de l'art, en (i) augmentant les capacités d'orchestration des comportements interactifs, (ii) fournissant un environnement d'entrées/sorties utilisateurs complet pour chaque application, et (iii) mettant à profit des conventions de programmation et extensions de langages.
+	_ Nous avons illustré l'application des Essentiels d'Interaction dans deux contributions
+	_ Une extension du langage Smalltalk pour exprimer les transitions animées par adjonction d'une durée aux appels de fonctions
+	_ Ce travail nous a permis de formuler le troisième Essentiel d'Interaction, en analysant notre travail sur la modification cohérente du langage Smalltalk
+	_ La deuxième contribution (la plus importante de ce travail) est un nouveau framework d'interaction, Polyphony
+	_ Il est basé sur ECS, qu'on adapte du jeu vidéo à l'IHM
+	_ Il répond principalement à la réutilisabilité (grâce au mécanisme de composition) et à l'extensibilité (en particulier nouvelles techniques d'interaction et nouveaux types de widgets)
+	_ Ses deux contributions principales à l'état de l'art sont un modèle d'exécution sans callbacks, et une propagation des entrées sans programmation évènementielle
+-->
+<p>
+	Durant ce travail de thèse, nous nous sommes intéressés à la programmation de prototypes de recherche en IHM, que nous avons cherché à rendre moins difficile et moins stéréotypée.
+	Nous avons commencé par étudier l'activité de programmation dans ce contexte, et avons pour cela réalisé une série d'interviews de chercheurs ayant développé de nouvelles techniques d'interaction.
+	Les observations ont mené à trois classifications, des problèmes rencontrés par les participants, des outils qu'ils avaient jugés utiles, et des techniques qu'ils avaient employées pour surmonter leurs difficultés.
+	Nous avons ensuite proposé un questionnaire en ligne pour évaluer la pertinence des classes de problèmes et techniques auprès d'un plus grand nombre de participants en IHM, et étudier les critères selon lesquels ils choisissent les bibliothèques.
+	Nous en avons déduit que (i) les chercheurs utilisent principalement des frameworks dans le cadre de leur travail, (ii) ils choisissent en priorité les plus documentés et les plus utilisés, (iii) les problèmes de documentation sont les plus fréquents et les problèmes de fiabilité les plus critiques, et (iv) les caractéristiques supportant le mieux leurs techniques avancées sont l'extensibilité, la réutilisabilité, et la transparence des frameworks.
+</p>
+<p>
+	Nous avons choisi d'explorer des contributions logicielles pour améliorer la programmation de prototypes de recherche en IHM, et avons au préalable étudié des principes de conception pour guider notre travail.
+	Leur synthèse a donné lieu à trois <i>Essentiels d'Interaction</i>, qui clarifient et différencient notre démarche de recherche par rapport à l'état de l'art.
+	Nous cherchons ainsi à (i) <b>augmenter des capacités d'orchestration des comportements interactifs</b>, (ii) <b>fournir un environnement d'entrées/sorties utilisateurs complet pour toute application</b>, et (iii) <b>mettre à profit des conventions de programmation et possibilités d'intégration aux langages</b>.
+</p>
+<!--<sh>Mettre les essentiels d'interaction en gras</sh>-->
+<p>
+	Nous avons illustré l'application des Essentiels d'Interaction avec deux réalisations.
+	La première est une extension du langage Smalltalk pour exprimer les transitions animées par adjonction d'une durée aux appels de fonctions.
+	Elle réduit le code nécessaire pour exprimer une animation par rapport à l'état de l'art, et met en commun dans le langage la gestion des animations autrefois spécifique à chaque framework.
+	Ce travail nous a permis de formuler le troisième Essentiel d'Interaction, en analysant notre travail en lien étroit avec le langage de programmation.
+	La deuxième réalisation est un framework d'interaction, qui applique le modèle Entité-Composant-Système issu du jeu vidéo, à la programmation d'interfaces graphiques.
+	Il répond principalement aux besoins de réutilisabilité (grâce au mécanisme de composition intégré au modèle), et d'extensibilité (en facilitant la création de nouvelles techniques d'interaction et types de widgets).
+</p>
+<!-- Réponse à la question de recherche :
+	_ Avec ces travaux, nous avons cherché à améliorer les frameworks pour le prototypage de nouvelles interactions, en proposant des concepts de bas niveau applicables aux langages et facilitant l'implémentation des frameworks (animation de fonctions, typage et énumération d'objets à partir des champs qu'ils possèdent).
+	_ Les travaux majeurs de l'état de l'art ont proposé une réutilisation principalement basée sur des hiérarchies (de types ou de scène), mais qui fragmentent en pratique l'exécution du code (le flux d'exécution "saute" de code en code, le rendant difficile à suivre et visualiser)
+	_ De plus, ils ont principalement proposé une propagation des entrées en couches, dans lesquelles les données transitent et l'obtention de toutes les données nécessite de parler à toutes les couches
+	_ Enfin les travaux majeurs ont proposé des syntaxes d'utilisation réduites par l'intégration partielle aux langages de programmation, ce que nous avons confirmé et approfondi par nos travaux.
+-->
+<p>
+	Avec ces travaux, nous avons cherché à améliorer les modèles de programmation des frameworks et langages, pour le prototypage de nouvelles interactions.
+	Nous avons proposé des concepts de bas niveau applicables aux langages, et facilitant l'implémentation de frameworks d'interaction (animation de fonctions, typage et énumération dynamique d'objets à partir de leurs champs).
+	Les travaux de l'état de l'art ont principalement proposé des modèles de réutilisation basés sur des arbres de types (ex. HTML, Qt, JavaFX), ou de scène (ex. Jazz, UBit), mais qui fragmentent l'exécution du code (le flux d'exécution “saute” fréquemment en mémoire, le rendant difficile à suivre et visualiser).
+	Nous proposons un modèle de réutilisation basé sur la composition, qui organise le flux d'exécution de façon linéaire, et rend le fonctionnement interne de l'application transparent, pour les développeurs souhaitant le manipuler.
+	De plus, l'état de l'art s'est principalement basé sur une propagation des entrées utilisateurs en couches, qui communiquent les données de couche à couche, sans nécessairement conserver les données brutes.
+	Nous proposons une représentation des périphériques d'interaction en objets extensibles et persistents, sur lesquels les différentes techniques d'interaction viennent ajouter des données de plus haut niveau (voire des données temporaires pour les transitions d'états).
+	Cette représentation centralise les données d'interaction, et évite aux développeurs d'avoir à les aggréger depuis différentes couches.
+	Enfin, de nombreux travaux de l'état de l'art ont proposé des syntaxes de programmation réduites (par rapport à l'utilisation des fonctions d'une API), grâce à une intégration partielle aux langages de programmation.
+	Nous avons appuyé et approfondi cette démarche, par le développement de concepts intégrables aux langages, et l'utilisation de métaprogrammation pour les implémenter.
+</p>
+
+<h2 id=conclu1>Limites</h2>
+<!--<notesh>Titre: "Limites" est suffisant, pas besoin de mettre "de ce travail"</notesh>-->
+<!-- Limites de ma recherche :
+	_ Ces travaux étant exploratoires, nous ne les avons pas testés en conditions réelles, et avons consacré la majorité de nos efforts à raffiner leur conception pour adhérer de façon cohérente avec nos Essentiels d'Interaction.
+	_ On ne s'est pas concentrés sur les efforts de documentation en général, qui sont bien couverts dans l'état de l'art
+	_ On n'a pas étudié le problème de la promotion des bibliothèques logicielles issues de la recherche, parce qu'on est convaincus que l'état de l'art peut encore être amélioré
+-->
+<p>
+	<!--Nos travaux sont exploratoires.<notesh>Oui, comme beaucoup de travaux dans nos domaines qui ont pour objectif de créer les artefacts à étudier. Donc je l’enlèverai, car ce n'est pas la cause des limitations.</notesh>
+	<del>En ce sens, nous</del>-->Nous avons privilégié le développement de nouveaux concepts qui puissent faciliter le développement d'interfaces moins stéréotypées, plutôt que des outils qui facilitent l'utilisation de concepts existants.<!-- <del><notesh>privilégié ça par rapport à quoi ?</notesh></del> -->
+	De plus, nous avons consacré beaucoup d'efforts à raffiner leur conception afin d'explorer et démontrer au mieux la pertinence de nos Essentiels d'Interaction.
+	<!--Nous avons consacré beaucoup d'efforts à raffiner leur conception, pour adhérer de façon aussi cohérente que possible à nos Essentiels d'Interaction.<notesh>Dire plutôt: "Nous avons consacré beaucoup d'efforts à raffiner leur conception afin d'explorer et démontrer au mieux la pertinence de nos Essentiels d'Interaction."</notesh>-->
+	En contrepartie, la faible maturité de ces concepts ne nous a pas permis de les tester en conditions réelles.
+	Dans le cas de l'animation de fonctions, il conviendrait d'adapter ce concept à d'autres langages, pour encourager son intégration plus cohérente avec leur syntaxe (ex. <code>object.setProperty(target) during 2s</code>).
+	Dans le cas de Polyphony, il conviendrait de valider nos travaux avec des interfaces plus complexes, mettant en œuvre la gestion du positionnement, des styles visuels, des périphériques multiples et changeant dynamiquement, ou encore du rendu optimisé sur carte graphique.
+	Nous pourrions alors diffuser Polyphony auprès de chercheurs en IHM, et recueillir leurs retours, ainsi que les forces et faiblesses du modèle pour le prototypage de nouvelles interactions.
+</p>
+<p>
+	En outre, dans ce travail nous n'avons pas abordé les problèmes de documentation soulevés à l'issue des interviews et questionnaires.
+	Bien que ce problème soit le plus fréquent pour les utilisateurs de frameworks d'interaction, il bénéficie de travaux de recherche abondants.
+	Ceux-ci nous laissent penser que la solution ne peut pas se résumer à un nouvel outil de documentation, et qu'elle pourrait très bien dépasser le cadre d'un travail de thèse.
+	Enfin, bien que nous ayons observé la faible utilisation des frameworks issus de la recherche pour prototyper de nouvelles interactions, nous n'avons pas exploré la piste de leur promotion auprès des chercheurs.
+	En effet, la complexité de bas niveau des systèmes informatiques vis-à-vis de l'interaction nous a incités à concentrer nos efforts pour la réduire, plutôt que promouvoir des outils qui la cachent.
+	Nous espérons ainsi accélérer le développement de futures boîtes à outils, et par là contribuer au développement de nouvelles interactions avec les machines.
+</p>
+
+<h2 id=conclu2 class=break>Promouvoir Polyphony pour les utilisateurs d'ECS</h2>
+
+<!-- Promotion de Polyphony dans la communauté d'ECS
+	_ Nous avons observé sur les forums en ligne quelques discussions autour de l'application d'ECS pour les GUI
+	_ Les utilisateurs qui appliquent déjà ECS à un jeu, voudraient ne pas le mélanger avec de l'OOP pour l'interface
+	_ À cause du besoin de structuration plus fort qu'un jeu, de nombreuses réponses déconseillent ECS pour les interfaces, et recommandent OOP
+	_ Nous démontrons qu'ECS peut s'appliquer aux GUI, à condition d'adapter le modèle de base pour ajouter le support des Composants temporaires
+	_ À ce stade de notre travail, le modèle de base est stable, mais les choix de Composants et Systèmes sont encore susceptibles de changer
+	_ De plus, JavaScript s'est révélé limité en pratique, à cause du très faible nombre de bindings disponibles (qui ne fassent pas appel à un navigateur Web) qui rendent la programmation de bas niveau pénible
+	_ Nous comptons donc en développer une nouvelle version, basée sur Python, avec un choix de Composants et Systèmes mieux informé grâce à notre expérience
+	_ Nous allons aussi promouvoir l'utilisation d'ECS pour concevoir des GUIs auprès de la communauté JV
+	_ Nous souhaitons voir ECS évoluer pour supporter l'interaction, et à plus long terme contribuer à l'évolution des capacités des langages objet, et la conception d'un langage dédié et optimisé pour ECS.
+-->
+<p>
+	En amont de notre travail sur Polyphony, nous avons relevé des discussions sur des forums de développeurs de jeux vidéo, qui montraient un intérêt pour l'application d'ECS à la programmation d'interfaces graphiques.
+	En effet, alors qu'ils appliquent déjà ECS à l'architecture de leurs jeux, de nombreux développeurs souhaitent l'appliquer aux interfaces des mêmes jeux, principalement pour ne pas le mélanger avec un modèle orienté objet au sein d'un même programme.
+	Sur ces mêmes forums, nous avons observé de nombreuses réponses déconseillant l'utilisation d'ECS pour les interfaces, arguant principalement que les outils existants sont très bien adaptés.
+	Nous avons donc travaillé sur un sujet avec une demande explicite, et avons démontré qu'ECS peut s'appliquer à la conception d'interfaces graphiques.
+	Nous proposons en outre d'introduire le support de Composants temporaires, pour permettre la réification des périphériques en Entités.
+</p>
+<p>
+	<i>Perspectives de travaux futurs sur ECS :</i>
+	À ce stade de notre travail, nous considérons le modèle de base de Polyphony suffisamment stable, cependant les choix des Composants et Systèmes sont encore susceptibles de changer.
+	De plus, nous considérons d'autres langages pour l'implémentation de Polyphony.
+	La première version était réalisée en Java, qui s'est révélé verbeux à l'usage à cause de l'incompatibilité entre son modèle objet et ECS (nous obligeant à passer par des appels de fonctions).
+	La version courante est réalisée en JavaScript (avec Node.js), or son support de l'interaction à bas niveau s'est rélévé très limité, à cause du faible nombre de bindings disponibles, d'une obsolescence des bibliothèques tierces très rapide, et de l'instabilité générale de la plateforme.
+	Nous considérons actuellement le développement sous Python, qui permet une métaprogrammation équivalente, tout en offrant un support de bas niveau suffisant (avec PyGame).
+	Il est aussi envisageable que nous travaillions avec un framework existant pour ECS, tel que Unity.
+	Enfin, nous sommes actuellement en contact avec la communauté d'ECS, pour promouvoir notre architecture d'interaction basée dessus, et la confronter aux discussions avec de potentiels utilisateurs.
+	À l'avenir, nous souhaitons voir ECS évoluer pour supporter explicitement la programmation d'interactions, et à plus long terme contribuer à l'évolution des langages à objets/entités, et la conception future d'un langage dédié et optimisé pour ECS.
+</p>
+
+<h2 id=conclu3>Améliorer le support de bas niveau de l'interaction</h2>
+
+<!-- Améliorer le support de bas niveau de l'interaction :
+	_ On a eu beaucoup de difficultés à développer les deux projets, principalement à cause du bas niveau
+	_ Obsolescence rapide des APIs de bas niveau (surtout en JS), bindings mal documentés, fastidieux à écrire, et instables
+	_ Les bases sont fragiles, mais personne n'est censé y accéder -> favorise les gros frameworks qui peuvent investir du développement pour supporter de multiples alternatives
+	_ On voudrait faciliter l'expérimentation à bas niveau, pour les toolkits et pour l'utilisation directe
+	_ Définir un support de bas niveau de l'interaction qui puisse être spécifié sur tous les systèmes, voire intégré aux langages
+	_ Différentes manières de concevoir une API de bas niveau (continuum de bas à haut niveau plutôt qu'une distinction claire)
+	_ Clarifier l'espace de conception d'une telle API (à l'aide des nombreuses APIs concurrentes)
+	_ Choisir les fonctions à inclure pour minimiser le nombre de fonctions et la difficulté à réimplémenter les fonctions absentes
+	_ Aussi standardiser l'interface permettant de définir un binding
+-->
+<p>
+	Comme suggéré plus haut, nous avons eu beaucoup de difficultés pour développer les deux projets présentés dans ce manuscrit, principalement à bas niveau.
+	Nous rejoignons en partie les problèmes rencontrés par les participants de nos études, en ce que nous avons utilisé des bibliothèques (Node.js, OpenGL) pour des besoins rarement exprimés, et avons manqué de documentation et d'exemples contextuels pour supporter notre travail.
+	À la différence de nos participants, nos difficultés ne sont pas liées à l'utilisation de frameworks, mais de bibliothèques de bas niveau.
+<!-- 	<del><notesh>Tu pourrais rapidement dire en quoi les problèmes que tu as rencontré sont similaires ou différents de ceux qu'ont rencontré les participants à tes études.</notesh></del> -->
+	Ces difficultés ont consisté en :
+</p>
+<ul>
+	<li>le choix des bibliothèques logicielles à utiliser pour les entrées de clavier/souris, et pour le dessin à l'écran (à cause de leur nombre, l'incertitude de l'existence de bindings fonctionnels pour un langage particulier, l'incertitude quant à leur performance, la découverte tardive de fonctionnalités manquantes, ou encore la découverte tardive de nouvelles bibliothèques)</li>
+</ul><ul>
+	<li>le choix d'un binding approprié pour une bibliothèque donnée (la plupart redéfinissent les noms des fonctions, altèrent les concepts d'utilisation de l'API, omettent certaines fonctionnalités, ou ne fonctionnent simplement plus)</li>
+	<li>l'implémentation d'un binding pour une bibliothèque donnée (chaque langage définissant sa propre syntaxe pour la définition de bindings, avec un support souvent non-officiel et peu stable dans le temps, et ne supportant pas toujours toute l'Interface Binaire-Programme du système)</li>
+	<li>le manque de puissance des bibliothèques de bas niveau, qui nécessite plus de développement qu'anticipé (ex. l'écriture de texte multi-lignes dans FreeType, le dessin de lignes avec épaisseur dans OpenGL, ou l'entrée de texte avec SDL)</li>
+	<li>le manque de flexibilité des bibliothèques de haut niveau, lorsqu'on souhaite les utiliser pour des besoins simples (à cause des procédures d'installation complexes, des incompatibilités entre bibliothèques, des modèles complexes requérant un apprentissage conséquent, ou encore des mauvaises performances)</li>
+</ul>
+<p>
+	Les outils de bas niveau sont donc peu stables, ce qui est cohérent avec l'idée que peu de programmeurs sont censés y accéder.
+	Or cette situation ne favorise pas le développement de nouvelles boîtes à outils, et contribue à pérenniser les frameworks majeurs, qui peuvent investir les efforts de développement pour tester et supporter de nombreuses alternatives sur chaque système d'exploitation.
+	Dans la continuité du deuxième Essentiel d'Interaction (<i>un environnement d'interaction minimal et initialisé au démarrage de toute application</i>), nous souhaitons étudier à l'avenir le support de l'interaction à bas niveau, pour faciliter son accès dans les boîtes à outils d'interaction, et en utilisation directe par les programmeurs.
+	Ce support prendrait la forme d'une API d'interaction <i>essentielle</i>, qui puisse être utilisée facilement dans tout langage, en utilisant un sous-ensemble de l'Interface Binaire-Programme, et en fournissant une interface en C facilitant la génération automatique de bindings.
+	Les bibliothèques comme SDL existent déjà pour fournir un support complet de l'interaction.
+	Cependant elles souffrent du manque de puissance évoqué ci-dessus, qui rend impossible leur utilisation seule.
+</p>
+<p>
+	<i>Perspectives de travaux futurs sur les outils de bas niveau :</i>
+	Nous pensons qu'il serait nécessaire d'abord de clarifier l'<i>espace de conception</i> d'une bibliothèque de bas niveau, à partir de l'étude des nombreuses bibliothèques disponibles.
+	Cet espace pourrait se représenter comme un graphe de dépendances, où les noeuds sont les fonctions de l'API, et les arêtes les dépendances entre elles.
+	Par exemple, la fonction <code>dessinTexteMultiLigne</code> dépendrait de la fonction <code>dessinMot</code>, qui elle-même dépendrait de <code>dessinLettre</code>.
+	Chaque fonction aurait comme poids sa complexité d'implémentation si elle n'était pas incluse dans une API.
+	Il s'agirait alors de maximiser la somme des poids inclus dans une API, tout en minimisant le nombre de fonctions à inclure.
+	Nous espérons ainsi contribuer à stabiliser les APIs de bas niveau, voire à terme les rapprocher des langages de programmation.
+</p>
+
+<h2>Vers la programmation d'interactions semi-structurée</h2>
+
+<!-- Vers l'Interaction semi structurée :
+	_ La quasi totalité des frameworks étudiés commencent par construire un arbre de scène, mais ce n'est pas forcément nécessaire pour des besoins simples
+	_ Il y a un fossé entre les besoins simples (afficher un carré qui bouge à l'écran) et les interfaces complexes -> existence de deux "programmations d'interactions" ?
+	_ Il devrait exister un juste milieu
+	_ Nous nous sommes principalement attachés à la programmation d'interfaces graphiques (qui est très structurée), mais ce n'est pas toute l'interaction
+	_ Proposition de l'interaction semi structurée comme un pont entre les deux mondes, pour permettre de faire les deux avec un seul framework
+-->
+<p>
+	La quasi-totalité des frameworks que nous avons étudiés (avec l'exception notable d'ImGUI) nécessitent l'initialisation d'un arbre de scène pour créer une quelconque application interactive.
+	Qu'on souhaite réaliser une interface complexe comportant de multiples widgets et diverses modalités d'interaction, ou au contraire dessiner quelques formes à l'écran, il est toujours demandé de <i>structurer</i> l'interface.
+	Une telle structure implique pour les utilisateurs d'un framework :
+</p>
+<ul>
+	<li>d'apprendre les concepts d'arbre de scène, d'ordre d'affichage, de positionnement relatif, de propagation des évènements (<i>event bubbling</i>), voire de parcours récursif</li>
+	<li>d'exprimer leur application à l'aide des widgets réutilisables de l'interface (ex. un canevas pour dessiner, une vue transparente pour intercepter les données d'entrée)</li>
+	<li>d'initialiser un arbre de scène, avec au moins une vue et un conteneur, et placer leur code dans des <i>callbacks</i></li>
+</ul>
+<p>
+	Ces efforts sont pondérés par la simplicité avec laquelle on peut exprimer des interfaces complexes.
+	Cependant, ils sont un obstacle majeur lorsqu'il n'est pas question de créer une interface qui soit un assemblage de widgets.
+	Il semble qu'il y ait un fossé entre ces interfaces “assemblées”, et des interfaces minimales (ou moins stéréotypées), pour lesquelles un arbre de scène serait superflu.
+	Nous arguons qu'il devrait exister un juste milieu, qui permettrait d'utiliser des frameworks reconnus, pour développer des interfaces structurées différemment.
+	Dans Polyphony, nous avons réduit l'utilisation de l'arbre de scène, rendant son utilisation non-systématique.
+	Nous pouvons qualifier ce modèle de <i>semi-structuré</i>, car l'application possède une structure entre certaines Entités, mais pas entre toutes.
+</p>
+<p>
+	<i>Perspectives de travaux futurs sur la programmation semi-structurée :</i>
+	Tout au long de ce manuscrit de thèse nous avons cherché à appréhender la nature de la “programmation d'interactions”.
+	Nous l'avons caractérisée à partir des travaux des praticiens en IHM, observée lors des interviews de chercheurs, et pratiquée dans le développement de nos contributions logicielles.
+	Or nous avons principalement observé des <i>interfaces graphiques</i>.
+	L'idée de la programmation d'interactions que nous avons distillée dans ce manuscrit est en fait biaisée par l'environnement où nous l'avons étudiée.
+	Cette thèse traite donc <i>réellement</i> de la programmation d'interfaces graphiques, bien que ce soient les interactions qui nous motivent.
+	À partir de ce constat, nous souhaitons à l'avenir acquérir une connaissance plus complète des domaines où l'interaction se programme, et où on lui confère une structure originale, voire pas de structure.
+	Entre tous ces domaines, la programmation semi-structurée pourrait être un concept unificateur, qui contribuerait à combler leurs éventuelles différences, et apporter une vision plus complète de la programmation d'interactions.
+</p>
+<!--<notesh>OK pour la conclusion, c'est pas mal, mais un peu court et un peu léger sur les travaux futurs:
+<ul>
+	<li>Ils sont fondus dans la conclusion, et c'est compliqué de voir de manière synthétique ce sur quoi ta thèse ouvre</li>
+	<li>Ils sont en général pertinents, mais pas beaucoup développés</li>
+</ul>
+Une possibilité serait de les "sortir" et les développer un peu plus, voire si tu as le temps. Si tu n'as pas le temps, il y a des chances que ça apparaisse dans les remarques des rapporteurs et que tu doives le faire pour une version finale...</notesh>
+<traf>Ah, pourtant j'ai conçu chaque dernier paragraphe une ébauche du travail de chaque piste.</traf>
+<sh>Mets les en évidence alors, avec un sous-titre par exemple ?</sh>-->
+<!-- On a suivi un chemin en terre que de nombreux ont foulé avant nous, il convient maintenant de le paver -->
+<!--<p>
+	À la lecture de ces perspectives futures, nous pouvons contempler les chemins devant nous, ainsi que le chemin parcouru, que de nombreux autres ont foulé avant nous.
+	Nous y avons investi beaucoup d'énergie, gravissant les mêmes pentes, buttant contre les mêmes obstacles, et nous engageant dans les mêmes impasses.
+	Il serait temps de paver ce chemin.
+</p>
+<notesh>Ce dernier paragraphe est à mon sens inutile. Ça pourrait conclure tout travail de recherche. Je n'ai rien contre terminer sur une note un peu "philosophique", mais il faut qu'elle serve le propos et fasse réfléchir sur tout (ou partie) de ce qui a été dit auparavant, pas que ce soit une généralité. C'est qu'un exemple, mais en lien avec les problèmes que tu as toi aussi rencontrés pour résoudre ceux des autres, tu pourrais discuter de la "circularité" du domaine, et de la question de savoir si on arrivera un jour à faire des outils pour programmer l'interaction au dessus d'architectures/langages/systèmes qui ne sont pas conçus pour l'interaction (ça renvoie un peu au projet de l'équipe, mais bon, ça me paraitrait plus pertinent...)</notesh>-->
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel=stylesheet href=style.css>

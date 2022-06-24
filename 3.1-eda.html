@@ -1,0 +1,653 @@
+<h1 class=break-right>La boîte à outils Polyphony</h1>
+
+<!-- Qu'illustre ce travail dans ma démarche ?
+	_ modèle d'exécution original, dans lequel tous les traitements de l'interface, leurs déclencheurs et leur ordre sont clairement identifiés dans le programme, et manipulables -> possibilité de les observer, les réordonner, les remplacer, et d'en insérer de nouveaux, donc de modifier le comportement d'une interface existante
+	_ représente les périphériques d'interaction par des éléments globaux, faciles d'introspection, dont les champs sont dynamiques, et qui aggrègent toutes les données liées aux évènements d'entrée -> simples à apprendre, unifient l'expression des techniques d'interaction avec le code de l'interface, et la représentation des widgets avec celle des périphériques, lie directement le haut et bas niveau sans couches de traduction intermédiaires
+	_ explore l'utilisation des langages dynamiques pour l'architecture d'un système interactif -> traduit la flexibilité du langage en flexibilité du framework, propose de nouveaux besoins pour ces langages
+-->
+<p>
+	Dans les chapitres précédents, nous avons discuté de l'adéquation des outils actuels avec les besoins émis par les programmeurs de nouvelles techniques d'interaction, et constaté que la documentation et la flexibilité des frameworks étaient cruciales pour favoriser leur utilisation dans des contextes non prioritaires.
+	Nous souhaitions aussi expérimenter l'utilisation d'une technologie du Web (ici le langage JavaScript) dans la conception d'une architecture d'interaction, pour permettre un éventuel transfert de connaissances vers le Web.
+	Nous avons donc choisi de contribuer avec la création d'un nouveau framework, <i>Polyphony</i>, conçu pour les interfaces ad hoc (simples, peu robustes, et créées pour un usage précis) et flexibles (dont le code et l'apparence sont simples à modifier).
+</p>
+<p>
+	Ce travail illustre nos Essentiels d'Interaction avec un <i>modèle de programmation original</i>, dans lequel tous les traitements de l'interface (leur ordre, leurs déclencheurs) sont clairement explicités dans le programme, et manipulables.
+	Il est possible de les observer, les réordonner, les remplacer, et d'en insérer de nouveaux, afin de modifier le comportement d'une interface existante.
+	Nous supportons ainsi une pratique de développement incrémentale, qui permet d'incorporer et de raffiner les besoins à mesure qu'ils émergent dans un projet.
+	Nous présentons aussi une <i>réification des dispositifs d'interaction en entités programmables et extensibles</i>, dont l'introspection est facilitée (pour en découvrir les variables disponibles), et les variables sont dynamiques (pour y accumuler des données de plus haut niveau).
+	Grâce à un mécanisme de variables temporaires (existant durant un court laps de temps), nous fournissons une alternative à la programmation évènementielle, en utilisant les entités réifiant les périphériques comme supports de données des techniques d'interaction.
+	Cette représentation nous permet en retour d'intégrer les traitements des techniques d'interaction dans ceux de l'interface, et ainsi d'<i>unifier le fil d'interface avec le fil d'interaction</i>.
+	Nous parvenons ainsi à une représentation simple du flux global d'exécution, qu'il est possible de représenter graphiquement dans son intégralité, ce qui en facilite la compréhension.
+	Enfin, l'expérimentation d'un langage dynamique comme JavaScript consiste à tirer parti du caractère dynamique des objets (leurs variables ne sont pas contraintes à la définition d'une classe).
+	Nous utilisons cette fonctionnalité pour symboliser l'ajout de comportement aux éléments de l'interface, et ainsi constituer de nouveaux éléments par Composition plutôt d'Héritage.
+	Ce travail consiste donc à <i>traduire la dynamicité du langage en dynamicité du framework</i>, ce qui nous amène à proposer de nouveaux besoins et évolutions pour ce langage.
+</p>
+<p>
+	Au cours de nous recherches bibliographiques et technologiques, nous avons considéré l'étude et l'application du modèle Entité-Composant-Système (ECS) à la programmation d'interfaces graphiques et d'interactions.
+	Ce modèle architectural est issu du domaine du jeu vidéo, y est utilisé depuis plus d'une décennie, et n'a à notre connaissance pas été utilisé pour modéliser des inferfaces.
+	Il nous a semblé être pertinent pour le prototypage de nouvelles techniques d'interaction.
+	En effet, ECS est basé sur le principe de Composition, qui est un besoin récurrent en IHM, pour lequel de nombreuses contributions ont été proposées, comme les Web Components [<a href=#cooney_introduction_2014>Coo14</a>], UBit [<a href=#lecolinet_molecular_2003>Lec03</a>], ou encore Jazz [<a href=#bederson_toolkit_2004>Bed04</a>].
+	De plus, ECS accorde une priorité importante à la modélisation du flux d'exécution, qui est conçu comme un <i>pipeline</i> — modèle commun dans les jeux vidéo, qui cherchent à maximiser l'utilisation des ressources de la machine.
+	Il fournit donc une solution au problème de fragmentation de la logique énoncé en <a href=#sec2x2x4>section 2.2.4</a>.
+	Enfin, ECS a été appliqué avec succès dans des jeux commerciaux tels que Thief: The Dark Project [<a href=#leonard_postmortem_1999>Leo99</a>], Operation Flashpoint 2 [<a href=#martin_entity_2007>Mar07</a>], ou encore Overwatch [<a href=#ford_overwatch_2017>For17</a>].
+	La communauté de développeurs autour de ce modèle est très active aujourd'hui, autant comme utilisateurs de bibliothèques basées sur ECS, que comme développeurs de ces bibliothèques.
+	Nous avons identifié en amont de notre travail sur ECS un besoin, exprimé principalement sur des forums de discussions en ligne, de voir ce modèle appliqué à la construction des interfaces dans les jeux.
+	Ces conditions nous ont donc incités à adapter le modèle ECS à la programmation d'interactions dans un contexte de recherche.
+</p>
+
+<!--<sh>OK pour la nouvelle intro, très bien !</sh>-->
+
+<!-- TODO: Intro à revoir pour identifier plus clairement le problème de recherche et introduire correctement l'état de l'art -->
+<!-- TODO: Copier toutes les remarques de Stéphane sur ma manière de rédiger dans un fichier, pour avoir une vue d'ensemble de mes pistes d'amélioration -->
+<!-- <del><p class=break>
+	Dans le chapitre précédent, nous avons démontré que les outils actuels ne répondent pas à tous les besoins émis par les programmeurs de nouvelles techniques d'interaction.<noteSH>Attention avec les formules du  type "nous avons démontré"... Je n'ai pas encore lu le chapitre précédent, mais je suis quasiment certain que tu n'as rien "démontré" au sens scientifique du terme. Il faudrait donc préférer des formules telles que "Dans le chapitre précédent, nous avons discuté de l'adéquation des outils actuels avec les besoins émis par les programmeurs de nouvelles techniques d'interaction, et constaté que..."</noteSH>
+	Dans ce chapitre nous tentons d'y apporter des éléments de solution.<noteSH>développer en 2 mots le "apporter des solutions": à quoi ? (l'inadéquation) Un ou deux points saillants de ces éléments de solution ? (modèle ? toolkit cf. suite).</noteSH>
+	Nous avons choisi d'orienter ce travail de recherche vers le développement d'une nouvelle boîte à outils de programmation d'interactions.<noteSH>Il y a aussi un modèle, avant la toolkit...</noteSH>
+	En effet, des travaux comme ImGui [<a href=#muratori_immediate-mode_2005>Mur05</a>] et D3 [<a href=#bostock_d3_2011>Bos11</a>] montrent que des paradigmes alternatifs de construction d'interfaces peuvent encore être développés aujourd'hui, et apporter de nouvelles manières de raisonner sur la programmation d'IHM<noteSH>Je mettrais aussi Djnn en avant ici, surtout pour les nouvelles manières de raisonner.</noteSH>.
+	De plus, la construction d'une nouvelle boîte à outils nous permet de raisonner sur la <i>simplification</i> des frameworks, en conservant sélectivement les fonctionnalités qui nous sont utiles.<noteSH>mouais... c'est pas faux, mais si on reprend le discours général de l'IHM, ce n'est pas uniquement l'idée de "simplifier", c'est surtout d'identifier l'essentiel (en terme d'objets d'intérêt et mécanismes pour programmer l'interaction). De plus: (i) "simplifier" n'est pas dans l'absolu un objectif en soi. Certaines tâches sont par nature complexes, et cette complexité ne peut être réduite sans en perdre l'essence. Du coup, (ii) ça ne veut pas forcément dire "réduire et limiter" les fonctionnalités, mais rendre "accessible" la complexité. Si on adapte la terminologie de Norman au français on pourrait dire que ce qui est "complexe" ne doit pas être nécessairement "compliqué", donc plutôt que de juste dire "simplifier" (qui est ambigu), il faut dire que l'objectif est de ne pas rendre les choses inutilement compliqués, qu'elles soient simples où complexes ("Simple things should be simple, complex things should be possible"). Dans tous les cas, je ne suis pas satisfait par le terme "simplification des frameworks"</noteSH>
+	Enfin, ce travail est motivé par les évolutions récentes des capacités des machines, démarche peu explorée dans les travaux de conception d'interfaces graphiques.<noteSH>Je reste (très) sceptique sur ce dernier point... on n'en n'a jamais vraiment parlé en profondeur, et pas certain que ce que tu as fais concrètement tire quelque chose de cette "motivation par les évolutions récentes des capacités des machines". Il me semblerait plus judicieux de n'en parler qu'en conclusion du chapitre ou/et du manuscrit.</noteSH>
+</p> -->
+
+<!-- Court paragraphe pour introduire le critère de recherche initial, peut être développé -->
+<!-- <p>
+	Nous avons donc cherché en priorité un paradigme <i>orienté données</i>.
+	En effet, les architectures des ordinateurs modernes favorisent les traitements de type SIMD (<i>Single Instruction stream, Multiple Data streams</i>), avec pour principales représentantes les cartes d'accélération graphiques.
+	Un paradigme orienté données exprime un programme par la manipulation directe de données — par opposition à l'exécution de code.
+	Ces données sont dédiées aux circuits SIMD auxquels elles sont directement envoyées.
+	La conception orientée données est un concept flou en soi, qui s'apparente à une tendance en programmation, mais que nous caractérisons néanmoins par la <i>matérialisation des données à manipuler en objets de haut niveau</i>, et la <i>disponibilité d'opérateurs pour manipuler ces objets</i>.
+	<noteSH>Pas convaincu de l'intérêt de ce paragraphe ici... je le mettrai (et développerai plus) plutôt en fin de partie sur ECS et Polyphony, comme un avantage plutôt qu'une motivation. Au niveau de l'intro du chapitre, il faut à mon avis garder l'idée de base de la motivation "orienté données", mais pas descendre aussi bas dans la machine, et parler plutôt de l'intérêt de cette orientation "données" pour l'utilisateur (le programmeur) et le contexte (programmation d'interaction)</noteSH>
+</p>
+
+<p>
+	Au cours de nos recherches et discussions avec les collègues intéressés, nous avons découvert le paradigme Entité-Composant-Système (ECS), et décidé d'en faire l'objet des travaux de cette thèse.<noteSH>lors d'un petit déjeuner avec des amis, alors que mon chat me regardait... :) C'est un peu light comme formulation... tu écris un document scientifique, pas un roman autobiographique e.g.: "Au cours de nos recherches bibliographiques et technologiques, nous avons considéré d'approfondir l'étude et l'application du modèle Entité-Composant-Système (ECS)."</noteSH>
+	Ce paradigme est un représentant majeur de la conception orientée données, issu du domaine du Jeu Vidéo.<noteSH>paradigme -> modèle ou patron architectural (l'AAC d'EICS a raison...)</noteSH>
+	Il jouit de plus d'une décennie d'existence [<a href=#leonard_postmortem_1999>Leo99</a>]<noteSH>un peu ampoulé le "il jouit de plus..." -> "introduit à la fin des années 90 [<a href=#leonard_postmortem_1999>Leo99</a>], ce modèle a été appliqué..."</noteSH>, a été appliqué avec succès à des jeux commerciaux (Thief: The Dark Project, Dungeon Siege, Overwatch)<noteSH>URLs en footnote?</noteSH>, et semble aujourd'hui en phase d'adoption dans de plus en plus de frameworks de jeux <noteSH>frameworks dédiés à la programmation de jeux vidéos</noteSH>majeurs (en particulier Unity).
+	Cependant le modèle a fait l'objet d'une formalisation assez libre d'interprétation<noteSH>n'est-ce pas un peu contradictoire de parler d'une "formalisation", mais "assez libre d'interprétation" ? Ce n'est donc pas une formalisation... justement, dire que ce modèle (ou plutôt son implémentation ?) n'a jamais vraiment été formalisé/standardisé, et reste à un niveau assez conceptuel</noteSH>, se révèle difficile à implémenter en pratique, et les articles disponibles sur le sujet se contredisent souvent sur de nombreux points.
+</p>
+
+<noteSH>Il manque ici un paragraphe qui explique déjà un peu pourquoi ce modèle est un bon candidat pour la programmation d'interfaces/interactions. Ce sera bien sûr développé dans le chapitre, mais il faut déjà en dire un peu ici (là, ça fait un peu trop "on est tombé dessus, on s'est dit que ça pourrait le faire")</noteSH></del> -->
+
+<p>
+<!-- 	<del>Le but de ce chapitre de thèse a donc été, à partir de cette situation,</del> -->Dans ce chapitre, nous présentons la première étape de notre travail, qui a été d'appliquer ECS à la programmation d'IHM, d'en fournir une architecture claire et non-ambiguë, et d'en dégager les contributions principales à la programmation d'interfaces graphiques et d'interactions.
+	<!-- <del><noteSH>Ce n'est pas le but du chapitre, mais le but du travail qui est rapporté dans ce chapitre -> "Dans ce chapitre, nous présentons la première étape de notre travail qui a été d'appliquer ECS à la programmation d'IHM [...]</noteSH></del> -->
+	La première section de ce chapitre présente un état de l'art sur les bibliothèques logicielles dédiées au prototypage et à la programmation de nouvelles techniques d'interaction.
+	Dans la section suivante, nous présentons Polyphony, une boîte à outils basée sur ECS, et introduisons son utilisation du point de vue des programmeurs d'applications.
+	Ensuite, nous détaillons l'architecture de Polyphony, à des fins de réplicabilité.
+	Enfin nous énumérons les choix d'implémentation caractéristiques de toute variante d'ECS, et expliquons ceux de Polyphony.
+</p>
+
+<!-- TODO: Décrire l'architecture d'ECS par niveaux, en partant des principes fondateurs (comme en OOP le principe selon lequel les objets encapsulent leur état), puis en décrivant les éléments constitutifs d'une implémentation d'ECS, puis... -->
+<!-- TODO: Une limite d'ECS est l'expression de dépendances entre Composants d'une même Entité. Il faut ajouter de la logique hors Systèmes (l'utilisation de Composants temporaires n'est pas raisonnable), et il faut que chaque Composant connaisse son parent, ce qui est impossible à réaliser simplement avec JavaScript. Par contre, cette limitation nous incite à éviter les dépendances (exemple des coordonnées d'une flèche et des bornes de son Entité), ce qui a tendance à simplifier le programme globalement. -->
+<!-- TODO: Une limite de notre implémentation d'ECS est qu'on ne peut pas savoir lorsqu'un Composant a été modifié par setter (exemple de dessin en cache et modification de position). Dans ce cas il faut utiliser un Composant non mutable afin de "voir" la modification par Sélection. -->
+<!-- TODO: En dernière partie, présenter les différentes manières d'observer des changements de valeurs sur des Composants (flag sur Sélecteurs, tmpModified sur Entités). -->
+<!-- TODO: En travaux futurs, optimisations en contraignant des choix qui étaient trop puissants (Descripteurs) -->
+<!-- TODO: Dans la section architecture, ajouter une sous-section sur la structuration d'une application interactive avec ECS. Choisit-on des composants lourds ou légers ? (Point/Size vs Bounds) Des Systèmes complexes ou simples ? (Dessin de sliders vs dessin de formes géométriques) -->
+<!-- TODO: Dans la section architecture, indiquer que Polyphony se compose de deux parties distinctes, le noyau ECS avec les bindings, et les Systèmes/Composants/Sélections/Patrons prédéfinis. Les programmeurs sont libres d'ignorer la deuxième partie. Détailler l'architecture des deux. -->
+<!-- TODO: On peut considérer que Polyphony est une simplification de nombreux concepts existants en IHM : SubArctic, WebStrates -->
+<!-- TODO: Polyphony peut aussi être vu comme une manière compatible d'exprimer la chaîne d'instruments en interaction instrumentale. -->
+<!-- TODO: Voir gjerlufsen_shared_2011 pour une définition de la flexibilité -->
+<!-- TODO: Insister sur le "blending" entre périphériques physiques et virtuels (nebeling_playing_2017 p2) -->
+<!-- TODO: Dédier une petite partie à la population ciblée par Polyphony (nebeling_playing_2017 p3), end-user ? -->
+<!-- TODO: Quels sont les futurs travaux relatifs à Polyphony ? -->
+<!-- TODO: Rationale pour la chaîne de Systèmes simple (pas multiple, déclencheurs grossiers) -> c'est facile de mettre un if dans un Système pour ne filtrer que ce qui nous intéresse. -->
+<!-- TODO: Dans Polyphony aussi on sépare l'interface de la logique -->
+<!-- TODO: Editer la figure décrivant les groupes de Systèmes pour inclure les Systèmes gérant les contrôles -->
+<!-- On peut implémenter l'exécution des Systèmes dans un style dataflow en spécifiant les Descripteurs qu'on écoute et les relations de précédence entre Systèmes, cependant l'exécution de chaque Système devient moins prévisible. On préfèrera donc une chaîne prédéterminée dans laquelle chaque Système peut ne rien faire si ses données n'ont pas changé. -->
+<!-- Cette remarque peut se généraliser en une critique du modèle dataflow : si je dis que B et C dépendent de A, lequel s'exécute en premier ? Avec MVC c'est pareil, en spécifiant les comportements des widgets isolés, on maîtrise moins le comportement de l'application dans son ensemble. -->
+<!-- Ajouter une sous-section sur quand dessiner. Expliquer que les écrans actuels ont leur propre source de rafraîchissement, que la durée de rendu est non-prévisible, et que le signal VSYNC est difficile à obtenir. Dans un système réagissant à des évènements externes, on peut redessiner immédiatement après chaque évènement, cependant si des évènements arrivent à haute fréquence on gâche du temps de calcul, et ça ne marche pas pour des animations (source de temps interne). On doit donc redessiner le plus tard avant VSYNC. Discuter aussi des différentes natures de feedback visuel en latence (souris et DnD doivent être dessinés en derniers). -->
+<!-- Un Descripteur est un type de Collection, dont le contenu change dynamiquement. On peut donc l'utiliser comme champ "children" d'un nœud. -->
+<!-- Différencier les Descripteurs des Sélections : les premiers définissent un ensemble de critères d'appartenance à un groupe, les seconds sont des Collections dynamiques basées sur des Descripteurs. -->
+<!-- Généralisation des dispatch policies de Subarctic grâce aux Systèmes -->
+<!-- TODO: Insister sur le côté optionnel du signalement de toute modification d'un Composant à son Entité, et le fait qu'on ne l'a pas implémenté pour des raisons syntaxiques. -->
+
+
+<!-- Parties à présenter :
+	_ État de l'art en boîtes à outils dédiées au prototypage de techniques d'interaction
+	
+	_ Définition de base du modèle ECS
+	_ Présentation de Polyphony d'un point de vue utilisateur (programmeur d'application), sans discuter de pourquoi c'est comme ça, mais en présentant divers cas d'utilisation et comment ils se traduisent en code
+	_ Présentation d'exemples de techniques d'interaction (drag & drop)
+	
+	_ Présentation de l'architecture de Polyphony (points à définir)
+	_ Graphique de l'évolution de Polyphony et explication des raffinements
+
+	_ Mise en lumière des choix d'implémentation à l'aide des variantes existantes
+	_ Présentation des différences IHM-JV et des conséquences vis-à-vis d'ECS
+	_ Énumération et justification point par point des choix de Polyphony
+	
+	_ Discussion sur l'avenir d'ECS pour la construction d'interfaces graphiques
+	_ Comparaison au modèle objet
+	_ Etude du problème particulier de la performance
+-->
+
+<!-- Pourquoi est-ce qu'on va introduire une nouvelle boîte à outils ? -->
+<!--
+<p>
+	Dans le chapitre précédent, nous avons dressé un état des pratiques en programmation de NTI, et relevé les problèmes qui préoccupent le plus les programmeurs.
+	Nous avons observé en particulier que :
+	<ul>
+		<li>les bibliothèques d'interaction ne découpent pas suffisamment finement leurs comportements réutilisables ;</li>
+		<li>les programmeurs reproduisent cette <i>micro-réutilisation</i> pour eux-mêmes à l'aide de techniques opportunistes, transgressant généralement les usages recommandés.</li>
+	</ul>
+</p>
+<p>
+	À partir de ces observations, nous avons choisi de nous focaliser sur l'aspect de réutilisation des comportements dans les boîtes à outils d'interaction.
+	Nous avons ainsi développé une boîte à outils, <i>Polyphony</i>, dédiée à la conception et la validation de NTI.
+</p>
+-->
+<!-- Que permet notre boîte à outils ? -->
+<!--
+<p>
+	Dans cette bibliothèque, les éléments de l'interface sont caractérisés exclusivement par les propriétés qu'ils possèdent – et acquièrent dynamiquement.
+	L'ensemble des propriétés disponibles détermine les comportements qui peuvent être acquis et composés.
+	Par exemple, si un élément acquiert les propriétés <code>position</code>, <code>size</code>, <code>backgroundColor</code>, <code>text</code> et <code>onClick</code>, alors il se comportera comme un bouton dans l'interface.
+	Chacun des comportements (s'afficher comme un bouton, être ciblable par la souris, être cliquable) est géré indépendamment dans la boîte à outils.
+	L'acquisition d'un comportement se fait en obtenant les propriétés nécessaires.
+	Cette forme de réutilisation illustre le principe de <i>Composition plutôt qu'héritage</i>, car les comportements ne sont pas hérités en groupe d'une classe parente, mais sélectionnés individuellement – <i>à la carte</i>.
+</p>
+<p>
+	Ce chapitre est structuré comme suit.
+	Dans une première section, nous présentons le paradigme de Composition ECS sur lequel nous nous sommes basés, et l'adaptons en vue de construire des IHMs.
+	Dans une seconde section, nous détaillons la construction de la boîte à outils Polyphony à l'aide des concepts présentés en première section.
+	Dans une troisième section, nous construisons des exemples avancés d'IHMs afin de tester les apports de Polyphony.
+</p>
+-->
+<!-- Comme le dit [], les toolkits sont un moyen de démontrer un nouveau paradigme/aspect d'intérêt. -->
+
+
+
+
+<!-- TODO: Inclure un état de l'art complet sur ECS (aucune autre thèse ne va le faire) -->
+<!-- TODO: Ajout d'une section sur les opportunités des interacteurs. Le concept d'interacteurs (et d'interaction comme objets de première classe) est utile pour matérialiser les techniques d'interaction et raisonner dessus, cependant ils peinent encore à être adoptés dans des frameworks majeurs. Exemple de JavaFX/... dans lesquels on modélise le drag par des handlers sur les widgets, donc diffuse entre tous les acteurs. On pense qu'il faut les exprimer de façon plus simples, et les intégrer aux autres mécanismes pour faciliter leur accessibilité. -->
+<!-- TODO: Présenter la structure des interactions dans Polyphony comme un parcours hamiltonien d'un graphe d'interaction (en d'autres mots une linéarisation) -->
+<!-- TODO: Mentionner les continuations dans la partie orchestration. Déjà utilisées pour décrire des techniques d'interaction ? -->
+<!-- TODO: Dans les limites, ajouter une partie sur le problème des callbacks -->
+
+<h2>État de l'art des outils de programmation pour la recherche de nouvelles IHM</h2>
+
+<!-- <del><sh>
+	le titre est trompeur, ce n'est pas un état de l'art du prototypage, mais un "état de l'art des outils de programmation pour le prototypage et le développement de techniques d'interaction". Aussi, ici tu parles des outils "alternatifs", issus du monde académique, par opposition aux outils/frameworks standards (Qt, SWING/Java FX, etc.) pour lequel tu as fait discussions et état de l'art dans le chapitre précédent, right ?
+	Du coup, il faudrait quand même:
+	<ol>
+		<li> que ça se voit aussi dans le titre</li>
+		<li> une sous-section qui rappelle aussi un peu ces problèmes et en quoi ces frameworks standard n'y répondent pas. Et cela pourrait peut-être même servir à classifier/ordonner un peu plus les frameworks dont tu parles dans cette section, plutôt que de simplement en faire une liste ? (à quels problèmes ils répondent et quelles solutions ils y apportent, à quels problèmes ils ne répondent pas, ...). Pour "à quels problèmes ils ne répondent pas", c'est vrai qu'il y a les discussions dans la section suivante ("Limites de l'état de l'art et opportunités de contributions"), mais ça n'empêche pas à mon avis d'en parler déjà un peu.</li>
+	</ol>
+</sh></del> -->
+<p>
+	Cette section est dédiée à la présentation de l'état de l'art et au positionnement de notre travail sur la boîte à outils Polyphony.
+	Nous ciblons en particulier le contexte de la programmation de techniques d'interaction, thème central de ce travail de thèse, bien que nous considérons que Polyphony pourrait servir dans de nombreux contextes d'applications.
+	Dans le <a href=#sec1>chapitre 1</a>, nous avons discuté des problèmes rencontrés par les chercheurs en IHM, dans l'utilisation de frameworks d'interaction.
+	Ils relatent principalement que leurs usages ne sont pas les cibles prioritaires des développeurs de frameworks, et que leurs besoins sont mal reconnus et supportés.
+	Ils manquent ainsi de documentations et d'exemples pertinents pour illustrer l'utilisation des frameworks dans un contexte de recherche.
+	Les frameworks majeurs rendent difficile la création d'interfaces non stéréotypées, à la fois en termes d'apparence et d'interactivité.
+	À cet effet, nous avons observé que les chercheurs exprimaient le besoin de s'approprier leurs outils, voire de les détourner pour créer des artefacts pour lesquels ils n'étaient pas prévus.
+	Enfin, pour intégrer des contributions à des interfaces existantes, comme de nouvelles techniques d'interaction, les chercheurs se sont heurtés à un manque de flexibilité des frameworks.
+	L'état de l'art présenté ici doit nous permettre de relever les solutions qui ont été proposées en réponse aux problèmes ci-dessus.
+	Nous avons analysé les travaux selon les questions suivantes :
+<!-- 	<del>Bien que nous considérons que Polyphony pourrait servir dans de nombreux contextes d'applications, son développement s'est fait avec <notesh>le prototypage et le développement de systèmes interactifs et </notesh>les techniques d'interaction en point de mire.
+	Nous présentons donc ici un état de l'art des bibliothèques de développement d'applications qui ont eu pour objet la programmation et le prototypage de nouvelles techniques d'interaction.</del> -->
+</p>
+<ul>
+	<li>Quels nouveaux usages ont-ils introduits/permis ?</li>
+	<li>Quels concepts et nouvelles manières de programmer ont-ils proposés ?</li>
+	<li>À quel point sont-ils flexibles, dans le changement de comportements prédéfinis ?</li>
+	<li>Comment s'intègrent-ils avec leur langage de programmation ou bibliothèque d'interaction ?</li>
+</ul>
+
+<p>
+<!-- 	<del>Le domaine IHM <notesh>Ce n'est pas le domaine qui a produit, mais dire plutôt "la recherche dans le domaine de l'IHM a conduit à un grand nombre..."</notesh> a produit un très</del> -->La recherche en IHM a conduit à un grand nombre de boîtes à outils, couvrant de nombreux usages.
+	Nous n'avons pas la prétention de les énumérer toutes ici, d'autant que notre objet d'étude peut amener à en considérer beaucoup. 
+	Les lecteurs intéressés par un état de l'art récent et très complet peuvent se référer au manuscrit de thèse de Vincent Lecrubier [<a href=#lecrubier_formal_2016>Lec16</a>].
+	Nous présentons ici les travaux les plus significatifs, qui nous permettent de situer les apports de Polyphony à la programmation de techniques d'interaction.
+</p>
+
+<!-- Questions à poser :
+	_ Quelles sont l'origine et les auteurs de ce framework ?
+	_ Quel a été le contexte de sa genèse, et son contexte d'application initial ?
+	_ Quels problèmes cherchait-il à résoudre en priorité ?
+	_ Comment décrire succintement son principe ?
+	_ Comment peut-on résumer ses contributions au domaine ?
+	_ Quelles critiques peut-on lui adresser aujourd'hui ? (qui justifient son adoption faible)
+-->
+<h3>djnn et Smala</h3>
+
+<p>
+	djnn est un framework complet de construction d'interfaces graphiques, développé au LII de l'ENAC depuis 2014 [<a href=#magnaudet_what_2014>Mag14</a>, <a href=#chatty_verification_2015>Cha15</a>, <a href=#rey_using_2015>Rey15</a>, <a href=#chatty_designing_2016>Cha16</a>].
+	Son contexte d'application initial est la spécification d'interfaces dans le domaine de l'aéronautique, pour lequel la vérification et la certification des programmes sont courants et nécessaires.
+	De plus, il est caractérisé par des équipes pluridisciplinaires, dans lesquelles il est courant que l'apparence des interfaces, leur logique, et leurs techniques d'interaction soient développés par des équipes distinctes.
+	djnn s'est construit autour d'une conception itérative des interfaces, à l'aide d'un paradigme de développement rigoureux : chaque programme est un arbre de composants interactifs, dont les interactions définissent l'exécution du programme.
+	<i>Tous</i> les éléments interactifs sont modélisés par ces composants (les widgets, les périphériques d'entrée/sortie, ou encore les formules de calcul), et sont inclus dans une hiérarchie de composants.
+	La représentation au format XML de cet arbre est utilisée comme interface entre les différentes équipes.
+</p>
+<p>
+	djnn se base sur le modèle théorique I* développé par Stéphane Chatty quelques années auparavant [<a href=#chatty_multiple_2007>Cha07</a>, <a href=#chatty_programs_2008>Cha08</a>, <a href=#chatty_reconcilier_2012>Cha12</a>].
+	Ce modèle est centré autour de la définition de <i>processus</i>, et des relations de causalité entre eux.
+	Il définit le concept de <i>binding</i>, qui relie un processus source à un processus dépendant, en propageant toute activation de l'un à l'autre.
+	Ce concept est repris et développé dans Smala, un langage de programmation basé sur le framework djnn, et transpilé vers C [<a href=#magnaudet_djnn/smala_2018>Mag18</a>].
+	Il introduit deux opérateurs de causalité, le couplage de processus et le lien <i>data-flow</i> (voir <a href=#fig-smala>figure</a>), supportés par une syntaxe concise<!-- <del>élégante <notesh>juste élégante ? rien de plus factuel et en réponse au problème?</notesh></del> -->.
+	De plus, il introduit une manière d'exprimer les interfaces à mi-chemin entre exécution immédiate de code, et alternance de modèles déclaratifs.
+</p>
+<figure id=fig-smala>
+	<img src=figures/smala.jpg style="width:10cm">
+	<figcaption>Les opérateurs de causalité de djnn/Smala (figure extraite de [<a href=#magnaudet_djnn/smala_2018>Mag18</a>]).</figcaption>
+</figure>
+<p>
+	djnn fournit un ensemble réduit de concepts unificateurs, avec lesquels ses auteurs parviennent à exprimer des interfaces complexes.
+	Ce framework invite les programmeurs à raisonner sur une interface comme un ensemble de processus interconnectés, et provoquant l'activation ou la désactivation des nœuds du graphe de scène.
+	Par la définition de relations de causalité, il est facile de propager des changements d'état, ce qui est d'autant plus facilité par la syntaxe de Smala.
+	La distinction ainsi que la relation étroite entre djnn et Smala illustre parfaitement notre idée d'intégration entre framework et langage.
+	Ici, djnn est le framework, auquel on accède par une API en C.
+	Smala est le langage (ici spécialement conçu pour djnn), dont l'intérêt est d'être une syntaxe pour djnn.
+	Le travail sur Smala a permis d'associer des éléments de syntaxe concis et clairs à des concepts autrefois exprimés par des appels de fonctions (en particulier les bindings).
+	Cependant, bien que le langage Smala soit particulièrement adapté pour définir une nouvelle interface, il ne démontre pas la modification d'une interface existante.
+	Ce type de flexibilité fait partie des besoins liés au prototypage de nouvelles techniques d'interaction, et nécessite l'introspection de tous les éléments de l'interface.
+	Or il est à craindre que modéliser toutes les relations de causalité de l'interface en objets de bindings, en génère un grand nombre, et rende difficile leur introspection.
+<!-- 	<del>Cependant, il est à craindre que tout modéliser par des composants en génère un grand nombre, particulièrement en comptant les <i>bindings</i> qui en sont aussi.
+	Dans djnn et Smala la hiérarchie des composants est partiellement exposée aux programmeurs, or nous avons vu dans le chapitre 1 que ceux-ci peuvent vouloir inspecter les aspects structurels de l'interface.</del> -->
+</p>
+<!-- <del><sh>
+	Tu vois, par exemple, en référence à mon point 2) ci-dessus, toutes les sous-sections sur les outils issus du  monde de la recherche sont très bien, synthétiques et efficaces. Mais ce que j'aurais aimé que tu développes un peu plus à la fin de chacune, c'est un bilan factuel, une synthèse, des plus et moins en regard des problèmes du prototypage/développement d'interactions. Ça pourrait être sous la forme (i) d'un tableau (si les plus et les moins ont d'abord été discuté dans le texte), ou (ii) de listes si il faut un peu plus de texte pour discuter chaque point si ça n'a pas été fait dans le texte avant.<br/>
+	Les plus/moins pourraient venir du chapitre précédent sur l'étude des pratiques et besoins, et on pourrait retrouver ce tableau récapitulatif pour chaque toolkit/outils de cette section. Ce qui permettrait d'abord d'introduire un peu les choix pour Polyphony, et ensuite de conclure le chapitre après par "beh voilà, Polyphony/ECS permet de résoudre ça, pas ça, améliorer ça, pas ça, et on l'a fait comme ça car (i) tous (ou la majorité) des outils dont on a parlé font comme ça et ça marche (ii) aucun ou peu d'outil ne faisait comme ça et on voulait explorer/évaluer et c'est bien (ou pas)".
+</sh></del> -->
+
+<h3>UBit</h3>
+
+<p>
+	UBit (<i>Ubiquitous Brick Interaction Toolkit</i>) est une boîte à outils basée sur le langage C++, implémentant une architecture “moléculaire” pour construire des IHMs [<a href=#lecolinet_brick_1999>Lec99</a>, <a href=#lecolinet_molecular_2003>Lec03</a>].
+	Elle a été conçue à partir d'un modèle simple offrant beaucoup de flexibilité, afin de supporter le développement de nouvelles techniques d'interaction, dans des contextes variés comme l'interaction distribuée ou à plusieurs utilisateurs.
+	Ce modèle répond au caractère “monolithique” des interfaces basées sur des classes de widgets, pour lesquelles les comportements de chaque widget sont prédéfinis dans sa classe.
+</p>
+<p>
+	UBit utilise un arbre de scène, dans lequel les widgets de l'interface composent leur apparence et leur interactivité à l'aide de <i>briques</i>, de petites unités sémantiques agissant comme les mots d'une phrase (voir <a href=#fig-ubit>figure</a>).
+	Elle utilise avantageusement les relations de fratrie dans l'arbre de scène, souvent peu mises en valeur, et permet aussi la “réplication récursive” par laquelle un nœud possède plusieurs parents pour lesquels il est dupliqué.
+	De plus, UBit s'intègre étroitement avec le C++ en redéfinissant les opérateurs arithmétiques <code>+</code> et <code>/</code>, qui lui permettent d'initialiser un arbre de scène de manière récursive, sans avoir à construire les nœuds dans des variables intermédiaires.
+<!-- 	<del>De plus, elle définit une syntaxe déclarative dérivée du C++ (par métaprogrammation), afin de regrouper déclarations de l'interface et de sa logique.</del> -->
+</p>
+<figure id=fig-ubit>
+	<img src=figures/ubit.png style="width:10cm">
+	<figcaption>Illustration d'un assemblage de briques dans UBit (figure extraite de [<a href=#lecolinet_molecular_2003>Lec03</a>]).</figcaption>
+</figure>
+<p>
+	Cependant, la granularité fine du concept de briques “atomiques” fait qu'en contrepartie toute interface de taille modeste contient un grand nombre de briques.
+	Il peut être alors difficile de représenter visuellement le graphe de scène, et de le manipuler directement, par exemple pour étendre une application existante ou en modifier des parties.
+	De plus, UBit ayant été conçue pour reproduire des interfaces WIMP, le choix des différents types de briques et leurs combinaisons possibles ont été conçus pour reproduire des contrôles standards (boutons, cases à cocher, menus, etc.).
+	L'ajout d'un nouveau type de brique doit prendre en compte les interactions possibles avec les briques existantes, ce qui rend difficile l'extension d'UBit à de nouveaux types de contrôles.
+	Dans le cas de nouveaux types d'interfaces (ex. Réalité Virtuelle, interfaces ubiquitaires), il faudrait potentiellement reconcevoir l'ensemble des briques.
+</p>
+<!-- <del><p>
+	Cependant, la multiplication des types de briques sémantiques complique les choix des programmeurs, qui doivent mémoriser quelles briques ont un effet sur quelles autres briques.
+	De plus, la simplicité <notesh>simplicité et/ou granularité ? Je dirais plutôt "la faible/ou fine granularité"</notesh> du modèle de briques “atomiques” fait qu'en contrepartie toute interface de taille modeste contient un grand nombre de briques.
+	Il est <notesh>"il peut être" au lieu de "il est" ?</notesh> alors difficile de représenter et de manipuler visuellement <notesh>pas que visuellement, non ?</notesh> le graphe de scène, donc de <notesh>comprendre le code ? pour <notesh> modifier <notesh> ou étendre ?</notesh> une application existante.
+</p></del> -->
+
+<h3>Amulet/Garnet</h3>
+
+<p>
+	Amulet est un framework de construction d'interfaces graphiques et d'interactions basé sur le langage C++, qui a fait figure de pionnier dans l'innovation en programmation d'IHMs [<a href=#myers_amulet_1997>Mye97</a>].
+	Développé sur plus d'une décennie, il se caractérisait par des widgets basés sur un modèle d'objets à prototypes, l'intégration d'un système de contraintes pouvant s'attacher à toutes les variables, la gestion des entrées utilisateur par des objets “<i>Interactors</i>” réutilisables, et des possibilités avancées d'inspection et de modification de l'interface à l'exécution.
+	Ces caractéristiques sont encore aujourd'hui en avance sur les frameworks courants de programmation d'IHM.
+	Amulet est le successeur de Garnet (illustré en <a href=#fig-garnet>figure</a>), un framework et environnement de développement basé sur Common Lisp et X11 [<a href=#myers_garnet_1990>Mye90</a>].
+</p>
+<figure id=fig-garnet>
+	<img src=figures/garnet.png style="width:10cm">
+	<figcaption>Exemple d'interface construite avec Garnet (figure extraite de [<a href=#myers_garnet_1990>Mye90</a>])</figcaption>
+</figure>
+<p>
+	Amulet a été spécifiquement développé pour soutenir la recherche sur les interfaces graphiques.
+	La flexibilité et l'extensibilité étaient donc des thèmes centraux, intégrés dans son modèle innovant de construction des interfaces.
+	Il a servi à explorer des sujets tels que l'interaction distribuée sur le réseau Internet, le support et l'expression des animations, le support de l'action <i>undo</i>, le déboguage graphique des applications interactives, la création d'un outil graphique de définition d'interface (Gilt), l'instanciation de widgets par le dessin à main levée (SILK), et la programmation par démonstration (Gamut).
+	Le modèle à prototypes d'Amulet consiste pour chaque objet à avoir un parent (son <i>prototype</i>), qui implémente les méthodes de l'objet (tout comme une classe le ferait).
+	Cependant, à la différence des classes il est possible d'ajouter ou supprimer des champs de chaque objet (indépendamment des autres), et de changer de prototype.
+	On peut ainsi considérer la programmation orientée prototype comme une alternative aux classes plus flexible.
+	Amulet est un des rares travaux ayant exploré l'usage d'un langage dynamique (au sens moderne, nous entendons le typage et la topologie des objets), pour la construction d'interfaces graphiques.
+	Le modèle à prototypes était implémenté en C++ à l'aide de fonctions, sans faire usage de fonctionnalités de métaprogrammation, ce qui explique qu'il ait souffert d'une mauvaise performance.
+</p>
+<p>
+	Aujourd'hui, certaines des fonctionnalités innovantes qu'Amulet a contribué à développer ont acquis une diffusion plus large (gestion des contraintes de Cassowary [<a href=#badros_cassowary_2001>Bad01</a>], introspection des interfaces avec les navigateurs Web), tandis que les autres sont restées du domaine de la recherche.
+	Il est à envisager que l'essor de langages dynamiques comme Python et JavaScript permette le développement de frameworks exploitant les objets à prototypes, dont nous nous sommes également inspirés dans ce travail de thèse.
+</p>
+
+<!-- <del><sh>OK, mais le modèle sous-jacent ou je ne sais quoi (modèle à prototypes ?) qui ferai l'originalité et la contribution est moins développé que pour les 2 précédents... du coup ça fait un peu "c'est vachement bien ce qu'ils ont fait, encore d'actualité en plus, on s'en est même inspiré"...  et donc pourquoi faire autre chose ?</sh></del> -->
+
+<h3>SwingStates et HsmTk</h3>
+
+<p>
+	SwingStates est une boîte à outils basée sur le langage Java, s'intégrant avec le framework natif Swing pour y appliquer le formalisme des machines à états [<a href=#appert_swingstates_2006>App06</a>].
+	Elle a été conçue pour structurer le flux de contrôle des applications graphiques, dont la complexité est depuis longtemps reconnue comme problématique, pour la maintenance et l'introspection des interfaces [<a href=#myers_separating_1991>Mye91</a>].
+	Elle est notable aussi pour le développement des notions de <i>tags</i>, inspirés de Tcl/Tk, et popularisés par les classes de CSS1 [<a href=#w3c_cascading_1996>W3C96</a>].
+	Les machines à état (ou <i>automates finis</i>) sont un modèle mathématique permettant de décrire le fonctionnement d'un système comme un enchaînement d'états, et l'exécution de transitions entre ces états.
+	Appliqué à la programmation d'IHMs, elles permettent de décrire des techniques d'interaction de façon rigoureuse et systématique — en particulier pour repérer et clarifier les interactions inattendues (ex. appui simultané des deux boutons sur la <a href=#fig-fsm>figure</a>).
+</p>
+<figure id=fig-fsm>
+	<img src=figures/fsm.png style="width:10cm">
+	<figcaption>Illustration d'une technique d'interaction à deux boutons modélisée par une machine à états (figure extraite de [<a href=#buxton_three-state_1990>Bux90</a>]).</figcaption>
+</figure>
+<p>
+	HsmTk est une autre boîte à outils, basée sur le C++, et appliquant cette fois le formalisme des machines à états hiérarchiques [<a href=#blanch_programming_2006>Bla06</a>] (voir <a href=#fig-hsmtk>figure</a>).
+	Elle s'intègre à la fois comme une extension du langage C++ (pour définir la logique des automates), et comme une extension du format SVG (pour l'intégration de la logique à la spécification de l'interface).
+	HsmTk est notable pour chercher à s'extraire du modèle de widget, réutilisant des technologies existantes, éprouvées, et bien optimisées (SVG et la syntaxe du C++), pour concevoir des interfaces graphiques innovantes.
+</p>
+<figure id=fig-hsmtk>
+	<img src=figures/hsmtk.svg style="width:6cm">
+	<figcaption>Exemple d'une machine à états hiérarchique (figure extraite de [<a href=#blanch_programming_2006>Bla06</a>]).</figcaption>
+</figure>
+<p>
+	SwingStates et HsmTk ont comme points communs d'avoir été toutes deux développées — indépendamment — au LRI (Université Paris-Sud), et d'appliquer le principe d'<i>interaction comme objet de première classe</i> de Beaudoin-Lafon [<a href=#beaudouin-lafon_designing_2004>Bea04</a>].
+	Les machines à état sont un paradigme robuste et éprouvé pour modéliser des techniques d'interaction, cependant elles ont rarement été utilisées pour du prototypage — y compris pour la recherche académique.
+	En effet les automates s'expriment au mieux par des diagrammes visuels, et se transposent en texte souvent de façon verbeuse.
+	De plus, il sont assez vite limités dans la complexité des interactions qu'ils peuvent modéliser, en particulier lorsqu'il faut considérer la combinaison de plusieurs états, les transitions continues entre états (animations), ou l'expression de <i>feedback</i> et <i>feedforward</i>.
+	Ces besoins impliquent de rajouter des états, et augmentent donc la complexité de façon exponentielle.
+	Pour ces mêmes raisons, les formalismes à états sont généralement très limités dans leurs capacités à faire évoluer le nombre d'états et de transitions.
+<!-- 	<del>ou la logique floue.<notesh>ou les aspects continues de l'interaction (e.g., ce qu'il se passe pendant une transition par exemple, comme du feedback ou du feedforward: ça implique de rajouter des états et donc peut faire exploser la complexité)</notesh></del> -->
+	Les paradigmes à états sont cependant très utilisés dans les domaines où l'interaction doit être formellement spécifiée et déterministe, comme les systèmes critiques, avec ICO/Petshop qui est basé sur des réseaux de Petri [<a href=#navarre_icos_2009>Nav09</a>].
+	Enfin, InterState est notable pour avoir fourni une représentation graphique unifiée entre machines à états et données des objets (voir <a href=#fig-interstate>figure</a>), afin de spécifier des comportements réutilisables sous forme de machines à états [<a href=#oney_interstate_2014>One14</a>].
+<!-- 	<del>Des variations et extensions des automates ont été développées avec succès, mais elles s'éloignent de la simplicité des machines à état, et requièrent une expertise accrue.
+	<notesh>Dans les paradigmes à états, il faut à mon avis aussi évoquer ICO/Petshop, basé sur les réseaux de Petri, qui eux sont plus dans la "spécification" de l'interaction: <a href="https://www.irit.fr/recherches/ICS/softwares/petshop/ico.html">https://www.irit.fr/recherches/ICS/softwares/petshop/ico.html</a>. Du coup, il faudrait renommer la sous-section (e.g., formalismes à états). Il y a  aussi interstate qui me semble être une référence récente incontournable (<a href="http://from.so/p/interstate.pdf">http://from.so/p/interstate.pdf</a>)</notesh></del> -->
+</p>
+<figure id=fig-interstate>
+	<img src=figures/interstate.svg style="width:12cm">
+	<figcaption>Exemple du comportement de glisser-déposer implémenté dans InterState (figure extraite de [<a href=#oney_interstate_2014>One14</a>]).</figcaption>
+</figure>
+
+<h3>ICON et MaggLite</h3>
+
+<p>
+	ICON est une boîte à outils dédiée à la manipulation des périphériques d'entrée d'une application, et la spécification de techniques d'interaction [<a href=#dragicevic_input_2001>Dra01</a>, <a href=#dragicevic_support_2004>Dra04</a>].
+	Elle est centrée autour d'une représentation graphique interactive en flots de données (<i>dataflow</i>), dans laquelle on connecte des slots d'entrée et de sortie pour établir des flux permanents (voir <a href=#fig-icon>figure</a>).
+	ICON a été créée pour <i>adapter</i> la richesse des périphériques d'entrée aux modalités d'interaction limitées des logiciels de bureau, afin de permettre l'utilisation efficace de périphériques déviant du cadre stéréotypé du couple souris/clavier.
+	Elle est construite principalement pour le framework Swing, mais fonctionne aussi partiellement pour des applications externes.
+</p>
+<figure id=fig-icon>
+	<img src=figures/icon.png style="width:13cm">
+	<figcaption>Exemple d'une configuration d'entrées dans ICON (figure extraite de [<a href=#dragicevic_support_2004>Dra04</a>]).</figcaption>
+</figure>
+<p>
+	ICON est notable pour avoir été utilisée pendant plus d'une décennie pour gérer les entrées sur le mur d'écran WILD du LRI [<a href=#beaudouin-lafon_multisurface_2012>Bea12</a>].
+	De plus, elle a démontré l'applicabilité de la définition de techniques relativement complexes, <!-- <del>par boîtes et chemin</del> -->par un langage de programmation visuel basé sur des diagrammes de flots (boîtes, slots et connexions).
+	L'apparence visuelle très structurée lui permet en effet d'afficher une densité d'informations importante en restant lisible, chose généralement difficile avec des systèmes comme Max/MSP ou Pure Data.
+	Cependant, bien que l'approche par flux de données soit adaptée aux aspects continus de l'interaction, elle l'est moins pour décrire des états et transitions entre états.
+	Ainsi, l'approche hybride FlowStates a été proposée, qui combine les flux de données d'ICON avec les machines à états de SwingStates [<a href=#appert_flowstates_2009>App09</a>].
+	Les interfaces construites avec ICON se distinguent par la flexibilité des connexions entre boîtes.
+	Il est possible de lier les connecteurs à la volée, et de les déconnecter, sans perturber le fonctionnement du système.
+	Les développeurs peuvent ainsi brancher un périphérique, et réaliser les connexions nécessaires pour l'adapter à une application existante, le tout durant l'exécution de l'application.
+	Enfin, ICON étant un système de programmation visuelle, il n'est pas question d'intégration à un langage, puisqu'on ne l'utilise pas à partir des fonctions d'une API.
+<!-- 	<del><notesh>il y a quand même des limites, ça peut vite devenir complexe. De plus, l'approche data-flow a aussi ses limites: bien pour les aspects continus, pas top pour décrire les états et les transitions: les "switchs" sont difficile à exprimer en dataflow. D'où la combinaison des deux que l'on avait fait avec FlowStates, qu'il faut citer ici avec ces arguments...<a href="https://hal.inria.fr/inria-00538598/">https://hal.inria.fr/inria-00538598/</a></notesh></del> -->
+</p>
+<p>
+	MaggLite est une boîte à outils de construction d'interfaces à main levée (illustrée en <a href=#fig-magglite>figure</a>), développée conjointement à ICON et l'utilisant comme base de gestion des évènements d'entrée [<a href=#huot_magglite_2004>Huo04</a>].
+	Elle est dédiée explicitement à l'exploration et la définition de nouvelles techniques d'interaction.
+	Par un modèle de <i>graphes combinés</i> [<a href=#huot_flexibilite_2006>Huo06</a>]<!-- <del><notesh>citer article IHM 2006 sur ce modèle ? et/ou ma thèse ?</notesh></del> --> faisant cohabiter graphe d'interaction (issu d'ICON) et graphe de scène, elle sépare clairement l'apparence et la logique d'une application, en donnant une importance accrue à la gestion des interactions (par rapport à un système basé sur la propagation d'évènements).
+	MaggLite est aussi notable pour avoir mis en lumière l'aspect stéréotypé des interfaces WIMP, en démontrant l'utilisation à la fois de périphériques non conventionnels, de techniques d'interaction issues de la recherche, et de visuels inhabituels.
+</p>
+<figure id=fig-magglite>
+	<img src=figures/magglite.jpg style="width:16cm">
+	<figcaption>Illustration du principe “<i>Draw it, Connect it and Run it</i>” de MaggLite (figure extraite de [<a href=#huot_magglite_2004>Huo04</a>]).</figcaption>
+</figure>
+<p>
+	Bien que ICON et MaggLite aient contribué à défaire le caractère inflexible et conventionnel des interfaces, le principe des graphes d'interaction a été peu répliqué par la suite.
+	Pourtant, les périphériques et techniques d'interaction n'ont cessé de se diversifier, mais aussi de gagner en degrés de liberté et paramètres à contrôler.
+	Les graphes d'interaction montrent leurs limites dans l'expression de techniques complexes qui y sont difficilement lisibles, ainsi que le manque d'intégration dans les langages couramment utilisés pour prototyper des interfaces graphiques.
+</p>
+
+<h3>Proton et Proton++</h3>
+
+<p>
+	Proton est une boîte à outils facilitant l'expression de techniques d'interaction <i>multi-touch</i> sur écrans tactiles [<a href=#kin_proton_2012>Kin12</a>].
+	Elle répond à la difficulté de prototyper rapidement de nouvelles interactions au doigt, en particulier lorsqu'elles mettent en oeuvre des séquences de gestes et combinaisons à plusieurs doigts.
+	Proton modélise les techniques au doigt par des expressions régulières, qui sont formées par assemblage de trois types d'actions (appui, déplacement, relâchement), auxquels sont ajoutés des attributs de numéro de doigt et d'objet ciblé (voir <a href=#fig-proton>figure</a>).
+	Elle fournit de plus un éditeur graphique de <i>tablatures</i>, inspirées de la notation musicale.
+	Proton++ est la continuation du travail effectué sur Proton, qui permet de définir de nouveaux types d'actions paramétriques, et de spécifier leurs paramètres par une extension aux expressions régulières de Proton [<a href=#kin_proton++_2012>Kin12</a>].
+</p>
+<figure id=fig-proton>
+	<img src=figures/proton.png style="width:10cm">
+	<figcaption>Illustration des expressions régulières de Proton (figure extraite de [<a href=#kin_proton_2012>Kin12</a>]).</figcaption>
+</figure>
+<p>
+	Proton et Proton++ sont notables pour avoir rapproché l'expression de techniques d'interaction à la définition d'expressions régulières, apportant de nouvelles manières pour les développeurs de raisonner sur ces artefacts.
+	De plus, grâce à leur définition d'une syntaxe concise et inambiguë pour décrire des gestes complexes, elles permettent de raisonner à plus haut niveau pour prototyper du contrôle gestuel, sans avoir avoir à se perdre<!-- <del>s'empêtrer <notesh>bof bof s'empêtrer...</notesh></del> --> dans du code souvent verbeux.
+</p>
+<p>
+	Cependant, les deux boîtes à outils reposent fortement sur l'absence d'ambiguïtés dans les gestes atomiques.
+	En effet il est facile de différencier un appui du doigt d'un déplacement du doigt, à la fois pour le programme et pour l'utilisateur.
+	Les gestes ajoutés par Proton++ respectent ces mêmes propriétés : ils sont fortement différenciables les uns avec les autres.
+	Or les ambiguïtés sont courantes dans les interfaces gestuelles, pour lesquelles les systèmes de reconnaissance classiques quantifient une probabilité de reconnaissance.
+	De façon générale, nous arguons que chaque technique d'interaction peut nécessiter un contrôle fin, en particulier lorsqu'elle évolue avec les usages courants.
+	Par exemple, il est possible que les utilisateurs réalisant un geste de pincement (<i>pinch</i>) sur un objet pour l'agrandir, commencencent le geste en l'air et positionnent ainsi les premiers points de contact en dehors de l'objet.
+	Pour une technique d'interaction robuste à ce type d'usages, il convient de détecter les gestes ambigus, or la rédution à des expressions régulières de Proton et Proton++ limite ce contrôle.
+<!-- 	<del>Proton et Proton++ ne supportent pas explicitement la gestion des gestes ambigus, de plus la réduction à des expressions régulières limite le contrôle fin d'une technique d'interaction (comme le seuil de détection d'un déplacement), qui est important y compris lors du prototypage.</del> -->
+</p>
+
+<h3>subArctic/Artkit</h3>
+
+<p>
+	subArctic est un framework complet de programmation d'interfaces graphiques et d'interactions, construit principalement autour de la notion d'<i>extensibilité</i> [<a href=#hudson_extensible_2005>Hud05</a>].
+	Développé comme Garnet sur plus d'une décennie, et pour soutenir la recherche, il a été utilisé pour explorer des sujets tels que l'abstraction et l'implémentation des animations, l'implémentation de contraintes de positionnement propagées localement (µConstraints), le déboguage visuel interactif des applications graphiques, et plus généralement l'implémentation d'interfaces non-standard.
+	Ces travaux ont contribué à améliorer les fonctionnalités et l'apparence des interfaces graphiques, et sont aujourd'hui présents, sous différentes formes, dans de nombreux frameworks.
+	subArctic est le successeur d'Artkit, un framework d'interaction basé sur le C++ [<a href=#henry_integrating_1990>Hen90</a>].
+</p>
+<p>
+	En ce qui concerne la programmation de nouvelles techniques d'interaction, subArctic se caractérise principalement par un modèle complet d'entrées extensibles (voir <a href=#fig-subarctic>figure</a>).
+	Ce modèle permet la définition et l'ajout de nouveaux <i>interacteurs</i>, à la compilation comme à l'exécution, qui interprètent en séquence des comportements de plus haut niveau.
+	Il est ainsi possible d'intégrer de nouvelles techniques d'interaction à des interfaces existantes, ou de remplacer des modalités d'interaction existantes.
+	Ce modèle est analogue à celui que nous implémentons dans Polyphony, et que nous présentons dans les sections suivantes.
+	Enfin, la boîte à outils subArctic n'ayant pas fait usage de techniques d'intégration à un langage, elle s'utilise par une API standard pour Java.
+<!-- 	<del>La modélisation des techniques d'interaction dans Polyphony est très analogue à la gestion des entrées dans subArctic, qui nous semble être une approche à la fois puissante et simple à se représenter mentalement.
+	Cependant, dans Polyphony la gestion des entrées et l'interprétation des techniques d'interaction est intégrée avec les autres comportements de l'interfaces, afin d'offrir un modèle d'ensemble simple et cohérent.<notesh> Tu parles 2 fois de Polyphony ici, mais tu n'as pas encore présenté Polyphony... il faut dire ça autrement ou le garder pour après...</notesh></del> -->
+</p>
+<figure id=fig-subarctic>
+	<img src=figures/subarctic.svg style="width:9cm">
+	<figcaption>Illustration du modèle d'évènements de subArctic (figure extraite de [<a href=#hudson_extensible_2005>Hud05</a>]).</figcaption>
+</figure>
+
+<h3>D3/Protovis</h3>
+
+<p>
+	D3 est une bibliothèque conçue pour créer des visualisations interactives sur le Web, qui fournit un langage dédié basé sur JavaScript, permettant de manipuler du SVG inclus dans le DOM d'une page Web [<a href=#bostock_d3_2011>Bos11</a>].
+	Elle se base sur une approche pragmatique de la création de visualisations : être la plus <i>efficiente</i> (moins d'efforts pour produire une visualisation), <i>accessible</i> (plus facile à apprendre), <i>expressive</i> (variété des visualisations possibles, voir <a href=#fig-d3>figure</a>), et <i>performante</i> (temps d'exécution).
+	D3 est notable pour son intégration voulue à des technologies existantes (SVG, DOM), sans introduire de nouvelle représentation ni étendre de format existant.
+	Les auteurs de cette bibliothèque critiquent ouvertement l'usage de représentations intermédiaires de contrevenir aux objectifs précédents.
+	Ils justifient leur choix pour : le faible apprentissage nécessaire pour les utilisateurs familiers du Web, la grande base d'utilisateurs du Web qui peuvent adopter rapidement D3, les documentations déjà nombreuses et complètes sur DOM et SVG, le bénéfice des outils de débogage du DOM présents dans les navigateurs Web, et l'absence de réduction d'expressivité due à la traduction depuis un format différent.
+</p>
+<p>
+	D3 a été un succès d'usage, puisqu'elle a été adoptée massivement pour produire des visualisations interactives en ligne, et a contribué à défaire le caractère stéréotypé des visualisations, en ramenant leurs conceptions aux dessins de formes simples en SVG.
+	Le concept de données <i>liées</i> aux éléments graphiques relie la flexibilité des données à celle des visualisations.
+	Cependant, D3 ne cherche pas expressément à étendre les capacités des périphériques d'interaction, autrement qu'en proposant de nouvelles manières de manipuler les données présentes dans le DOM.
+	Son intérêt pour la programmation de nouvelles techniques d'interaction est donc moindre, bien que son approche pragmatique de validation de contribution par la communauté soit un exemple à suivre.
+	D3 succède à Protovis, un framework complet de visualisation basé sur JavaScript [<a href=#bostock_protovis_2009>Bos09</a>].
+</p>
+<figure id=fig-d3>
+	<img src=figures/d3.jpg style="width:15cm">
+	<figcaption>Exemples de visualisations construites avec D3 (figure extraite de [<a href=#bostock_d3_2011>Bos11</a>]).</figcaption>
+</figure>
+
+<h3>Limites de l'état de l'art et opportunités de contributions</h3>
+
+<!--<traf>J'avais commencé par faire un tableau, mais l'exercice de synthèse me semble trop risqué aussi près du rendu.</traf>
+<sh>OK, c'est bien comme ça avec tes 3 paragraphes. Il faudrait juste peut-être leur donner des titres, ou a minima mettre en gras le "motif récurent" dans la première phrase de chaque paragraphe et la voie que tu as choisi dans la dernière phrase (je l'ai fait, ça me semble pas mal...)</sh>-->
+<p>
+	À partir des travaux présentés ci-dessus, nous observons un certain nombre de motifs récurrents en nous concentrant sur les questions posées au début de cette section.
+	Tout d'abord, la plupart répondent à des <b>besoins de propagation d'informations</b>.
+	Ces informations peuvent être des données, ou de façon plus abstraite des “survenues d'évènements”.
+	Il peut s'agir de propager une information de clic de souris vers un déclenchement de la commande d'un bouton, ou de propager l'information de déplacement de la souris sur une contrainte de positionnement durant un appui-relâchement.
+	Ces besoins ne correspondent pas exactement au paradigme de mise à jour d'états en mémoire mis en avant dans les architectures matérielles et la programmation impérative, car les informations doivent transiter entre des étapes de traitement, plutôt qu'être archivées en mémoire.
+	C'est pourquoi de nombreuses boîtes à outils ont introduit des paradigmes de propagation d'informations (<i>dataflow</i>, <i>bindings</i>, systèmes de contraintes).
+	Les boîtes à outils étant pour la plupart implémentées avec des langages impératifs, ces paradigmes doivent cohabiter avec des types de raisonnements différents.
+	Nous considérons que cette situation est source de confusions pour les développeurs, et <b>avons choisi au contraire d'adapter la propagation d'information au modèle impératif</b> (en particulier avec le stockage des changements d'états en “variables temporaires” présentées en <a href=#sec3x2x5>section 3.2.5</a>).</li>
+</p>
+<!-- Arbre de scène et structuration sémantique :
+	_ très utile pour gérer les grosses interfaces, fournir des comportements globaux cohérents (flux de positionnement, tooltips), et mutualiser des comportements complexes (contraintes de pos et propagation des évts)
+	_ pas strictement nécessaire pour les petites applications
+	_ plus de nœuds, introduit des concepts (parcours d'arbre, scène/vue, event bubbling)
+	_ nécessite de régler des comportements par défaut (que fait mon interface si on la redimensionne)
+	_ gène le caractère incrémental de l'activité de prototypage
+-->
+<p>
+	Ensuite, la majorité des travaux que nous avons étudiés nécessitent la <b>construction d'un arbre de scène</b>.
+	Ce type de structure est très répandu dans les frameworks d'interaction, et très utile pour fournir des comportements globaux cohérents (ex. les règles de flux de positionnement des éléments dans leurs conteneurs en HTML), pour mutualiser la modélisation de relations complexes (ex. l'ordre d'affichage et l'ordre de réception des évènements de la souris), et plus généralement pour maîtriser la complexité des interfaces réalistes.
+	L'arbre de scène impose de raisonner sur la construction d'interfaces par imbrications récursives d'éléments rectangulaires, et en retour permet la réutilisation de contrôles standards (les <i>widgets</i>), implémentés comme des nœuds de l'arbre de scène.
+	Cependant, l'arbre de scène n'est pas strictement nécessaire pour produire de petites applications.
+	Par exemple, pour dessiner un objet suivant le curseur à l'écran, il faudrait dans la plupart des boîtes à outils fournir un canevas de dessin à la taille de l'écran, et y exécuter des instructions de dessin.
+	La nécessité d'un arbre de scène gène ainsi le caractère <i>incrémental</i> de l'activité de prototypage, évoqué en <a href=#sec1x3x1x2>section 1.3.1.2</a>.
+	Selon les Dimensions Cognitives de Notations [<a href=#green_usability_1996>Gre96</a>], ce point représente un coût important de <i>Premature commitment</i>, en ce que les développeurs doivent d'abord construire un arbre de scène minimal (ainsi que le code de base pour initialiser la bibliothèque) avant de pouvoir créer avec.
+	Ce coût est accentué par l'introduction de notions spécifiques aux arbres de scène, dont il faut acquérir une certaine compréhension au préalable.
+	Enfin, nous conjecturons que l'utilisation d'un arbre de scène, ainsi que les concepts visant à simplifier les différents types de nœuds existant, résulte en l'instanciation d'un plus grand nombre de nœuds.
+	Sans pouvoir étayer cette affirmation, <b>nous avons néanmoins cherché à remettre en question la nécessité d'un arbre de scène, et étudié les différents types de relations qui en tirent parti</b>.
+</p>
+<p>
+	De nombreux travaux proposent une <b>intégration étroite avec un langage de programmation</b> (djnn avec Smala, UBit avec C++, D3 avec JavaScript, voire Proton avec les expressions régulières), au delà de fonctions accessibles par une API.
+	Ils font souvent usage de fonctionnalités de métaprogrammation, pour <i>tordre</i> les règles liant la syntaxe et la sémantique, et en superposer de nouvelles.
+	Par exemple, UBit redéfinit les opérateurs <code>+</code> et <code>/</code>, qui expriment respectivement l'addition et la division arithmétiques, pour leur faire exprimer respectivement l'ajout d'un frère dans un arbre, et la relation d'attachement d'un <i>callback</i> à un type de déclencheur.
+	D'autres boîtes à outils comme InterState, ICON, ou encore Proton, fournissent des interfaces graphiques pour programmer visuellement de l'interaction.
+	Ils possèdent ainsi un contrôle plus fin des éléments de syntaxe qu'utiliseront les développeurs pour exprimer des comportements interactifs, sans dépendre des règles préexistantes d'un langage.
+	Durant la conception de Polyphony, nous avons <b>cherché à appuyer l'intégration avec le langage JavaScript, faisant coïncider la notion d'Entité avec celle des objets, afin que la syntaxe de Polyphony semble “native” à JavaScript</b>, plutôt que “superposée” comme peut l'être par exemple UBit.
+</p>
+<p>
+<!-- 	<del>À partir des travaux présentés ci-dessus, nous discutons dans cette sous-section <notesh>tu répètes un peu trop souvent "dans cette section..."  dans tes intros. Tu peux alléger un peu en mettant parfois "nous discutons/allons discuter maintenant" ou variantes</notesh> des limites perçues <notesh>pourquoi "perçues"? comprends pas</notesh> de l'état de l'art pour le prototypage de nouvelles techniques d'interaction.</del> -->
+	Nous allons discuter maintenant de points saillants, pour lesquels nous nous sommes volontairement distingués de l'état de l'art présenté ici, et plus généralement des frameworks d'interaction utilisés pour le prototypage en IHM.
+	Nous en dégageons des opportunités de contributions, qui forment l'origine de notre travail sur Polyphony.
+</p>
+
+<h4>Mutualisation et réutilisation des comportements</h4>
+
+<p>
+	Une manière de différencier les bibliothèques de construction d'IHM est d'analyser leur gestion des <i>comportements</i> interactifs.
+<!-- 	<del>Pour clarifier la notion de comportements, nous les considérons à deux niveaux.</del> -->
+	Nous considérons cette notion de comportements à deux niveaux interdépendants.
+	À haut niveau, ils désignent les réactions observables des Entités à différents stimuli.
+	Ces stimuli peuvent être des évènements externes (clic de souris, front montant d'horloge), ou internes (la souris survole un élément).
+	À bas niveau, les comportements désignent les variables et le code déclenchés par ces évènements, et qui donnent lieu aux réactions observées.
+	Par exemple, le comportement “permettre l'édition de texte” réfère à haut niveau à l'affichage de caractères en séquence lors de chaque appui de clavier, et à bas niveau au code qui après chaque entrée du clavier obtient l'objet ciblé par le clavier, et ajoute chaque caractère en bout d'une chaîne de caractères dont l'affichage est mis à jour.
+<!-- 	<del>Par exemple, pour un comportement de haut niveau “permettre l'édition de texte” sur une Entité, le code correspondant vérifie que l'Entité est ciblée par le clavier, et pour chaque caractère pressé l'ajoute en bout d'une chaîne de caractères dont l'affichage est mis à jour.
+	<sh>
+		Pourquoi tu ne re-utilises pas les termes de l'article EICS ? (transient et periodic => transitoire et périodique)<br/>
+		De plus, sauf erreur de ma part, tu ne reviens jamais dans le reste de la section sur cette distinction entre les comportements bas-niveau et haut-niveau. Tu parles juste dans le paragraphe suivant de comportements individuels et partagés, ce qui rend le discours au  début  du moins encore plus flou...<br/>
+		Est-ce que ça ne vaudrait pas le coup de fouiller cette caractérisation des comportement un peu plus loin et de garder une cohérence dans le reste de la section? Il me semble qu'on a 3 dimensions orthogonales, là : (i) haut niveau vs bas niveau; (ii) transitoire vs périodique; (iii) individuel vs partagé.<br/>
+		Du coup, j'ai lu la suite de la section, mais pas commenté: c'est l'article. C'est bien, mais peut-être pas structuré tout à fait comme il faut pour un chapitre de thèse. Peut-être qu'en suivant mes conseils pour le début de la section (discussion des +/- de l'état de l'art en fonction de problèmes et besoins pour le prototypage et le dév.) et en caractérisant clairement les types de comportements comme suggéré ci-dessus, ça te donnera des billes pour re-structurer un peu cette section (en gardant le contenu et les arguments, mais en étant plus cohérent avec ce qui précède)
+	</sh></del> -->
+</p>
+<!-- <traf>Je ne distinguais pas a priori les comportements de haut et bas niveau. C'est plutôt que chaque comportement peut être considéré à haut niveau (ce qu'on observe) ou à bas niveau (son code). Les deux autres dimensions sont très pertinentes, vu qu'on y apporte des solutions concrètes, j'essaierai d'en parler vers la conclusion.</traf> -->
+<p>
+	La plupart des bibliothèques basées sur des objets utilisent la notion d'<i>arbre d'héritage</i> pour organiser les comportements individuels et partagés, et peuvent être décrits comme “monolithiques” [<a href=#bederson_toolkit_2004>Bed04</a>].
+	L'arbre d'héritage établit une hiérarchie de types entre les objets, selon laquelle tout objet descendant d'un autre en hérite les définitions de méthodes et de variables (donc les comportements).
+	Grâce à cette propriété, le type descendant peut être utilisé là où on attend le type parent — c'est le <i>polymorphisme</i>.
+	Dans les applications d'IHM, les comportements partagés par cet arbre sont principalement : l'apparence des widgets, leur propagation des contraintes de dimensionnement aux voisins/enfants, et leurs réactions aux évènements souris/clavier.
+	Cette réutilisation est particulièrement utile pour la création de nouveaux types de widgets, qui peuvent se baser sur des widgets existants (hériter de leur classe), et ajouter des fonctionnalités plutôt que tout réimplémenter.
+</p>
+<p>
+	Cependant, les hiérarchies entre ancêtres sont généralement prédéfinies, ce qui complique l'attribution de comportements à des objets qui n'ont pas été spécifiquement conçus et implémentés pour les recevoir [<a href=#bederson_toolkit_2004>Bed04</a>, <a href=#lecolinet_molecular_2003>Lec03</a>, <a href=#myers_amulet_1997>Mye97</a>], aussi bien de manière statique (à la compilation) que dynamique (à l'exécution).
+	Par exemple, il est souvent difficile d'ajouter le comportement d'édition de texte aux <i>labels</i> d'une interface (ex. <code>JLabel</code>).
+	En effet, les fonctions pour <i>recevoir les appuis clavier</i>, <i>afficher un curseur de texte clignotant</i> et <i>modifier une chaîne de caractères</i>, appartiennent souvent à une autre famille de composants, dédiée à l’édition de texte.
+</p>
+<p>
+	Pour un programmeur ayant accès au code source de l'interface, ce changement peut se faire de deux manières : soit avec une sous-classe d'un <i>champ de texte</i> modifiée pour ressembler à un label, soit avec une sous-classe d'un <i>label</i> modifiée pour permettre l'édition de texte.
+	Dans les deux cas un des deux comportements est recréé car il ne peut pas être hérité.
+	Ce problème a donné lieu à des architectures d'objets favorisant la <i>Composition</i> plutôt que l'<i>Héritage</i>, comme les Traits [<a href=#curry_traits_1982>Cur82</a>] ou les mixins [<a href=#bracha_mixin-based_1990>Bra90</a>].
+	Cependant, ces architectures ont été peu utilisées pour développer des bibliothèques d'IHM, ce que nous imputons aux contraintes qu'elles imposent pour maintenir leur cohérence.
+	Pour un programmeur n'ayant pas accès au code source de l'interface, ajouter un comportement à un élément revient à changer sa <i>nature</i>, ce qui relève parfois de l'impossible.
+	Comme le remarque Lecolinet [<a href=#lecolinet_molecular_2003>Lec03</a>], « <i>behaviors and other features are not seen as general services that could be used by any widget</i> ».
+</p>
+<p>
+	De nombreuses bibliothèques dites “polylithiques” [<a href=#bederson_toolkit_2004>Bed04</a>] ont été proposées, liées au paradigme de Composition, pour partager des comportements sans arbre d'héritage, statiquement ou dynamiquement.
+	UBit [<a href=#lecolinet_molecular_2003>Lec03</a>] le fait en synthétisant des comportements et des propriétés composables dans les “briques” d'un arbre de scène, dont l'interprétation récursive matérialise l'interface.
+	De même, Jazz [<a href=#bederson_jazz_2000>Bed00</a>] modélise les comportements par des nœuds insérés entre les éléments de l'arbre de scène.
+	Les comportements sont ainsi hérités par tous les enfants de l'arbre.
+	MaggLite [<a href=#huot_magglite_2004>Huo04</a>] reprend un principe similaire, ajoutant un modèle de <i>graphes combinés</i> qui lie le graphe d'interaction de ICON à celui du graphe de scène [<a href=#huot_flexibilite_2006>Huo06</a>].
+</p>
+<p>
+	La majorité de ces approches se base sur l'existence d'un <i>arbre de scène</i> pour supplanter l'arbre d'héritage proposé par les langages à objets.
+	L'arbre de scène, qui est déjà utilisé pour structurer les éléments visuellement, se prête bien à l'héritage des styles visuels — propriétés graphiques de UBit, nœuds de Jazz.
+	Cependant, il ne se prête pas à <i>toutes</i> les propriétés.
+	CSS, par exemple, indique pour chaque type de propriété si elle est héritée par défaut ou non [<a href=#mozilla_css_2019>Moz19</a>].
+	En effet, la couleur de texte (<code>color</code>) peut être partagée avec les enfants d'un élément, mais pas ses marges (<code>margin</code>/<code>padding</code>).
+	L'arbre de scène n'est donc pas une solution universelle, d'autant que son utilisation exclusive requiert de nombreux nœuds, qui rendent son inspection visuelle difficile.
+	Comme nous l'avons énoncé précédemment, nous avons pour objectif d'<b>explorer des approches <!-- <del>de composition</del> --> qui ne se basent pas exclusivement sur un arbre de scène, notamment à l'aide de la composition</b>.
+</p>
+
+<h4>Dynamicité des comportements</h4>
+
+<p>
+	La plupart des bibliothèques d'IHM ont un support limité pour l'ajout de nouveaux comportements à des objets, à l'exécution.
+	Il est aussi difficile d'altérer des comportements à la volée (ex. <i>activer/désactiver</i>), à moins qu'ils aient été prévus pour.
+	Dans une interface graphique, par exemple, les menus déroulants ne permettent pas de réordonner leurs éléments à la souris.
+	Rendre les éléments d'un menu ordonnables durant l'exécution du programme, est un exemple de dynamicité des comportements.
+</p>
+<p>
+	Il est important de noter que cette dynamicité est indépendante du choix de Composition ou d'Héritage pour partager les comportements.
+	Il s'agit en fait de pouvoir changer <i>à l'exécution</i> les composants ou parents d'un objet donné.
+</p>
+<p>
+	Une solution commune est pour chaque élément de posséder le comportement visé, et de le désactiver par défaut.
+	C'est le cas par exemple dans Qt pour l'exemple cité: la classe de base <code>QAbstractItemView</code> contient une méthode <code>setDragEnabled</code> qui permet à chaque liste d'activer la possibilité de déplacer les éléments à la souris.
+	Cette approche est toutefois limitée par le fait que l'ajout de nouveaux comportements doit se faire par la classe de base.
+</p>
+<p>
+	Cette limite a conduit les chercheurs à développer diverses techniques pour attribuer des comportements à la volée.
+	Scotty [<a href=#eagan_cracking_2011>Eag11</a>] permet par exemple d'analyser la structure des composants d'interaction d'une application Cocoa existante et d'y injecter du code pour en modifier les comportements.
+	Bien que spectaculaire et efficace pour le prototypage rapide de nouveaux comportements interactifs dans des applications existantes, cette approche présente des défauts de robustesse et de persistance qui ne permet pas de l'utiliser à plus grande échelle que pour du “hacking” temporaire. 
+	Ivy [<a href=#buisson_ivy_2002>Bui02</a>] est un bus de messagerie sur lequel des agents peuvent envoyer du texte et s'enregistrer pour écouter des messages (sélectionnés par expressions régulières).
+	De cette manière, de nouveaux comportements sont ajoutés par le biais de nouveaux agents, et les agents se remplacent en envoyant des messages compatibles.
+	Amulet [<a href=#myers_amulet_1997>Mye97</a>] se base sur un modèle d'objets à <i>slots</i> dynamiques (variables et méthodes), qui semblent permettre l'ajout de comportements à la volée.
+	Cependant, spécifier une nouvelle méthode ne garantit pas qu'elle soit exécutée automatiquement, il faut hériter du bon prototype et la hiérarchie des prototypes n'est pas modifiable.
+</p>
+<p>
+	La plupart des travaux gérant l'attribution de nouveaux comportements (non-prédéterminés) à la volée se heurtent à la <i>nécessité d'une spécification</i>.
+	En effet, les objets sont passifs par nature, ils ne s'exécutent que si on les “appelle”, par une fonction ou un envoi de message.
+	Les programmes sont passifs aussi, le système d'exploitation les lance en exécutant une fonction attendue (généralement <code>main</code>).
+	Pour s'exécuter, un comportement/objet/programme doit donc fournir une spécification (ou interface), qui indique comment l'exécuter, et avec quels arguments.
+	Lorsqu'il est défini <i>avant</i> le code qui doit l'appeler, il peut imposer sa spécification, et ce sera à l'appelant de se conformer en appelant les bonnes fonctions.
+	Lorsqu'il est défini <i>après</i> le code appelant, les spécifications ont nécessairement été déjà fixées.
+	Par exemple, pour qu'un objet s'affiche dans JavaFX il doit implémenter la méthode <code>onDraw</code>, qui sera exécutée par le framework pour tout objet dans le graphe de scène.
+	Toute autre méthode de dessin sera ignorée, car le système ne peut pas savoir autrement qu'elle sert à dessiner.
+</p>
+<p>
+	Les travaux étudiés sont limités par l'extensibilité des spécifications qu'ils fournissent — Ivy par le format des messages échangés sur le bus, et Scotty par l'architecture inchangeable des applications Cocoa.
+	<b>La définition ad-hoc de nouvelles spécifications, et l'adaptabilité de ces spécifications à des objets préexistants</b>, sont des fonctionnalités peu présentes dans les langages à objets (hormis la notion de <i>typage structurel</i> implémenté dans le langage Go).
+	Elles ont été peu explorées dans les bibliothèques d'IHM, et fournissent des opportunités de contributions pour ce travail de thèse.
+</p>
+
+<h4>Orchestration des comportements</h4>
+
+<p>
+	Le déclenchement et l'ordre d'exécution des fonctions sur des éléments interactifs est important.
+	Il peut s'agir d'exécuter une fonction systématiquement avant/après une autre, après un changement d'état donné, ou bien sur réception d'évènements d'un ou plusieurs périphériques d'entrée.
+	La conception d'IHM regorge de tels cas d'utilisation complexes.
+	Par exemple, le rendu graphique des éléments d'une interface Web met en œuvre le dessin d'arrière-plans, de bordures, de texte, voire d'ombres portées.
+	En utilisant l'algorithme du peintre, les étapes de rendu pour chaque élément doivent s'exécuter dans un ordre précis: l'arrière-plan <i>avant</i> la bordure et le texte, et l'ombre portée <i>avant</i> l'arrière plan.
+	Autre exemple, certaines techniques d'interaction s'appuient sur des séquences d'actions, provenant potentiellement de plusieurs périphériques d'entrée, et pouvant mettre en œuvre des délais de pause (comme <i>CTRL + clic de souris + attente de 500ms</i>).
+	Là encore, les langages et bibliothèques ont un support limité de ces besoins.
+	Les appels de fonctions offrent une orchestration séquentielle et statique des différents blocs de code, et les mécanismes de callbacks enregistrent des centaines, voire des milliers de liens pour des interfaces “réalistes” [<a href=#myers_separating_1991>Mye91</a>].
+</p>
+<p>
+	Pour palier à ces limitations, différents modèles ont été proposés.
+	Les modèles basés sur le formalisme états-transitions (machines à états) de SwingStates [<a href=#appert_swingstates_2006>App06</a>] et HsmTk [<a href=#blanch_programming_2006>Bla06</a>] permettent de limiter “l'éclatement” du code définissant les comportements interactifs, tout en offrant une représentation de l'interaction proche de celle des concepteurs et des programmeurs.
+	Des modèles en flot de données ont aussi été proposés, qui exécutent des blocs de code lorsque toutes les données dont ils dépendent sont disponibles.
+	Parmi ceux-ci, ICon [<a href=#dragicevic_input_2001>Dra01</a>] réifie les liens de dépendances en des arcs représentés graphiquement, que les utilisateurs peuvent manipuler directement, par exemple pour ajouter ou remplacer un périphérique d'entrée.
+	Les deux paradigmes ont même été unis dans FlowStates [<a href=#appert_flowstates_2009>App09</a>] afin de tirer partie des deux formalismes aux niveaux où ils sont les plus adaptés.
+</p>
+<p>
+	Des approches d'Ingénierie Dirigée par les Modèles comme MARIA [<a href=#paterno_maria_2009>Pat09</a>] et UsiXML [<a href=#limbourg_usixml_2005>Lim05</a>] ont également été utilisées pour abstraire la définition des interfaces par rapport aux modalités d'interaction disponibles sur chaque machine (périphériques, système d'exploitation), grâce à des transformations entre modèles de différents niveaux d'abstraction.
+	Elles permettent d'adapter l'interface au contexte dans laquelle on l'utilise, qu'il s'agisse de la taille de l'écran (ex. les sites Web <i>responsive</i>), de l'état physique et émotionnel de l'utilisateur [<a href=#galindo_toward_2017>Gal17</a>, <a href=#gajos_automatically_2010>Gaj10</a>], ou simplement pour explorer un espace de conception de l'interface [<a href=#leite_neto_toward_2015>Lei15</a>].
+	Dans le contexte des gestes et des séquences d'actions, Proton [<a href=#kin_proton_2012>Kin12</a>] est notable pour son utilisation d'expressions régulières pour représenter les séquences de gestes, et GestIT [<a href=#spano_gestit_2013>Spa13</a>] est notable pour sa modélisation de séquences d'actions complexes à l'aide d'opérateurs de composition.
+</p>
+<p>
+	La plupart des approches basées sur des modèles ont en commun qu'elles représentent des <i>micro-dépendances</i> au sein des techniques d'interaction — elles rendent les relations “faire B après A” explicites, plutôt qu'avec le séquencement implicite du code.
+	Ce faisant, elles ont tendance à nécessiter beaucoup de code, et à passer difficilement à l'échelle pour gérer des interfaces et interactions complexes.
+	Dans ECS, l'orchestration des comportements se fait au niveau <i>macroscopique</i>, non pas sur les données mais sur les processus.
+	En ce sens, nous le considérons comme complémentaire aux approches d'ingénierie par les modèles, qui pourraient l'utiliser comme cible de moindre niveau d'abstraction.
+	Le modèle ECS s'aligne en effet sur l'exécution des algorithmes liés aux jeux vidéo (rendu 3D, simulation physique), qui traitent rapidement et régulièrement de grands volumes de données.
+	Il incite à considérer les comportements comme des processus qui transforment les évènements d'entrée en évènements de sortie.
+	Comme Chatty et al. l'écrivent pour présenter djnn, « <i>Like computations can be described as the evaluation of lambda expressions, interactions can be described as the activation of interconnected processes</i> ».
+	Polyphony se distingue par l'ajout d'attributs (Composants) aux processus (Systèmes), de manière à traiter explicitement les dépendances entre eux, sans contraindre le choix des attributs à donner.
+	L'orchestration d'une application peut ainsi être étendue et améliorée par l'introduction de nouveaux composants.
+</p>
+<p>
+	Enfin, peu de travaux ont réussi à pallier la “fragmentation” de la logique dans les applications interactives, mise en avant par Myers [<a href=#myers_separating_1991>Mye91</a>].
+	Beaucoup d'entre eux mettent en oeuvre des <i>petites</i> fonctions, qui réalisent des comportements minimes se réduisant à quelques lignes de code (ex. les transitions des machines à états, ou les propagations de contraintes entre variables).
+	L'utilisation de ces petites fonctions est encouragé par la pratique des <i>callbacks</i>, qui consiste à enregistrer une fonction à appeler lorsqu'un évènement se produit.
+	Les programmes effectuent alors de nombreux “sauts” entre des fonctions, qui rendent leur fonctionnement difficilement observable, en plus d'être peu efficace sur les architectures modernes de processeurs.
+	Ces problèmes justifient l'<b>étude de modèles basés sur des processus macroscopiques, et écartant l'usage de callbacks pour réduire la fragmentation de la logique dans les applications interactives</b>.
+</p>
+
+<link rel=stylesheet href=style.css>
+<script src=scripts.js></script>
+<script>prefix_headers(3, 1)</script>

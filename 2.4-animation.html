@@ -1,0 +1,544 @@
+<h2>Transformation des appels de fonctions en animations</h2>
+
+<!-- Qu'illustre ce travail dans ma démarche ?
+	_ Lien de l'interaction au langage de programmation
+	_ définition d'un concept dédié à l'interaction, et intégration étroite avec la syntaxe d'un langage
+	_ orchestration plus explicite des animations en spécifiant que c'est une fonction exécutée à 60Hz, et non un objet opaque d'animation
+	_ intégration du temps (les traitements qui se déroulent sur une période de temps plutôt qu'instantanément) à l'environnement d'interaction
+-->
+<p>
+	Motivés par la prédominance des frameworks observée durant les premières interviews, nous avons entrepris la réalisation d'un projet les améliorant, sans pour autant investir de l'énergie pour en modifier un explicitement.
+	De plus, à partir des Essentiels d'Interaction, nous souhaitions démontrer notre vision d'une syntaxe intégrée à un langage de programmation.
+	Nous avons donc développé, à partir du concept d'<i>animer une fonction</i>, une extension du langage Smalltalk qui convertisse une transition instantanée par appel de méthode, en une transition animée dans le temps.
+	Avec ce travail, nous nous sommes également attachés à inclure le support des traitements en <i>durée</i> dans l'environnement d'interaction des applications (c'est-à-dire les traitements qui se déroulent sur une période de temps plutôt qu'instantanément).
+	Conformément au premier Essentiel d'Interaction, l'orchestration des animations est rendue explicite par une règle simple : toute fonction animée est exécutée à fréquence fixe pendant la durée d'animation.
+<!-- 	<del>Nous avons donc choisi de créer une <i>extension</i> de langage de programmation, qui puisse apporter des fonctionnalités aux frameworks basés dessus, sans intervention explicite. <notesh>Que veut dire "sans intervention explicite" ?</notesh>
+	<notesh>De plus, dès cette "pre-introduction", il faut que tu connectes cette application/cet exemple à tes discussions précédentes et que tu expliques plus en détails ce qu'elle illustre dans ta démarche. Là, c'est trop général et fait un peu cheveu sur la soupe. En parcourant rapidement, je vois que tu en déduis un essentiel d'Interaction, mais du coup il se retrouve "toput seul" ici. Ça me fait penser qu'il va falloir à un moment les récapituler...</notesh></del> -->
+</p>
+<p>
+	Ce travail a pu être réalisé grâce à la collaboration avec une équipe de recherche en Génie Logiciel, RMoD, qui développe son propre interpréteur et environnement de développement pour Smalltalk, Pharo [<a href=#ducasse_pharo_2017>Duc17</a>].
+	Avec l'aide des chercheurs et ingénieurs de cette équipe, nous avons pu réaliser une extension du langage Smalltalk dédiée à l'expression des animations dans les interfaces graphiques.
+	Ce travail a été présenté en <i>Late Breaking Result</i> lors de la conférence EICS'17 [<a href=#raffaillac_turning_2017>Raf17</a>], et démontré en direct lors de la conférence Pharo Days 2017 [<a href=#raffaillac_pharodays17_2017>Raf17</a>].
+	Nous détaillons ici ce travail.
+</p>
+
+<h3 class=break>Introduction</h3>
+
+<p>
+	Depuis le développement des ordinateurs, les animations ont été utilisées dans une gamme de plus en plus large de scénarios tels que : l'enseignement de la programmation avec des environnements visuels [<a href=#stasko_algorithm_1993>Sta93</a>, <a href=#resnick_scratch_2009>Res09</a>, <a href=#dann_learning_2011>Dan11</a>], les transitions dans les interfaces graphiques et visualisations pour redimensionner les fenêtres ou alterner entre vues sur des données [<a href=#shanmugasundaram_can_2007>Sha07</a>, <a href=#klein_benefits_2005>Kle05</a>, <a href=#dragicevic_gliimpse_2011>Dra11</a>], ou l'animation de personnages virtuels dans les jeux vidéo par interpolation entre images-clés [<a href=#brotman_motion_1988>Bro88</a>, <a href=#wiley_interpolation_1997>Wil97</a>].  
+	Les animations sont considérées comme utiles dans les interfaces utilisateur pour aider à suivre les changements [<a href=#schlienger_improving_2007>Sch07</a>], et dans les visualisations pour construire une carte mentale des informations spatiales [<a href=#bederson_does_1999>Bed99</a>].
+	Elles peuvent aussi donner un sens à la visualisation des données [<a href=#gonzalez_does_1996>Gon96</a>], à la narration [<a href=#kennedy_planning_2002>Ken02</a>], ainsi que de nombreux autres usages dans les interfaces utilisateur [<a href=#chevalier_animations_2016>Che16</a>].
+</p>
+<p>
+	Les frameworks d'interaction ont évolué au fil des ans pour supporter une plus grande variété d'usages, en proposant des manières plus flexibles d'animer les éléments des interfaces utilisateur.
+	Alors que les systèmes d'autrefois animaient quelques propriétés (position, couleur) avec des fonctions dédiées pour chacune, les systèmes modernes en contiennent trop pour poursuivre de cette façon.
+	Par exemple, CSS a 44 propriétés animables [<a href=#baron_css_2018>Bar18</a>], et Core Animation a 29 propriétés animables [<a href=#apple_inc._about_2006>App06</a>].
+	Pour gérer ce nombre croissant de propriétés animables, la plupart des frameworks définissent des types génériques qui peuvent être animés (comme <code>IntProperty</code>, ou <code>DoubleProperty</code>), au lieu d'avoir une fonction spécifique pour chacune.
+	Ils améliorent ainsi la flexibilité du choix des propriétés à animer à l'exécution, et réduisent la taille de leur API.
+	Ils indiquent aussi implicitement que <i>toute</i> propriété peut être animée, ou au moins celles qui auraient du sens pour le programmeur.
+</p>
+<p>
+	Pourtant cette flexibilité a un prix.
+	L'animation de types définis par l'utilisateur nécessite de fournir une API avancée, qui expose les détails de bas niveau des systèmes d'animation des frameworks, en particulier les timers et threads.
+	Il en résulte des APIs d'animation plus larges et des syntaxes lourdes en raison des indirections supplémentaires pour accéder aux types animables.
+	Il se crée aussi une courbe d'apprentissage abrupte entre l'API de base et l'API avancée, qui est susceptible de forcer les programmeurs à s'en tenir autant que possible aux propriétés animables existantes.
+</p>
+<p>
+	Dans cette section nous introduisons un <i>opérateur de durée</i>, pour exprimer les animations par transformation d'appels de mutateurs (<i>setters</i>) en transitions animées.
+	Nous l'illustrons avec le pseudo-code suivant :
+</p>
+<p><code>object.setProperty(target) <b>during 2s</b></code></p>
+<p>
+	Cette syntaxe s'étend très simplement aux appels de fonctions (hors méthodes d'objets), cependant dans le cadre de ce travail nous l'avons implémentée dans un langage à objets.
+	Dans le reste de cette section, nous parlerons exclusivement de méthodes, et spécifions les traitements des fonctions lorsque ceux-ci diffèrent.
+	Nous commençons par énumérer les attributs caractérisant une animation, ainsi que les étapes nécessaires pour la construire à partir d'un appel de méthode avec durée.
+	Ensuite, nous décrivons l'implémentation d'un prototype fonctionnel pour la plateforme Pharo.
+	Pour finir, nous comparons six frameworks d'interaction modernes, et discutons des limites de notre système et l'implication de ce travail pour le reste de ce travail de thèse.
+</p>
+
+<!-- <del><sh>RàS...</sh></del> -->
+
+<h3>Caractérisation d'une animation</h3>
+
+<p>
+	Dans les systèmes interactifs modernes, la transition d'un état initial à un état final est instantanée.
+	Changer la position d'un objet à l'écran le fait disparaître de sa position actuelle, et en même temps apparaître à sa nouvelle position.
+	Ce changement brusque peut casser notre perception d'un seul et même objet s'est déplacé, plutôt qu'un nouvel objet soit apparu à une autre position.
+	Lorsqu'on souhaite souligner le déplacement d'un tel objet, ou maintenir la perception de son unicité, on a recours aux animations pour adoucir la transition dans le temps, afin qu'elle semble continue.
+	La définition qu'en donnent Betrancourt et Tversky est : « <i>any application which generates a series of frames, so that each frame appears as an alteration of the previous one, and where the sequence of frames is determined either by the designer or the user</i> » [<a href=#betrancourt_effect_2000>Bet00</a>].
+</p>
+<p>
+	L'animation d'une propriété dans un framework d'interaction consiste à remplacer une transition instantanée par plusieurs modifications mineures de la même propriété, en séquence rapide.
+	La fréquence de ces changements intermédiaires est aussi importante que possible, pour créer une illusion de continuité dans la transition principale.
+	Elle est généralement fixée au maximum de la fréquence de rafraîchissement de l'écran, qui est le nombre de trames générées pouvant être peintes à l'écran chaque seconde.
+	Sur la plupart des écrans, cette fréquence est de 60 Hz, et est parfois ralentie lorsque le rendu d'une trame est trop long.
+</p>
+<p>
+	Chaque modification commence par le calcul d'un temps relatif entre le début et la fin de l'animation : <i>t = f(now)</i>, où <i>t = 0</i> au début, et <i>t = 1</i> à la fin.
+	Le temps <i>t</i> ne croît pas nécessairement uniformément dans [0, 1] : il peut accélérer au démarrage, rebondir avant l'arrêt, et même osciller autour de l'arrivée (voir [<a href=#sitnik_easing_2019>Sit19</a>] pour une liste complète<!-- <del><notesh>mets plutôt l'URL sous la forme d'une entrée dans la biblio, pense toujours à la version PDF hors-ligne/papier</notesh></del> -->).
+	Nous appelons <i>f</i> une fonction de transition (en anglais <i>easing function</i>).
+</p>
+<p>
+	Ensuite, la valeur calculée pour chaque modification est obtenue avec une fonction d'interpolation, <i>interpolate(start, target, t)</i>, qui renvoie <i>start</i> lorsque <i>t</i> vaut 0 et <i>target</i> lorsque <i>t</i> vaut 1.
+	Cette fonction est spécifique pour chaque type de valeurs, par exemple des couleurs et des positions seraient interpolées avec des algorithmes différents.
+</p>
+<p>
+	Pour décrire le concept d'une propriété animée, nous nous sommes basés sur les 5 <i>aspects de haut niveau des animations</i> définis par Mirlacher et al. [<a href=#mirlacher_engineering_2012>Mir12</a>], et que nous avons étendus.
+	Nous définissons donc un <i>objet de transition animée</i> comme contenant :
+</p>
+<ul>
+	<li><b>receveur</b> — l'objet à animer (absent dans le cas d'un appel de fonction)</li>
+	<li><b>signature de mutateur</b> — le nom de la méthode modifiant la propriété visée, et les types de ses arguments</li>
+	<li><b>valeurs clés</b> — les valeurs de départ et d'arrivée pour chacun des arguments</li>
+	<li><b>durée</b> — en secondes</li>
+	<li><b>fonction de relaxation</b> — qui contrôle les effets de vitesse durant la transition</li>
+</ul><ul>
+	<li><b>fonction d'interpolation</b> — pour chaque argument, spécifique à chaque type</li>
+	<li><b>état d'exécution</b> — permet de mettre en pause, de redémarrer, de faire boucler, ou d'inverser la transition animée</li>
+</ul>
+
+<h3>L'opérateur de durée</h3>
+
+<p>
+	Notre opérateur associe une durée à un appel de fonction, créant un objet de transition animée  <code>&lt;appelFonction&gt; during &lt;durée&gt;</code>.
+	Son interprétation consiste en quatre étapes, comme illustré dans la <a href=#fig-etapes>figure</a>.
+</p>
+<figure id=fig-etapes>
+	<img src=figures/etapes.svg style="width:16cm">
+	<figcaption>Les quatre étapes pour transformer un appel de fonction en objet de transition animée</figcaption>
+</figure>
+<p>
+	La première étape, <i>extraction des composants de l'appel de fonction</i>, récupère quatre éléments de l'appel de fonction : son receveur (si c'est une méthode d'objet), son nom, les valeurs de ses arguments, et leurs types.
+	Elle annule également l'exécution immédiate de la fonction.
+	Cette étape <i>réifie</i> en fait l'appel, étant donné que nous inspectons ses données, et extrayons ses caractéristiques.
+	Elle nécessite que le langage de programmation supporte l'introspection du code, c'est-à-dire la possibilité d'examiner ses propriétés au lieu de l'exécuter (plus de détails sont donnés dans la partie Implémentation).
+</p>
+<p>
+	Pour la <i>récupération des valeurs initiales</i>, nous avons besoin d'un mécanisme pour obtenir les valeurs courantes d'une propriété ciblée par une méthode ou fonction mutateur.
+	Heureusement, de nombreux frameworks adoptent des conventions de nommage pour les accesseurs (<i>getters</i>) et mutateurs.
+	Qt [<a href=#the_qt_company_qt_2019>Qt19</a>], par exemple, fait correspondre la plupart des mutateurs <code>setProperty(...)</code> avec des accesseurs <code>getProperty()</code>.
+	Sur la plateforme Smalltalk, la convention est de leur donner le même nom, l'un prenant simplement un argument et l'autre non — comme <code>object property</code> et <code>object property: &lt;value&gt;</code>.
+	Les conventions de nommage sont importantes : sans elles, il faudrait associer explicitement chaque mutateur à l'accesseur correspondant, ce qui nécessiterait d'éditer chaque framework et invaliderait l'intérêt de ce travail.
+	Pour les fonctions à plusieurs arguments, on peut exiger que les accesseurs renvoient plusieurs valeurs si le langage le permet (ex. Python), ou les renvoyer dans des références passées en paramètres.
+	Une fois que l'accesseur est obtenu à partir de son nom, il est appelé dynamiquement pour récupérer les valeurs courantes, qui seront les valeurs initiales de la transition animée.
+	Pour les langages sans appels de fonction dynamiques (<i>dynamic dispatch</i>) comme le C, une convention de nommage intelligente (ex. <code>property()</code> ⇒ <code>get_property()</code>) permettrait une substitution par le préprocesseur.
+	Autrement, cela nécessiterait un support explicite de la part du compilateur, que nous n'avons pas exploré dans ce travail de thèse.
+</p>
+<p>
+	La troisième étape, <i>initialisation des interpolateurs</i>, attribue une fonction d'interpolation par défaut à chaque argument, en fonction de leur type.
+	Cette fonction pourra être remplacée ultérieurement sur l'objet de transition.
+	Pour les entiers et nombres réels, nous utilisons la formule :
+</p>
+<p><i>interpolate(start, target, t) = start × (1 − t) + target × t</i></p>
+<p>
+	Les types composites tels que les positions et les couleurs ont leurs champs interpolés séparément sous forme de nombres.
+	Lorsque le langage de programmation supporte le polymorphisme, la formule ci-dessus peut être utilisée pour ces types composites (à condition qu'ils implémentent l'addition et la multiplication à un réel), et ainsi supporter un grand nombre de types par défaut.
+	Néanmoins, il y a des types pour lesquels ce type d'interpolation n'aurait pas de sens, comme les tableaux ou les chaînes de caractères, par exemple en <a href=#fig-interpolation>figure</a>.
+	Dans ces cas, les programmeurs doivent être en mesure de fournir leur propre fonction d'interpolation.
+</p>
+<figure id=fig-interpolation>
+	<img src=figures/interpolation.svg style="width:8.5cm">
+	<figcaption>Deux interpolateurs alternatifs pour les chaînes de caractères. À gauche, la nouvelle chaîne est insérée par la droite. À droite, chaque modification est faite sur des indices aléatoires.</figcaption>
+</figure>
+<p>
+	Pour la <i>planification des modifications futures</i>, il s'agit de demander au framework ou au système d'exploitation d'exécuter le code de mise à jour de l'animation à intervalles réguliers dans le futur.
+	En pratique l'interaction avec les utilisateurs nécessite une latence de retour la plus faible possible, c'est-à-dire le délai entre chaque modification et son résultat à l'écran.
+	C'est important dans de nombreux contextes, tels que l'interaction avec les écrans tactiles [<a href=#deber_how_2015>Deb15</a>], les jeux en ligne [<a href=#claypool_latency_2006>Cla06</a>], ou encore les instruments de musique numériques pour lesquels on animerait le signal audio [<a href=#jack_effect_2016>Jac16</a>].
+	Par conséquent, chaque mise à jour de l'animation doit être programmée aussi tard que possible, et avant toute fonction qui en dépend, comme le montre la <a href=#fig-planification>figure</a>.
+</p>
+<figure id=fig-planification>
+	<img src=figures/planification.svg style="width:10cm">
+	<figcaption>Représentation simplifiée du moment où insérer les mises à jour d'animations. Le système d'exploitation reçoit un signal de l'écran lorsque la trame précédente est peinte, puis on temporise pour minimiser le temps restant entre le rendu et le prochain rafraîchissement. Le code d'animation est inséré juste avant chaque exécution du rendu.</figcaption>
+</figure>
+<p>
+	Ici, le support idéal prendrait la forme d'un mécanisme de <i>callback</i> pour exécuter le code juste avant la phase de rendu, comme la fonction <code>requestAnimationFrame</code> du DOM en HTML [<a href=#faulkner_html_2016>Fau16</a>].
+	Pour finir, une fois la planification effectuée, l'opérateur de durée initialise l'état d'exécution pour démarrer immédiatement l'animation.
+</p>
+
+<h3>Implémentation</h3>
+
+<p>
+	Notre prototype fonctionnel et preuve de concept de l'opérateur de durée a été réalisé avec le langage Smalltalk, et testé avec trois frameworks d'interaction.
+	Smalltalk est un langage orienté objet, dans lequel les appels de méthode sont remplacés par des <i>envois de messages</i> : le code <code>object x: 10 y: 20</code> envoie à <code>object</code> le message <code>x:y:</code>, avec arguments <code>10</code> et <code>20</code>.
+	Les messages sont distribués dynamiquement, c'est-à-dire que la méthode exécutée pour le message <code>x:y:</code> est sélectionnée à l'exécution.
+	Notre prototype exprime les animations avec :
+</p>
+<p><code>[object property: target] <b>during: 2 seconds</b></code></p>
+<p>
+	Notre extension est incorporée dans le message <code>during:</code>.
+	Les crochets autour de l'appel de mutateur créent une fermeture (<i>closure</i>), qui est un objet contenant le code.
+	Nous pouvons ainsi inspecter le code à l'intérieur sans l'exécuter, et résolvons les quatre étapes décrites dans la partie précédente comme suit :
+</p>
+<ul>
+	<li>L'extraction des composants du message se fait en analysant le <i>bytecode</i> de la fermeture, à l'aide des fonctionnalités d'introspection de la plateforme ;</li>
+	<li>Pour récupérer une valeur initiale, nous enlevons les deux points de <code>property:</code> pour obtenir le nom de l'accesseur correspondant. Ce message est alors envoyé à <code>object</code>, et la valeur qu'on obtient en retour est la valeur initiale. Notons que ce mécanisme ne permet pas d'animer des fonctions avec plusieurs arguments, car un accesseur ne retourne qu'une seule valeur ;</li>
+	<li>Notre interpolateur par défaut utilise le polymorphisme, en exécutant directement <code>(start * (1 - t)) + (target * t)</code>, qui envoie les messages <code>*</code> et <code>+</code> aux valeurs de début et de fin. Les développeurs peuvent également remplacer ce code d'interpolation pour les types incompatibles<!-- <del><notesh>Comment fait-on pour remplacer le code d'interpolation ? Et pour changer la fonction  de easing ?</notesh></del> -->. Dans le cas contraire, le Debugger (un mécanisme standard d'erreurs en Smalltalk) est invoqué lors de la première mise à jour de l'animation ;</li>
+	<li>Étant donné que nous n'avons pas accès aux évènements de rafraîchissement de l'écran au sein de la plateforme Pharo, les mises à jour futures sont enregistrées à l'aide du mécanisme de callbacks d'un des frameworks hôtes. Cette limitation est discutée plus en détail dans la présente section.</li>
+</ul>
+<p>
+	L'extension renvoie un objet de type <code>Animation</code>, qui contient tous les paramètres de l'animation et permet de les modifier.
+	Il est ainsi possible de remplacer l'interpolateur par défaut, de spécifier une fonction de transition, voire même de modifier la valeur cible de l'animation :
+</p>
+<pre><code class="lang-smalltalk line-numbers">animation := [object position: 100@100] during: 2 seconds.
+animation interpolator: [:v :t | (v first * t) + (v last * (1 - t))].
+animation easing: animation backOut.
+[animation to: 0@0] during: 2 seconds.		"animation de l'animation !"
+</code></pre>
+
+<!-- <del><sh>RàS, c'est clair tout ça...</sh></del> -->
+
+<h3 class=break>Tests préliminaires</h3>
+
+<p>
+	Nous avons testé cette extension d'animation avec les trois frameworks d'interaction les plus populaires pour la plateforme Pharo : (i) Morphic [<a href=#maloney_directness_1995>Mal95</a>], une interface graphique initialement développée pour le langage Self, puis portée pour Smalltalk avec Squeak, et maintenant disponible dans Pharo ; (ii) Bloc [<a href=#plantec_bloc_2015>Pla15</a>], qui vise à être le successeur de Morphic en supportant plus de périphériques d'entrée, et en utilisant le rendu vectoriel pour supporter de hautes densités de pixels ; et (iii) Roassal [<a href=#dehouck_pragmatic_2013>Deh13</a>], un framework de visualisation avec une grande sélection de modèles et un langage dédié pour exprimer des visualisations interactives avec peu de code.
+</p>
+<p>
+	Notre plus grand défi a été la planification des animations.
+	Pour satisfaire l'objectif représenté en <a href=#fig-planification>figure</a>, nous devions exécuter les mises à jour des animations avant le code de rendu de chacun des frameworks, idéalement sans avoir à les modifier explicitement.
+	Morphic (i) fournit un callback, <code>World defer: &lt;closure&gt;</code>, pour exécuter un bloc de code avant la prochaine étape de rendu.
+	Nous l'avons utilisé pour planifier nos mises à jour d'animations.
+	En effet, Morphic est tellement lié au système que tous les autres frameworks en dépendent, ce qui permet à notre extension de fonctionner pour tous.
+	Bien que Bloc (ii) fournisse un callback équivalent, <code>BlUniverse defer: &lt;closure&gt;</code>, nous ne voulions pas patcher notre système d'animation pour chaque nouveau framework, et avons compté exclusivement sur Morphic.
+	Cela soulève le problème de l'indépendance réelle aux frameworks : <i>notre système n'est pas réellement indépendant</i>, il fonctionne avec d'autres frameworks car ceux-ci dépendent aussi de Morphic.
+	Idéalement, cela ne devrait pas être le cas, et l'insertion de code avant la phase de rendu devrait être la responsabilité du <i>langage de programmation</i>, ou de sa <i>librairie standard</i>.
+	Cela permettrait à des bibliothèques tierces comme la nôtre d'apporter des améliorations aux frameworks, sans en dépendre explicitement.
+	Nous discutons de ce point en conclusion de cette section.
+<!-- 	<del><notesh>Intéressant ce point... mériterai d'être développé/discuté. Ça l'est plus loin ? Ou ailleurs dans le manuscrit ? (y faire référence ici si c'est le cas...)</notesh></del> -->
+</p>
+<p>
+	En utilisant l'opérateur de durée avec Morphic, nous avons pu animer des changements de position, de couleur de fond, de style de bordure, et de titre d'une fenêtre (voir <a href=#fig-morphic>figure</a>).
+	Nous avons également pu modifier ces mêmes attributs sur des boutons à l'intérieur de la fenêtre.
+	Pour permettre une interpolation par défaut des chaînes de caractères comme sur la gauche de la <a href=#fig-interpolation>figure</a>, nous avons implémenté <code>+</code> comme concaténation de deux chaînes, et <code>*</code> comme extraction d'une fraction de la chaîne à partir de la gauche.
+</p>
+<p>
+	Cependant, en pratique certaines propriétés ne pouvaient pas être animées avec notre système.
+	Par exemple, le texte de remplissage à l'intérieur d'un champ de saisie n'était pas modifiable une fois affiché (ses accesseurs étant conçus pour être utilisés uniquement avant insertion du widget dans l'arbre de scène).
+	L'animation n'avait donc aucun effet, notre système ne se souciant que d'appeler des méthodes, sans savoir si elles fonctionnent.
+</p>
+<figure id=fig-morphic>
+	<img src=figures/morphic.png style="width:14cm">
+	<figcaption>Fenêtre d'introspection ouverte sur une fenêtre en arrière-plan. Le code surligné est en cours d'exécution et change le titre de la fenêtre ciblée, de <code>'Gentleman'</code> à <code>'Werewolf'</code>.</figcaption>
+</figure>
+<p>
+	Notre système fonctionne aussi avec Bloc (ii) et Roassal (iii), bien que Roassal transgresse parfois la convention de nommage entre accesseurs et mutateurs.
+	Pour la position, les widgets ont un mutateur <code>translateTo:</code>, et un accesseur <code>position</code>, dont les noms ne correspondent pas.
+	Dans un tel cas, nous avons dû patcher Roassal avec un nouveau message <code>position:</code> renvoyant vers <code>translateTo:</code>.
+	Pour la couleur, les messages <code>color</code> et <code>color:</code> correspondent, mais l'accesseur ne renvoie pas le même objet <code>Color</code> qui est passé au mutateur.
+	Dans ce cas, nous avons dû corriger notre système pour toujours <i>convertir</i> les valeurs <code>start</code> et <code>target</code> au type renvoyé la première fois par l'accesseur.
+	Ces problèmes montrent l'importance et l'utilité d'une convention de nommage globale au système : elle permet à notre système de fonctionner sans stocker une table de correspondance entre mutateurs et accesseurs.
+</p>
+<p>
+	Un problème plus sérieux dans Roassal était que la mise à jour d'un widget ne rafraîchissait pas automatiquement sa vue contenante pour l'affichage.
+	Ainsi, toutes les animations étaient invisibles jusqu'à ce que nous déplacions ou redimensionnions la vue.
+	Bien que nous considérons ce comportement comme un bug du framework, nous l'avons résolu en <i>rafraîchissant manuellement la vue</i> avec une syntaxe spécifique au framework.
+	Cependant, avec plus de travail, nous corrigerions les widgets de Roassal, pour rafraîchir automatiquement les conteneurs dans chaque mutateur.
+</p>
+<!-- <sh>Ce que tout ça révèle en général est un manque de convention et d'approche "générique" dans la conception des frameworks, ce qui réduit donc leur compatibilité et leur extensibilité, non ?</sh> -->
+<p>
+	Ces problèmes révèlent que l'extensibilité des frameworks est influencée par l'existence et le respect de conventions communes.
+	Lorsqu'un framework manque de cohérence vis à vis des conventions de la plateforme (nommage des méthodes, paramètres des accesseurs) et des pratiques répandues avec les autres frameworks (rafraîchissement automatique des vues), il est plus difficile à adapter pour de nouveaux usages.
+	La mise en évidence et le respect de ces conventions nous semblent donc essentielles pour supporter le développement de nouveaux frameworks, et ainsi améliorer la programmation de nouvelles interactions.
+</p>
+<p>Pour finir, nous avons ajouté le support de l'opérateur de durée sur des groupes de messages :</p>
+<pre><code class="lang-smalltalk line-numbers">[object position: 100@100. object color: Color blue]
+    during: 2 seconds
+</code></pre>
+<p>
+	Cet exemple renvoie deux objets de transition animée dans un tableau, que nous avons modifié pour transférer les messages de contrôle (<code>start</code>, <code>stop</code>, <code>pause</code>) à ses éléments.
+	Pour implémenter correctement cette fonctionnalité, nous avons intégré dans Pharo la possibilité d'extraire tous les envois de messages d'une fermeture, en un tableau d'objets <code>MessageSend</code>.
+	Notre système d'animation itère alors simplement sur ces envois de messages réifiés, et pour chacun initialise une animation.
+</p>
+<p>
+	L'objectif de ce travail étant d'illustrer une preuve de concept liée à l'interaction dans un langage de programmation, nous n'avons pas poursuivi l'exploration d'usages plus avancés des animations.
+	Il aurait par exemple été envisageable d'étudier l'expression de “chorégraphies” d'animations multiples, à l'aide de relations de séquencement et simultanéité, qu'il aurait fallu intégrer de façon cohérente au langage.
+	De plus, bien que nous suggérions l'intérêt de ce travail pour gérer les transitions de signaux non-visuels (ex. audio, haptique), nous nous sommes basés en pratique sur des <i>callbacks</i> liés à l'affichage (voir <a href=#fig-planification>figure</a>).
+	L'extension à des signaux génériques est donc à réserver à de futurs travaux.
+</p>
+<!-- <del><sh>Tu ne parles pas beaucoup des limitations et éventuelles extension possibles liées aux usages habituels des animations... e.g. tu parles des groupes de messages, mais on ne sait pas si c'est possible de synchroniser et chorégraphier des animations (en faire partir une en même temps qu'une autre, ou après une autre). Tu ne parles pas de comment changer les fonctions d'interpolation et d'easing en pratique (exemples ?). Tu ne parles pas non plus de l'animation de propriétés non graphiques (i.e., quel est donc l'intérêt de se synchroniser sur le rendu graphique ?)</sh></del> -->
+
+<h3>État de l'art</h3>
+
+<p>
+	Pour ce travail, nous avons étudié les APIs d'animation de six frameworks d'interaction répandus. Qt [<a href=#the_qt_company_qt_2019>Qt19</a>] est un framework d'interaction courant pour C++, disponible sur plateformes bureau et mobile.
+	Core Animation [<a href=#apple_inc._about_2006>App06</a>] est le framework standard d'Apple recommandé pour les plateformes OSX et iOS.
+	JavaFX 8 [<a href=#oracle_corp._client_2008>Ora08</a>] est le successeur officiel de Swing pour Java, et Android [<a href=#google_android_2008>Goo08</a>] est un autre framework Java courant pour les téléphones du même nom.
+	Nous avons également choisi D3.js [<a href=#bostock_d3_2011>Bos11</a>] pour sa popularité en tant qu'outil de visualisation web, et GSAP [<a href=#greensock_gsap_2014>Gre14</a>] pour son choix le plus flexible de propriétés animables.
+	Nous nous sommes intéressés à la <i>flexibilité</i> et la <i>compacité</i> de chacun de ces frameworks pour exprimer les animations.
+	Notre but était de relever leurs différentes techniques pour animer des propriétés sans avoir recours à des fonctions statiques.
+</p>
+<p>La comparaison est présentée dans le <a href=#tab-comparaison>tableau</a>. Les dimensions considérées étaient :</p>
+<ul>
+	<li><i>propriétés animables</i> — les propriétés supportées, en soulignant les techniques utilisées pour en supporter de nouvelles ;</li>
+	<li><i>types animables</i> — les types supportés, avec les techniques utilisées pour en supporter d'autres;</li>
+	<li><i>exemple de syntaxe</i> — des extraits de code implémentant un exemple minimal d'animation de <code>property</code> à la valeur <code>target</code> pendant 2 secondes.</li>
+</ul>
+<table id=tab-comparaison>
+	<tr style="border-bottom:1px solid black"><th>Framework</th><th>Propriétés animables</th><th>Types animables</th><th>Exemple de syntaxe</th></tr>
+	<tr style="border-bottom:1px solid black"><td>Opérateur de durée (Smalltalk)</td><td>toute propriété avec un mutateur et un accesseur (<i>qui doivent avoir le même nom</i>)</td><td>types supportant les opérations <code>*</code> et <code>+</code> (<i>les autres peuvent fournir des interpolateurs</i>)</td><td><pre><code class="lang-smalltalk">[object property: target] during: 2 seconds</code></pre></td></tr>
+	<tr style="border-bottom:1px solid black"><td>Qt 5 (C++)</td><td>toute propriété fournissant un mutateur (<i>l'objet propriétaire doit hériter de <code>QObject</code></i>)</td><td>entiers, réels, <code>QLine</code>, <code>QPoint</code>, <code>QSize</code>, <code>QRect</code>, et <code>QColor</code> (les types additionnels doivent être supportés par <code>QMetaType</code>)</td><td><pre><code class="lang-clike">QPropertyAnimation a(object, "property");
+a.setDuration(2000);
+a.setEndValue(target);
+a.start();</code></pre></td></tr>
+	<tr style="border-bottom:1px solid black"><td>Core Animation (Swift)</td><td>29 propriétés par défaut (<i>les objets doivent hériter de <code>CALayer</code> et les nouvelles propriétés doivent offrir un accesseur et un mutateur</i>)</td><td>entiers, réels, <code>CGRect</code>, <code>CGPoint</code>, <code>CGSize</code>, <code>CGAffineTransform</code>, <code>CATransform3D</code>, <code>CGColor</code>, et <code>CGImage</code> (<i>pas de support d'autres types animables</i>)</td><td><pre><code class="lang-swift">let a = CABasicAnimation(keyPath:"property")
+a.toValue = target
+a.duration = 2.0f
+object.addAnimation(a, forKey:"property")</code></pre></td></tr>
+	<tr style="border-bottom:1px solid black"><td>D3.js (JavaScript</td><td>propriétés <code>attr</code> et <code>style</code> des éléments du DOM (<i>limité aux objets du DOM</i>)</td><td>nombres, couleurs (divers espaces), dates, nombres dans du texte, tableaux, dictionnaires, transformations 2D (<i>d'autres types sont animables en fournissant des interpolateurs</i>)</td><td><pre><code class="lang-js">object.transition()
+  .duration(2000)
+  .attr("property", target);</code></pre></td></tr>
+	<tr style="border-bottom:1px solid black"><td>JavaFX 8 (Java)</td><td>toutes les propriétés implémentant l'interface <code>WritableValue&lt;T&gt;</code> (<i>les objets ont seulement besoin de stocker ces propriétés</i>)</td><td>entiers, réels, <code>Color</code> (les types additionnels doivent implémenter l'interface <code>Interpolatable</code>)</td><td><pre><code class="lang-java">Timeline t = new Timeline();
+t.getKeyFrames().add(
+  new KeyFrame(Duration.seconds(2),
+  new KeyValue(object.property(), target)));
+t.play();</code></pre></td></tr>
+	<tr style="border-bottom:1px solid black"><td>Android Property Animation (Java)</td><td>toute propriété avec un mutateur <code>set&lt;Propriete&gt;()</code> (<i>pas de restriction sur l'objet conteneur</i>)</td><td>entiers, réels, couleurs (<i>d'autres types sont animables en fournissant des interpolateurs</i>)</td><td><pre><code class="lang-java">ObjectAnimator a = ObjectAnimator
+  .ofInt(object, "property", target);
+a.setDuration(2000);
+a.start();</code></pre></td></tr>
+	<tr><td>GSAP (JavaScript)</td><td>toute propriété exceptés un ensemble de noms réservés pour passer des options (<i>pas de restrictions sur les objets</i>)</td><td>nombres, nombres dans du texte (<i>d'autres types sont animables en fournissant des interpolateurs</i>)</td><td><pre><code class="lang-js">TweenLite.to(object, 2, {property: target});</code></pre></td></tr>
+	<caption>Comparaison avec les fonctionnalités d'animation de six autres frameworks</caption>
+</table>
+<p>
+	Nous observons trois types de restrictions sur les propriétés animables : la nécessité d'hériter d'une classe ou une interface en particulier (Qt 5, Core Animation, JavaFX 8), une convention de nommage pour les mutateurs des propriétés (Android), et la réservation de mots-clés spéciaux (GSAP).
+	Pour les types, nous identifions deux groupes de frameworks : ceux avec un ensemble fixe (Qt 5, Animation de base), et ceux nécessitant une fonction d'interpolation personnalisée.
+	Elle est souvent fournie sous la forme d'un <i>objet functor</i>, qui est un objet avec une unique méthode.
+	De plus, D3 se distingue par l'interpolation automatique des champs d'objets inconnus, grâce à la capacité de JavaScript à les énumérer.
+</p>
+<p>
+	Quant à la syntaxe, certains frameworks ont d'autres variantes, les plus complètes étant présentées ici.
+	Presque tous construisent des objets d'animation à partir d'une chaîne de caractères <code>"property"</code>.
+	Pour GSAP, <code>TweenLite</code> récupère le nom de la propriété en énumérant les champs de son 3ᵉ argument.
+	La démarche de D3 est d'intercaler <code>.transition()</code> entre le mutateur et l'objet receveur, un objet proxy interceptant les appels de fonction <code>style</code> et <code>attr</code> pour les animer automatiquement.
+	Avec le concept d'animation de fonction, nous parvenons à une syntaxe aussi concise que celle de GSAP, avec comme unique restriction celle que le framework doive spécifier et respecter une convention de nommage.
+	L'inconvénient majeur de notre approche est cependant que nous dépendons de fonctionnalités avancées du langage de programmation.
+	Plutôt que de simples appels de fonctions, notre syntaxe repose sur un langage dynamique, avec de fortes capacités d'introspection et de polymorphisme.
+<!-- 	<del>Ainsi, nous avons mis en évidence les nombreuses manières d'exprimer les animations, et présenté une nouvelle adaptée aux langages dynamiques comme Smalltalk.
+	<notesh>Et donc ? Avantages et inconvénients de ta méthode ?</notesh></del> -->
+</p>
+<p>
+	La finalité de ce travail était de fournir un concept que les développeurs puissent s'<i>approprier</i>, afin de favoriser l'utilisation des animations lorsqu'elles sont appropriées, et de susciter des solutions originales détournant leur usage pour répondre à d'autres problèmes.
+	Cette hypothèse est difficile à confronter, car le sentiment d'appropriation d'un concept est difficile à mesurer objectivement.
+	Nous nous sommes donc limités à cette preuve de concept, qui constitue une brique à assembler dans un éventuel langage futur <i>adapté</i> à l'interaction.
+</p>
+
+<h3>Conclusion et formulation d'un Essentiel d'Interaction</h3>
+
+<p>
+	En Programmation Orientée Objet, les objets encapsulent leur propre état et l'exposent avec des interfaces.
+	S'ils possèdent les coordonnées d'une position, alors ils exposeront certainement des fonctions <code>getPosition()</code> et <code>setPosition(Point)</code>.
+	L'animation par appels dynamiques utilise ce principe, en obtenant une valeur <code>start</code> avec la première fonction, et en envoyant de petites variations entre <code>start</code> et <code>target</code> à la seconde.
+	Les objets n'ont pas besoin de savoir <i>comment</i> animer une position : avec une série de petites modifications nous simulons un mouvement fluide vers la valeur finale.
+</p>
+<p>
+	À partir de cette observation, nous avons exploré le concept d'animation pour <i>tous</i> les objets du système, indépendamment d'un framework.
+	De plus, nous avons créé une syntaxe réutilisant autant que possible les éléments lexicaux existants.
+	Le résultat est un opérateur de durée rattaché aux appels de fonction :
+</p>
+<p><code>object.setProperty(target) <b>during 2s</b></code></p>
+<p>
+	Nous avons présenté un processus et une implémentation fonctionnelle pour produire un objet de transition animée à partir de cette syntaxe.
+	Ce travail donne lieu à deux recommandations pour les systèmes interactifs<!-- <del>, qui complètent les Essentiels d'Interaction formulés dans les deux sections précédentes</del> --> : (i) <i>fournir un mécanisme de notification de l'affichage global au système</i>, et (ii) <i>encourager les conventions de nommage pour les accesseurs et mutateurs</i>.
+	À partir de ces points, et de notre expérience dans l'exploration de syntaxes alternatives pour exprimer de l'interaction, nous formulons comme dernier Essentiel d'Interaction d'<b>assurer la compatibilité et l'extensibilité des outils (langages et bibliothèques) pour la conception et le prototypage d'interactions</b>.
+<!-- 	<del>Par ailleurs, à l'issue de ce travail nous avons pu analyser les réussites et les pistes d'amélioration, qui nous amènent à formuler un dernier Essentiel d'Interaction : <b>Se rapprocher de communautés déjà actives dans la recherche en IHM</b><notesh>Mouais... c'est important, soit, mais est-ce un essentiel d'interaction important pour le design des frameworks/langages comme on  en avait parlé ? Pas certain... je pense que les notions précédentes de conventions et tout ce qui peut aider à une meilleure compatibilité entre frameworks/langages/outils me semble plus important.</notesh>.</del> -->
+	Nous discutons de ce point dans les parties qui suivent.
+</p>
+<!-- Observations post-travail :
+	_ Utilisation intensive de la métaprogrammation, mais nécessité d'un développeur de VM pour faire les choses correctement -> il faut un langage dont la métaprogrammation soit accessible
+	_ Besoins intensifs de bibliothèques de bas niveau, mais support limité et peu de développeurs intéressés par des mises à jour jugées mineures -> il faut un langage où le bas niveau soit déjà bien développé
+	_ Prototype fonctionnel avec tous les frameworks, et succès lors des démonstrations EICS et Pharo Days, mais adoption nulle après, malgré quelques échanges de mails (le problème est que le besoin n'a pas été exprimé dans la communauté initialement) -> il faut répondre à un besoin existant dès le départ
+	-> IE : choisir sa communauté avec soin
+-->
+
+<h4 class=break>Utilisation de la métaprogrammation</h4>
+
+<!--
+	_ Qu'est-ce que la métaprogrammation ?
+	_ En quoi consiste-t-elle en pratique ?
+	_ Que nous a-t-elle permis de réaliser ?
+	_ En pratique comment l'avons-nous appliquée ?
+	_ Que n'aurions-nous pas pu réaliser sans métaprogrammation ? À quoi aurait ressemblé notre travail ?
+	_ La métaprogrammation permet de donner un sens différent à des syntaxes existantes
+	_ Quels sont nos besoins en métaprogrammation ? Qu'est-ce qui manque dans les langages ?
+-->
+<p>
+	La métaprogrammation désigne l'utilisation de structures de données qui décrivent des programmes.
+	Il peut s'agir de générer du code qui soit ensuite interprété ou compilé, de manipuler le comportement des objets avec un protocole à méta-objets (<i>Meta-Object Protocol</i>), ou encore d'utiliser les macros de certains langages (ex. préprocesseur du C).
+	Dans notre travail, la métaprogrammation nous a permis d'intégrer l'expression des animations de façon cohérente avec le reste du langage, comme si elle faisait partie du langage de base.
+	En pratique, il s'agissait de récupérer le <i>bytecode</i> d'un bloc de code compilé, de le parcourir à l'aide des fonctions de la plateforme, et de générer un objet <code>MessageSend</code> pour chaque envoi de message énuméré.
+	Dans une première version de ce travail, nous exprimions les animations avec la syntaxe <code>object property: (target during: 2 seconds)</code>.
+	Nous utilisions alors aussi la métaprogrammation, en invoquant le Debugger intégré lors de l'exécution de <code>during:</code>, pour récupérer l'appel à <code>property:</code> sur la pile d'envois de messages.
+</p>
+<p>
+	Sans l'utilisation de métaprogrammation, notre syntaxe pour exprimer les animations aurait ressemblé à <code>object animate: 'property' to: target during: 2 seconds</code>.
+	Or cette syntaxe n'est pas cohérente avec l'appel de méthode sans animation, ce qui nous avait motivé à étendre la syntaxe du langage.
+	Ainsi, dans le cadre de la recherche, la métaprogrammation permet de <i>modifier le sens des éléments de syntaxe existants</i>, afin de proposer de nouvelles formes d'expression cohérentes.
+	Dans notre cas, la syntaxe <code>[object property: target] during: 2 seconds</code> aurait dû signifier l'exécution immédiate ou retardée du bloc de code, ce que nous avons changé en sa conversion vers un objet de transition animée.
+</p>
+<p>
+	Plus généralement, nos besoins en métaprogrammation ont été de <i>décorréler la syntaxe et la sémantique du code</i>, c'est-à-dire de pouvoir inspecter le code comme une structure de données (pas seulement une chaîne de caractères), et de <i>remplacer certaines règles sémantiques</i> en conservant les autres.
+	De nombreux langages dynamiques aujourd'hui (ex. Smalltalk, JavaScript, Python, Lua) définissent un protocole à méta-objets, c'est-à-dire qu'il est possible d'intercepter et de changer le sens d'expressions comme <code>object.property = value</code>, ou <code>object.func()</code>.
+	Cependant, dans notre cas c'est l'inspection de blocs de code qui aurait été utile, et celle-ci est encore mal supportée dans la majorité des langages.
+</p>
+<!-- Problèmes :
+	_ La métaprogrammation expose les structures internes du système, qui sont conçues par et pour les développeurs du système.
+	_ Elles sont souvent bien spécifiées au départ, mais perdent en cohérence avec les évolutions (ex ajout des lambdas).
+	_ D'un point de vue externe, elles ne sont pas accessibles (documentation limitée, effets de bord inconnus).
+	_ Nous avons eu la chance de collaborer avec un développeur du système.
+	_ Il faut utiliser un langage dont la métaprogrammation soit la plus spécifiée et accessible possible (lesquels ? Smalltalk était un bon choix pour ce travail).
+-->
+<p>
+	En effet, la métaprogrammation expose souvent des structures internes au langage, qui sont documentées <i>par</i> les développeurs du langage, et <i>pour</i> leur propre usage.
+	Elles ne sont donc pas toujours accessibles pour des utilisateurs tiers, d'autant qu'ils ne sont pas au fait des éventuels effets de bord.
+	<!-- <del>En outre, certaines définitions énoncées lors de la genèse du langage, peuvent le complexifier avec les évolutions</del> -->En outre, certains détails internes peuvent se complexifier avec les évolutions du langage, rendant l'utilisation de la métaprogrammation plus difficile.
+	C'est le cas par exemple avec l'introduction de nouveaux types de fonctions (génératrices, asynchrones).
+	Ces nouvelles fonctionnalités ont apporté de nouveaux types primitifs dans les langages JavaScript et Python, avec pour conséquence qu'une fonction peut être représentée en interne par plusieurs types.
+	Pour notre travail, nous avons eu la chance de travailler avec un développeur de la machine virtuelle Sista pour Smalltalk, Clément Béra [<a href=#bera_sista_2017>Ber17</a>].
+	Il nous a permis d'implémenter notre extension en intégration parfaite avec la plateforme, en particulier pour identifier tous les types de <i>bytecodes</i> qui traduisaient des envois de messages.
+	Étant donné que cette opportunité est rare, il est plus probable à l'avenir que nous devions nous contenter des ressources disponibles dans le langage.
+	Nous considérons donc qu'il est essentiel d'<b>utiliser un langage de programmation à la métaprogrammation la plus spécifiée et accessible possible</b>.
+	Smalltalk se distingue favorablement des autres langages sur ce point, et notre travail sur l'expression des animations aurait été plus difficile (voire impossible) avec la plupart des autres langages de programmation.
+</p>
+
+<!-- <del><sh>CF ce que je dis dans ma note précédente: ce que tu discutes ici (possibilité de méta-programmation et ses avantages dans le cadre de la programmation d'interactions) me semble beaucoup plus proche d'un "essentiel d'interaction"...</sh></del> -->
+
+<h4>Interaction avec le bas-niveau</h4>
+
+<!--
+	_ Nous avons beaucoup travaillé avec le bas niveau durant notre utilisation de la plateforme smalltalk.
+	_ En quoi consiste le bas-niveau dans ce travail ? Dans les autres prototypes sur cette plateforme ?
+	_ Quels ont été nos besoins ?
+	_ Qu'est-ce qui manquait sur cette plateforme ?
+	_ Qu'avons-nous dû réaliser pour compenser ?
+-->
+<p>
+	Durant notre utilisation de la plateforme Pharo Smalltalk, nous avons conçu d'autres prototypes liés à la programmation d'interactions.
+	Le premier consistait en une syntaxe de causalité <code>[&lt;message&gt;] afterDo: &lt;bloc&gt;</code>.
+	Il se basait sur les travaux réalisés pour les animations, et permettait d'exécuter un bloc de code systématiquement après qu'un envoi de message soit effectué, à la manière de la programmation par Aspects [<a href=#kiczales_aspect-oriented_1997>Kic97</a>], et des <i>bindings</i> de Djnn [<a href=#magnaudet_djnn_2017>Mag17</a>].
+	Nous avons démontré ce prototype conjointement aux animations lors de la conférence Pharo Days 2017 [<a href=#raffaillac_pharodays17_2017>Raf17</a>].
+	Le second prototype était une version préliminaire aux travaux présentés dans le chapitre suivant, et consistait en une boîte à outils rudimentaire pour dessiner des formes graphiques à l'écran.
+	Nous l'avons présenté lors de la conférence ESUG 2016 [<a href=#raffaillac_show_2016>Raf16</a>].
+</p>
+<p>
+	Pour l'ensemble des prototypes développés avec Pharo, nous avons souvent travaillé étroitement avec le bas-niveau.
+	En pratique, nous souhaitions accéder aux évènements de la souris et du clavier avec une très faible latence, donc avec le minimum d'intermédiaires, et surtout pour être certains qu'aucune file d'attente n'était utilisée.
+	De plus, nous avions besoin de dessiner des formes géométriques simples et du texte dans une fenêtre, le plus rapidement possible.
+	Or sur cette plateforme le framework natif Morphic [<a href=#maloney_directness_1995>Mal95</a>] était notablement lent, au point de fonctionner à une fréquence très inférieure à celle de l'écran.
+	Quant à la récupération des évènements d'entrée, elle se basait sur une ancienne version de SDL [<a href=#lantinga_simple_1998>Lan98</a>], et ne gérait pas le défilement continu avec les trackpads.
+</p>
+<p>
+	Nous avons donc entrepris d'utiliser les bibliothèques OpenGL, FreeType, GLFW (alternative à SDL) et libpointing [<a href=#casiez_no_2011>Cas11</a>] directement avec Pharo, car nous les avions déjà utilisées par le passé.
+	Pour accéder à ces bibliothèques, la machine virtuelle doit faire appel à des fonctions dans des bibliothèques partagées (fichiers <code>.dll</code> sous windows, <code>.so</code> sous Linux, <code>.dylib</code> sous macOS).
+	Il faut alors écrire des <i>bindings</i>, qui permettent à du code Smalltalk d'exécuter ces fonctions.
+	Par exemple, la fonction native <code>glfwCreateWindow</code> se transpose en la méthode Smalltalk suivante :
+</p>
+<pre><code class="lang-smalltalk line-numbers">createWindow: title width: width height: height monitor: monitor share: window
+	^self ffiCall: #(GLFWwindow glfwCreateWindow(int width, int height,
+		String title, GLFWmonitor monitor, GLFWwindow window))
+</code></pre>
+<p>
+	Nous avons conçu des scripts permettant de générer automatiquement les bindings pour Smalltalk à partir des définitions de fonctions pour le langage C de chacune des bibliothèques.
+	Une fois les bindings réalisés, nous pouvions ouvrir une fenêtre supplémentaire avec GLFW, et dessiner directement dedans avec OpenGL et FreeType.
+	Or à cause de l'intégration étroite de Morphic dans Pharo, notre fenêtre devrait cohabiter avec une fenêtre principale.
+	Comme le système d'exploitation envoyait un flux unique d'évènements pour les deux fenêtres, l'exécution de notre système <i>asphyxiait</i> la fenêtre principale qui ne recevait plus d'évènements d'entrée.
+	Nous avons donc pu expérimenter à l'aide de Pharo, mais au prix de <i>beaucoup</i> d'efforts à bas niveau.
+</p>
+<!-- Problèmes :
+	_ Support limité et peu robuste de la plateforme
+	_ Bindings datés et besoin d'ingénierie pour utiliser les bibliothèques récentes
+	_ Beaucoup de temps investi et nécessité de connaissances à bas-niveau qui sont moins investies dans les concepts de haut-niveau
+	_ Peu d'intérêt pour ces améliorations dans la communauté
+	_ Il faut utiliser un langage pour lequel le support de bas-niveau de l'interaction soit une préoccupation majeure, et qu'on n'ait pas à s'en occuper.
+-->
+<p>
+	Dans le cadre de notre travail, un inconvénient majeur de la plateforme Pharo était son support insuffisant de l'interaction à bas-niveau, et qu'elle ne destine pas ce support à un autre usage qu'interne à la plateforme.
+	Les bindings obsolètes nécessitaient un travail d'ingénierie conséquent pour utiliser des bibliothèques plus récentes.
+	Nous y avons donc investi beaucoup de temps et d'apprentissage, que nous avons moins investis dans de la recherche de haut niveau.
+	De plus, nous avons trouvé un faible intérêt dans la communauté pour des contributions à l'interaction à bas-niveau, probablement car nous améliorions l'existant plutôt que d'apporter des fonctionnalités majeures.
+	L'exploration de concepts de haut-niveau nous ayant amenés à dépendre de fonctionnalités avancées de bas-niveau, il nous semble essentiel aujourd'hui d'<b>utiliser un langage de programmation avec un support de l'interaction à bas-niveau le plus complet possible</b>, pour qu'on n'ait pas à s'en occuper.
+	C'est le cas par exemple avec Java, qui fournit par l'intermédiaire du framework Swing des fonctionnalités avancées, comme par exemple le contrôle explicite de la souris avec la classe <code>Robot</code>.
+</p>
+
+<!-- <del><sh>Idem, beaucoup plus intéressant cette notion d'accès "unifié" au bas-niveau par les frameworks, permettant de plus ou moins s'affranchir des chouches... et pourrait être dans un même essentiel d'interaction que précédemment la méta-programmation sur compatibilité/extensibilité, etc.</sh></del> -->
+
+<h4>Compatibilité et l'extensibilité des outils de programmation d'interactions</h4>
+
+<p>À la lumière des discussions précédentes, nous énonçons donc un Essentiel d'Interaction avec les caractéristiques suivantes :</p>
+<ul>
+	<li>fournit un mécanisme de notification de l'affichage global au système</li>
+	<li>encourage les conventions de nommage pour les accesseurs et mutateurs des bibliothèques logicielles</li>
+	<li>favorise un langage de programmation avec une métaprogrammation très spécifiée et accessible</li>
+	<li>favorise un langage de programmation avec un support complet du bas niveau</li>
+</ul>
+<!-- Justifier que le développement d'applications interactives est facilité :
+	_ moins d'apprentissage lié aux règles spécifiques d'un framework -> accessibilité de la programmation grâce à la compatibilité
+	_ moins de développement pour accéder à des fonctionnalités de bas niveau (notre expérience)
+	_ offre plus de contrôle quant à la forme qu'on veut donner à la programmation d'interaction -> expérience utilisateur de la programmation pensée pour l'interaction plutôt que le calcul
+	
+-->
+<p>
+	Ces caractéristiques faciliteraient d'abord le développement d'applications interactives grâce à l'apprentissage moindre des règles spécifiques à chaque framework.
+	Avec des conventions communes, la compatibilité entre bibliothèques serait facilitée, et les programmeurs pourraient réutiliser leurs connaissances entre toutes.
+	Ensuite, les développeurs auraient moins d'efforts à faire pour accéder à des fonctionnalités de bas niveau, si celles-ci étaient d'emblée incluses dans le langage.
+	Enfin, nous conjecturons que la possibilité de modifier le sens des éléments du langage et d'en ajouter de nouveaux permettrait de contrôler plus finement l'<i>expérience utilisateur</i> du développement de nouvelles interactions (par rapport à l'utilisation des fonctions d'une API).
+	La finalité serait ici de s'affranchir des concepts de programmation hérités du calcul, pour imaginer une expérience de la programmation dédiée à l'interaction.
+	Nous en sommes encore loin aujourd'hui, car la création d'un langage de programmation est une tâche très lourde, qui nous oblige à modifier des langages existants plutôt que travailler à partir d'une copie vierge.
+	Nous espérons cependant que l'accumulation de concepts de programmation dédiés à l'interaction facilitera la création à terme d'un tel langage.
+	Notre troisième Essentiel d'Interaction est donc :
+</p>
+<div style="border:2px solid black; margin:1cm 0; padding:1cm .5cm; text-align:center"><span style="font:bold 15pt Palatino">Essentiel d'Interaction n°3</span><br><br>
+	Favoriser la compatibilité et l'extensibilité des bibliothèques logicielles, à l'aide de mécanismes et conventions standards à bas niveau, et d'un langage à la syntaxe flexible
+</div>
+
+
+<!--<h4>Diffusion du travail</h4>-->
+
+<!-- TODO: En conclusions de ce travail, on a présenté un travail fonctionnel, on l'a diffusé à la communauté (Pharo Days), on l'a montré aux personnes responsables des travaux sur les GUIs dans la communauté, mais finalement pas inclus dans la distribution officielle. Raisons : pas suffisamment actif, demandais des changements trop profonds, la démo était techniquement du bidouillage (impossible à inclure telle quelle), fonctionnalité pas demandée en dehors de l'effet "wahoo". À améliorer : travailler avec une communauté ayant des besoins d'interaction forts avec de l'argent en jeu (JV, arts, musique), faire des solutions pérennes dès le départ (qui seront intégrées en production). -->
+
+<!--
+	_ Nous avons conçu un prototype fonctionnel et complet.
+	_ Il a été démontré en live lors des conférences EICS et Pharo Days, prouvant que le prototype est robuste et cohérent (possibilité d'animer plusieurs en parallèle, possibilité d'animer une animation).
+	_ Quel est le contexte dans lequel ce travail a été réalisé ?
+	_ Pourquoi avons-nous développé en parallèle ?
+	_ Est-ce que ça marchait en théorie ?
+-->
+<!--<p>
+	À l'issue de ce travail sur les animations, nous avions un prototype fonctionnel et complet.
+	Celui-ci a été démontré en direct durant les conférences EICS 2017 et Pharo Days 2017, pendant lesquelles nous avons répondu avec succès aux interrogations des spectateurs, le prototype restant fonctionnel et robuste en toutes circonstances.
+	En particulier, nous avons montré qu'il était possible d'animer plusieurs propriétés en parallèle, et même d'animer une animation en cours :<notesh>voir ma remarque plus haut sur le fait que tu ne parles pas assez des possibilités et limitations... cet exemple de ce que l'on peut faire avec ta méthode devrait être expliqué plus haut dans le texte. Et tu peux y revenir ici pour dire que tu  as fait faire  "wahou"  ;)</notesh>
+</p>
+<pre><code class="lang-smalltalk line-numbers">animation := [object position: 100@0] during: 5 seconds.
+[animation to: 0@100] during: 5 seconds.
+</code></pre>
+<p>
+	Notre travail a été réalisé indépendamment des équipes développant des frameworks pour Pharo.
+	En effet, celles-ci étant localisées à Brest et Berne, il nous aurait été difficile de collaborer directement avec, et nous aurions eu peu d'influence sur les choix d'architecture.
+	Nous avons donc choisi de contribuer indirectement, par l'intermédiaire d'un travail <i>orthogonal</i> qui nécessiterait peu d'interactions.
+	Sur le plan théorique, notre prototype était un succès, mais en pratique nous n'avons pas réussi à l'implanter dans les frameworks en développement pour Pharo.
+</p>-->
+<!-- Problèmes :
+	_ travailler sans concertation préalable avec les potentiels intéressés -> ignorés
+	_ répondre à un besoin non identifié -> pas de persistence (alors que le besoin existe dans d'autres plateformes - viz, arts, Processing, jeux)
+	_ Il faut travailler avec une communauté qui manifeste au préalable un intérêt pour ce travail, et communiquer activement avec
+-->
+<!--<p>
+	Deux raisons peuvent expliquer ce manque de réussite.
+	La première est que nous n'avons pas <i>anticipé</i> la diffusion de notre travail avant de commencer à le développer.
+	Nous ne savions pas si un tel besoin avait été exprimé dans la communauté Pharo, bien qu'il soit clairement identifié dans la communauté Visualisation [<a href=#chevalier_animations_2016>Che16</a>].
+	En conséquence, nous ne savions pas à qui adresser notre travail, qui a été peu utilisé dans la communauté.
+	La deuxième raison est que notre travail dépend fortement du langage Smalltalk, pour sa dynamicité et sa syntaxe très spécifique facilitant l'implémentation de notre syntaxe.
+	Nous n'avons donc pas pu le diffuser en dehors de la communauté Smalltalk.
+	En effet, une implémentation pour Python ou JavaScript nous aurait demandé d'écrire un préprocesseur afin d'implémenter la syntaxe requise, ce qui est difficile à partager avec d'autres utilisateurs.<notesh>Oui, mais ça aurait pu être fait...</notesh>
+</p>
+<p>
+	Le travail sur l'expression des animations nous a donc amenés à prévoir sérieusement la diffusion de nos contributions.
+	Nous considérons comme essentiel d'<b>identifier une communauté qui manifeste des besoins pour notre travail, et de communiquer activement avec elle</b>.
+	Il est important d'effectuer cette démarche en amont et durant nos projets futurs.
+</p>-->
+<!-- <del><sh>Encore une fois pas convaincu par ça comme un essentiel d'interaction... de plus, c'est une évidence et même presque un bâton pour te faite battre: en tant que chercheur en GL/IHM, tu es censé faire du user-centered design et tu devrais identifier les besoins en amont, voire même impliquer les utilisateurs potentiels dans la conception... Je pense donc qu'il faut revoir cette fin, comme je le dis au début, pas convaincu par cet essentiel d'interaction, je le seari plus par un englobant meta-programmation et accès unifié pour "assurer la compatibilité et l'extensibilité des outils (frameworks, langages, etc.) pour la conception  et le prototypage d'interactions".</sh></del>
+<traf>Section "Diffusion du travail" retirée, merci pour la suggestion, c'est effectivement plus simple à formuler comme Essentiel d'Interaction.</traf> -->
+
+<link rel=stylesheet href=style.css>
+<link rel=stylesheet href=prism.css>
+<script src=scripts.js></script>
+<script src=prism.js></script>
+<script>prefix_headers(2, 4)</script>

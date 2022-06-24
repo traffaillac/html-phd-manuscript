@@ -1,0 +1,402 @@
+<h1 class=break-right>Les Essentiels d'Interaction</h1>
+
+<!-- La création d'un langage de programmation est une tâche très complexe, au delà de l'ambition d'un chapitre de thèse. Ce chapitre est donc une position pour montrer que les langages ont encore beaucoup à évoluer, et une ouverture vers des travaux futurs pour implémenter les IE. -->
+<!-- Le but des IE est aussi de soutenir le développement de nouveaux paradigmes de construction d'interfaces, car les outils de bas niveau sont encore très limités, orientés pour des paradigmes existants (évènements). -->
+<!-- Qu'est-ce qu'un langage de programmation ? -->
+<!-- Je suis convaincu que la programmation d'Interactions ne devrait pas appartenir à des boîtes à outils, mais être intégrée aux langages. C'est pourquoi j'ai toujours gardé en tête l'objectif langage, et ai minimisé l'importance de Polyphony par rapport à IE. -->
+<!-- TODO: Présenter une section sur la "tour d'ivoire de la recherche", en illustrant par le fait que les outils principalement utilisés n'en sont pas issus, et sont très en retard. La diffusion de travaux ET de personnes issus de la recherches sont insuffisants. Énumérer les différences entre toolkits de recherche et besoins pratiques (diversité des périphériques, mobile vs desktop, attention/apprentissage limité, moindre culture du "hacking", coeur de métier vs interface secondaire. -->
+<!-- TODO: Qu'est-ce qu'on entend par "approche intégrée" aux langages de programmation ? -->
+<!-- TODO: Mentionner fekete_les_1996 qui fait quelque chose d'analogue aux IE -->
+<!-- TODO: Pas LES Essentiels d'Interaction, mais DES Essentiels d'Interaction -->
+<!-- TODO: Un point de conclusion est qu'il faut se rapprocher du domaine du jeu vidéo, car c'est un domaine dynamique, poussé par des impératifs de compétitivité forts, très ouvert à l'adoption d'innovations, et qui a contribué activement au succès de nombreuses technologies (OOP, Kinect, VR). Il faudrait donc orienter le futur de Polyphony vers les IHMs dans les jeux vidéo. -->
+<!-- TODO: Notre problème en IHM -> pas de "vraie" communauté d'utilisateurs pour valider notre travail en conditions écologiques -->
+<!-- TODO: Autre problème -> certains auteurs se donnent un objectif à court terme clairement identifié, qu'ils valident, cependant ils ne discutent pas en quoi cet objectif contribue à un objectif de plus long terme -->
+<!-- TODO: Discuter du danger de dérive du travail sur les animations vers plus d'utilisation des lambdas, donc fragmentation de la logique -->
+
+<!-- Un modèle d'exécution adapté à la causalité :
+	_ Qu'est-ce que la causalité en programmation et pourquoi est-elle importante ?
+	_ Quels sont les différents modèles d'exécution microscopiques et macroscopiques ?
+	_ Quelle est leur répartition dans les différentes couches d'un système interactif ?
+	_ Quelles approches ont été tentées dans l'état de l'art ?
+	_ Pourquoi est-ce toujours un problème aujourd'hui ?
+	_ Que peut-on faire et qu'a-t-on fait dans cette thèse ?
+-->
+<!-- Un environnement d'interaction minimal et initialisé au démarrage de toute application :
+	_ Qu'est-ce que le contexte d'exécution pour une application ?
+	_ Qu'en est-il pour différents langages ?
+	_ Qu'en est-il pour différents frameworks ? (trop haut niveau, manque d'un niveau intermédiaire)
+	_ Quelles approches ont été tentées dans l'état de l'art ?
+	_ Pourquoi est-ce toujours un problème aujourd'hui ?
+	_ Qu'a-t-on tenté de faire dans cette thèse, et que reste-t-il à faire ?
+-->
+<!-- Une syntaxe de programmation extensible et décorrélée de la sémantique :
+	_ Que sont la syntaxe et la sémantique pour un langage et pour un framework ?
+	_ Sur quels aspects sont-il corrélés en pratique ?
+	_ Comment peut-on dire qu'on les a décorrélés ?
+	_ Quels travaux de l'état de l'art contribuent à cette décorrélation ?
+	_ En quoi est-ce que c'est essentiel pour l'interaction ? (exemple d'animation)
+	_ En quoi les outils actuels sont difficiles à utiliser, et insuffisants ?
+	_ Que peut-on faire à l'avenir ?
+-->
+
+<p>
+	Comme nous l'avons observé, les chercheurs utilisent principalement des frameworks d'interaction éprouvés pour développer de nouvelles techniques d'interaction.
+	Cependant ces frameworks sont excessivement complexes, et restreignent la liberté des chercheurs à explorer de nouvelles idées et dévier des standards établis.
+	Le problème principal est que leurs développeurs ne prennent pas suffisamment en compte les besoins des chercheurs, car ce ne sont pas leurs priorités.
+	Ces besoins étant exprimés par une communauté relativement petite d'utilisateurs, les développeurs de frameworks seraient peu enclins à des changements d'architecture majeurs (tels que suggérés en <a href=#sec1x5x2>section 1.5.2</a>).
+	Nous proposons donc de contribuer <!--<i>indirectement</i><notesh>pas certain de la pertinence du "indirectement", je l’enlèverai, la suite de la phrase suffit...</notesh>,--> par des travaux qui reconnaissent la prépondérance des frameworks, et s'intègrent de façon complémentaire dans cet écosystème.
+	En lien avec le manque de support de l'interaction à bas niveau (évoqué en <a href=#sec1x6x2>section 1.6.2</a>), et inspirés par les travaux sur Amulet [<a href=#myers_amulet_1997>Mye97</a>], Smalltalk [<a href=#krasner_cookbook_1988>Kra88</a>], et Smala [<a href=#magnaudet_djnn/smala_2018>Mag18</a>], nous avons considéré la possibilité d'étendre les langages de programmation, autant que les frameworks.
+	Par nos travaux, nous avons aussi cherché à étudier le manque de diffusion des outils issus de la recherche, et y proposer des réponses.
+	Enfin, nous avons choisi de nous orienter vers des contributions logicielles (plutôt que des documents comme discuté en <a href=#sec1x6>section 1.6</a>).
+	En effet il nous a semblé essentiel, dans le cadre d'une thèse de doctorat, de bénéficier d'une expérience pratique dans les outils de programmation d'interactions, avant de contribuer ultérieurement à des efforts de standardisation de ces outils.
+	<!-- <del>Leur complexité alourdit leur maintenance, ce qui limite aussi leur évolution<notesh>OK, mais leur évolution pour qui ? pour quoi ? et par qui ? Le truc, c'est qu'à mon sens, les développeurs de ses frameworks ne prennent pas en compte les besoins des chercheurs car ce n'est pas leur objectifs/application visée au départ. Donc là, le problème n'est pas le lien entre leur complexité et la maintenance/évolution pour ce besoin particulier qui n'est pas leur objectif premier.</notesh>.
+	En outre, les frameworks et boîtes à outils développés spécifiquement pour la recherche sont peu ou pas utilisés, <notesh>probablement</notesh> car ils manquent de diffusion et de compatibilité avec les outils existants. <notesh>C'est peut–être un peu réducteur: il y a aussi des chances qu'ils ne soient pas assez stables et robustes, avancés, ou alors pas tout à fait adaptés (mon hypothèse est qu'à ce niveau de besoins bien très pointus, un seul petit point du framework qui ne correspond pas complétement au besoin peut pousser à ne pas l'utiliser et en redévelopper un... de plus, les chercheurs aiment  bien faire leurs propres outils, même si il en existe déjà des "à peu près" correspondants...)</notesh>
+	Dans cette situation, la complexité des outils de programmation de l'interaction freine l'évolution des paradigmes de programmation de l'interaction, et freine en conséquence l'évolution des techniques d'interaction.  <notesh>L'évolution, mais aussi leur évaluation et leur dissémination.</notesh></del> -->
+</p>
+<p>
+	Ainsi, partant du problème que l'expression et l'implémentation de l'interaction est souvent rendue complexe avec les outils actuels, notamment à cause d'une multitude de niveaux d'abstraction, nous proposons et défendons la thèse selon laquelle <b>il faut rendre plus accessible la programmation de l'interaction à bas niveau, à l'aide de concepts applicables aux langages de programmation et aux architectures de frameworks</b>.
+	Nous illustrons cette thèse avec une extension au langage Smalltalk (en <a href=#sec2x4>section 2.4</a>), ainsi qu'un nouveau framework dédié au développement d'interfaces ad hoc (au <a href=#sec3>chapitre 3</a>).
+</p>
+<!-- <del><p>
+	Pour améliorer cette situation, nous proposons et défendons la thèse selon laquelle <b>l'expression et l'implémentation de l'interaction peuvent et doivent être simplifiées dans les systèmes interactifs</b>.<notesh>Ce n'est pas cela la thèse que tu défends, ça c'est plutôt le problème et la solution que tu proposes (Pour t'en convaincre, tu peux reformuler en disant "l'expression et l'implémentation de l'interaction est trop complexe"). De plus, "simplifiées" est trop vague. La thèse que tu défends, c'est <b>comment</b> tu proposes de le faire.</notesh>
+	Cette simplification peut s'opérer aussi bien dans les frameworks d'interaction, que dans les langages de programmation.
+	Nous illustrons les deux démarches dans ce manuscrit de thèse.
+</p></del> -->
+<p>
+	Nous commençons par formuler des <i>Essentiels d'Interaction</i>, recommandations pratiques visant à orienter notre démarche d'accessibilité<!-- <del>de simplificiation</del> -->.
+	Ces recommandations ont été définies à partir de mentions régulières dans l'état de l'art, d'observations récurrentes dans les frameworks d'interaction majeurs, ainsi que nos études préliminaires<!-- <del>par la prévalence de certaines pratiques de programmation de nouvelles interactions <notesh>et tes études ?</notesh></del>. -->
+	Les Essentiels d'Interaction sont :
+</p>
+<ul>
+	<li><i>Une orchestration explicite et flexible des comportements interactifs</i>, où les règles de déclenchement des blocs de code sont clairement mises en valeur, et permettent de donner l'initiative de leur exécution directement à l'environnement</li>
+	<li><i>Un environnement d'interaction minimal et initialisé au démarrage de toute application</i>, pour réduire les efforts initiaux des développeurs lors de l'accès aux entrées et sorties utilisateurs.<!-- <del>faciliter le développement d'applications utilisant des périphériques d'interaction, et rendre plus explicite leurs <notesh>le "leur" porte sur quoi, les applications ? Pas clair...</notesh> dépendances à ces périphériques</del> --></li>
+	<li><i>Des mécanismes et conventions standardisés, ainsi qu'un langage à la syntaxe flexible</i>, pour assurer la compatibilité et l'extensibilité des bibliothèques logicielles pour y exprimer de l'interaction</li>
+</ul>
+<!-- <del><sh>Même si tu vas développer ensuite dans le chapitre, ce serait bien de d'ores et déjà dire en 2-3 mots le pourquoi de chaque essentiel d'interaction dans cette liste e.g. "une orchestration explicite des comportements interactifs pour permettre de blablabla"</sh></del> -->
+<p>
+	La première section de ce chapitre est consacrée à un état de l'art des recommandations d'améliorations des frameworks et langages de programmation.
+	Les deux sections suivantes sont dédiées aux deux premiers Essentiels d'Interaction.
+	Dans la quatrième section, nous illustrons notre démarche de simplification avec l'intégration des animations dans un langage de programmation, et en déduisons un troisième Essentiel d'Interaction.
+<!-- 	<del>Enfin, nous concluons sur les pistes futures de ce travail et son intégration dans le paysage d'outils existants.</del> -->
+</p>
+
+<!--
+<p>
+	Dans le chapitre précédent, nous avons décrit la boîte à outils Polyphony, conçue pour supporter le développement d'interfaces graphiques et d'interactions.
+	Avec Polyphony nous avons cherché à rendre la conception d'IHM plus <i>accessible</i>, et considérons que son adoption éventuelle par une communauté de développeurs validera son modèle de programmation.
+	Cependant, en pratique de nombreuses boîtes à outils ont été proposées dans le domaine IHM avec des buts analogues, et n'ont pas connu le succès escompté.
+	Ce problème est récurrent, et peut s'expliquer en partie par le manque de promotion des travaux de recherche après publication.
+	Néanmoins, il nous incite aussi à raisonner sur d'autres manières de rendre la programmation d'interactions plus accessible.
+</p>
+-->
+<!--
+	_ Énoncé de la thèse
+	_ Pourquoi un langage plutôt qu'une toolkit ?
+	_ À qui doit-on s'adresser pour diffuser ces contributions ?
+	_ Comment doit-on formuler ces contributions ?
+	
+	_ Pourquoi ne pas juste créer un nouveau langage ?
+	_ Comment ce travail va influencer le prototypage de NTI ?
+	_ Quelle est notre ambition dans ce chapitre de thèse ?
+	_ Comment est-il structuré ?
+-->
+<!--
+<p>
+	Dans ce chapitre, nous défendons la thèse selon laquelle <b>le support de l'interaction peut et doit être amélioré dans les langages de programmation</b>.
+	En effet, un langage de programmation est la première chose qu'apprennent les programmeurs débutants.
+	Contraitement aux boîtes à outils, il est <i>nécessaire</i> à la programmation.
+	L'intégration d'améliorations à un langage de programmation nous permettrait donc de toucher un plus large public.
+	De plus, la nature déjà complexe des langages existants nous oblige à formuler des améliorations simples — en comparaison avec des frameworks complets.
+	Ce travail de simplification permet en retour de rendre la programmation d'interactions plus accessible, ce qui le rend particulièrement pertinent pour ce travail de thèse.
+</p>
+<p>
+	La création d'un langage de programmation est une tâche très complexe, qui dépasse le cadre de cette thèse.
+	Nous formulons donc dans ce chapitre un ensemble de caractéristiques, les <i>Essentiels d'Interaction</i>, qui puissent être intégrées aux langages de programmation pour faciliter le développement d'applications interactives.
+	Ces propositions doivent s'adresser en priorité aux concepteurs de langages.
+	Elles doivent être suffisamment claires et techniquement plausibles, pour pouvoir être considérées à l'intégration dans les langages.
+	Les contributions de ce chapitre sont donc présentées pour un public de concepteurs de langages.
+	Nous espérons ainsi que la diffusion des Essentiels d'Interaction facilitera l'intégration de nouvelles boîtes à outils, comme Polyphony.
+</p>
+<p>
+	Dans la première section, nous étudions les modèles d'exécution des systèmes interactifs, et leur adéquation à la programmation d'interactions.
+	Dans la seconde section, nous étudions le cas particulier de l'expression des animations, et présentons un prototype fonctionnel intégré au langage Smalltalk.
+	Dans la troisième section, nous nous intéressons à l'accès aux entrées/sorties avec les utilisateurs, et présentons deux cas d'ingénierie pour intégrer le support de la souris et du dessin.
+	Dans la quatrième section, à partir de notre expérience dans le développement de Polyphony, nous soulignons les différences entre notre modèle et le langage que nous avons utilisé (JavaScript), et discutons de l'utilité de la métaprogrammation dans ce contexte.
+	Enfin, nous concluons sur les limites de ce travail et son avenir.
+</p>
+-->
+
+
+
+<!-- Conclusions EDA :
+	_ Aucun des travaux étudiés ne parvient à formuler clairement le problème ni à justifier qu'on doive y apporter des solutions, du coup il est normal qu'on soit ignorés par les concepteurs de langages
+-->
+
+<h2>État de l'art des recommandations pour langages et frameworks d'interaction</h2>
+
+<p>
+	La syntaxe et la sémantique de la programmation d'interactions ont été relativement peu étudiées dans les domaines des Interactions Homme-Machine et du Génie Logiciel.
+	Elles sont dépendantes de l'expressivité donnée par les langages de programmation, or ceux-ci sont souvent considérés comme immuables, et l'interaction y est exprimée par extension.
+	Par exemple, pour connecter un <i>signal</i> à un <i>slot</i> dans Qt, on écrirait <code class=lang-cpp>QObject::connect(&objA, &ClassA::fctA, &objB, &ClassB::fctB)</code>.
+	Cette syntaxe est largement basée sur celle du langage C++ : la création d'une connection se fait par un appel de fonction <code class=lang-cpp>QObject::connect</code>, on fait référence aux objets par leurs pointeurs <code class=lang-cpp>&objA</code> et <code class=lang-cpp>&objB</code>, et on fait référence aux signaux et slots sur ces objets par des pointeurs de fonctions <code class=lang-cpp>&ClassA::fctA</code> et <code class=lang-cpp>&ClassB::fctB</code>.
+	À l'opposé, pour exprimer un binding (concept relativement similaire) dans Smala [<a href=#magnaudet_djnn/smala_2018>Mag18</a>], on écrirait <code>objA -> objB</code>.
+	Ici, le binding est <i>intégré</i> à la syntaxe du langage, ce qui offre aux utilisateurs de Smala plus de facilité pour exprimer des applications interactives, et résulte en du code plus court.
+<!-- 	<del>Leurs natures sont généralement difficiles à saisir, en partie à cause de l'absence d'alternatives dans les langages qui permettraient de comprendre l'existence de choix de conception.
+	Par exemple, pour un appel de fonction, des alternatives à la syntaxe <code>f(a, b)</code> pourraient être <code>f[a; b]</code>, ou <code>(a, b) -> f</code>, ou encore <code>pass a and b to f</code>.
+	Pour la sémantique d'un appel de fonction, des alternatives pourraient être de renvoyer plusieurs valeurs plutôt qu'une, de ne pas faire revenir le flux d'exécution (à la manière de <code>goto</code>), ou encore de passer implicitement les variables de portée locale.<notesh>Je ne comprends pas bien ce que montre cet exemple... Trop général ? peut-être devrais-tu le contextualiser un peu plus ?</notesh></del> -->
+</p>
+<p>
+	Par définition, la <i>syntaxe</i> est la manière dont des mots s'assemblent pour former des phrases.
+	Dans un langage de programmation, ces mots sont des lexèmes (ou <i>tokens</i>), qui sont généralement de cinq types : identifiants (noms de variables et de fonctions), mots-clés du langage, ponctuation (opérateurs et parenthèses), litéraux (constantes numériques et chaînes de caractères), et commentaires.
+	La syntaxe d'un langage s'accompagne de règles de <i>grammaire</i>, qui permettent de vérifier qu'une séquence de lexèmes est un programme valide ou non (sans définir ce qu'il produira).
+</p>
+<p>
+	La <i>sémantique</i> d'un langage est le sens donné à un programme (séquences de lexèmes), c'est-à-dire l'effet qu'il produira à l'exécution.
+	Par exemple, un identifiant suivi d'une parenthèse ouvrante et une parenthèse fermante (<code>f()</code>) forme un appel de fonction, qui correspondra à l'exécution en une instruction de branchement du flux d'exécution, vers le code de la fonction.
+</p>
+<p>
+	Dans le cas d'un framework de programmation, la syntaxe et la sémantique sont toujours définies dans les limites permises par le langage de base.
+	Il sera donc impossible d'ajouter des règles de grammaire qui violent les règles du langage (par exemple autoriser une parenthèse ouvrante sans parenthèse fermante).
+	De plus, la sémantique d'un framework sera généralement définie par <i>extension</i> de celle du langage, car il est souvent impossible d'inhiber un comportement de base du langage (comme par exemple intercepter tous les appels de fonctions du programme pour en changer les paramètres<!-- <del>comme passer un argument supplémentaire à chaque appel de fonction</del> -->).
+</p>
+<p>
+	L'étude et le prototypage de nouvelles syntaxes et sémantiques pour la programmation d'interactions est une activité difficile, qui revient soit à modifier un langage existant (et accepter ses contraintes), soit à créer un nouveau langage.
+	Ceci explique le faible nombre de travaux ayant opéré à l'interface entre frameworks et langages.
+	Nous présentons ici des travaux significatifs ayant proposé ou suggéré de nouvelles formes de programmation de l'interaction.
+	Ils se distinguent des boîtes à outils proposées en IHM par la remise en question de concepts à la base des<!-- <del>leur <b>incompatibilité partielle</b> avec les</del> --> langages de programmation, qui nécessite d'opérer aux deux niveaux (langage et framework).
+</p>
+<!-- <del><sh>Bien cette intro. J'attends par contre de voir ensuite si tu développes un peu la discussion sur cette "<b>incompatibilité partielle</b> avec les langages de programmation", qui est je pense ce que le lecteur va en attendre.</sh></del>
+<traf>Désolé d'avoir enlevé la notion d'incompatibilité partielle, c'était une mauvaise formulation. J'essaie de ne pas mettre ces travaux en opposition aux langages, mais plutôt dire que si on avait plus de contrôle sur les langages on pourrait rendre la programmation d'interactions plus accessible.</traf> -->
+<!-- Questions à poser :
+	_ Quelles sont l'origine et les auteurs de ces points ?
+	_ Quel a été le contexte de leur genèse, et leur contexte d'application initial ?
+	_ Quel est le public visé par les points ?
+	_ Quels problèmes cherchaient-ils à résoudre en priorité ?
+	_ Comment décrire succintement leur principe ?
+	_ Comment peut-on résumer leurs contributions au domaine ?
+	_ Quelles critiques peut-on leur adresser aujourd'hui ? (qui justifient leur adoption faible)
+-->
+
+<h3>Les trois services du noyau sémantique indispensables à l'IHM</h3>
+
+<!--
+	_ énumérés par Fekete lors de la conférence IHM'96, puis lors des journées du GDR Programmation du CNRS
+	_ fait suite à la conception d'outils de programmation d'applications interactives et techniques d'interaction
+	_ description de trois services visant le "noyau sémantique" (langage ?), difficiles à implémenter autrement
+	_ notification (qui se rapporte au traitement réactif des évènements), prévention des erreurs (qui se rapporte à la possibilité de savoir si un appel de fonction va déclencher une erreur), annulation (possibilité de matérialiser et annuler des instructions)
+	_ manque de cohérence des notifications dans le système (tout n'est pas observable), redondance de l'information de compatibilité des fichiers avec les applications (prévention des erreurs), et nature irrémédiable de certaines opérations incompatible avec le besoin de cohérence du undo (annulation d'opérations)
+	_ notable pour avoir présenté le problème aux deux communautés, relatant des besoins précis, et décrit de façon plausible techniquement. Une approche pragmatique de besoins éprouvés, présentés auprès des personnes qui peuvent y répondre
+	_ cependant, le travail n'a pas donné suite à des améliorations du noyau sémantique. L'article est formulé du point de vue IHM, et n'est pas suffisamment détaillé sur la manière de l'implémenter dans un langage (propositions de syntaxe, grammaires, algorithmes).
+	_ les besoins énumérés restent tous les trois d'actualité aujourd'hui
+-->
+<p>
+	<!-- <del>Les trois services du noyau sémantique indispensables à l'IHM ont été énumérés par Fekete</del> -->Fekete a proposé trois services du noyau sémantique, qu'il qualifie d'indispensables à l'IHM, pour la conférence IHM [<a href=#fekete_les_1996>Fek96</a>], puis lors des journées du Groupe de Recherche Programmation du CNRS [<a href=#fekete_les_1996-1>Fek96</a>].<!-- <del><notesh>La façon dont tu l'amènes fait que cela semble admis et acquis, "ce sont les 3 service indispensables"... Il faudrait peut-être changer cette première phrase pour être plus tempéré et objectif. Genre "Fekete a proposé trois services du noyau sémantique qu'il qualifie d'indispensable à l'IHM..."</notesh></del> -->
+	Ces points s'adressent au “noyau sémantique” des systèmes interactifs, qu'on peut assimiler aux langages de programmation.
+	Ils désignent des fonctionnalités difficiles à implémenter sans un support explicite du noyau sémantique, et détaillent chacun des mécanismes communs pour les implémenter.
+	Les services présentés par Fekete sont :
+</p>
+<dl>
+	<dt>la notification</dt>
+	<dd>
+		Ce service se rapporte au besoin de pouvoir observer tous types d'évènements dans le système (écriture de variable, modification à un fichier, etc.).
+		Le problème est que certains types d'évènements ne sont pas observables, et que l'enregistrement d'observateurs (<i>callbacks</i>) n'est pas un mécanisme cohérent dans tout le système, ce qui invite à un support unifié au niveau du langage de programmation.
+	</dd>
+	<dt>la prévention des erreurs</dt>
+	<dd>
+		Ce service revient à savoir si une fonction va déclencher une erreur avant même de l'exécuter (ex. Est-ce je peux lire le contenu d'un fichier comme une image ?), voire d'énumérer les fonctions valides dans un contexte particulier.
+		En l'absence de ce type de fonctionnalité, les systèmes interactifs doivent stocker l'information de validité en amont (ex. l'extension d'un fichier avant sa lecture par une application), ce qui représente une redondance et un risque de correspondances erronnées.
+	</dd>
+	<dt>l'annulation</dt>
+	<dd>
+		Ce service revient à sauvegarder l'état de l'application à des moments donnés, et à pouvoir y revenir à tout moment, afin d'implémenter les commandes <i>undo</i> et <i>redo</i>.
+		Il est présent dans toutes les applications aujourd'hui, et c'est parmi les trois services de Fekete celui qui a été le plus étudié dans le domaine IHM [<a href=#nancel_causality_2014>Nan14</a>, <a href=#heer_graphical_2008>Hee08</a>].
+		Cependant il reste aussi très difficile à implémenter, à cause de la nature irrémédiable de nombreuses commandes dans les systèmes informatiques (assignation de variable, suppression de fichier, etc.).
+		L'implémentation de l'annulation nécessite de matérialiser et manipuler l'état courant du système, ce qui pourrait être facilité par le langage.
+<!-- 		<del>Cette fonctionnalité est présente dans toutes les applications aujourd'hui, mais reste difficile à implémenter.
+		À cause de la nature irrémédiable de nombreuses commandes dans les systèmes interactifs (assignation de variable, suppression de fichier, etc.), l'implémentation de l'annulation nécessite de matérialiser et gérer l'état du système, ce qui pourrait être facilité par le langage.<notesh>sur ce point du undo, tu pourrais noter que c'est peut-être celui sur lequel c'est le plus penché le domaine depuis longtemps (voir nombreux travaux de Myers là dessus, et bien sûr Mathieu avec Causality), mais que en effet, il y a toujours un problème pour supporter ces méthodes avancées au niveau système, langages, et frameworks (c'est un des objectif du projet de Mathieu)</notesh></del> -->
+	</dd>
+</dl>
+<p>
+	Ce travail est notable pour avoir été présenté aux deux communautés de l'Interaction Homme-Machine et du Génie Logiciel.
+	Le besoin émane donc de l'expérience d'un praticien ayant implémenté des techniques d'interaction et un outil de programmation d'applications interactives, et est adressé à une communauté qui peut y apporter des solutions.
+	De plus, les services illustrent des besoins précis, et sont décrits techniquement aussi bien que théoriquement.
+	Cependant, le travail n'a pas été suivi de recherches pour résoudre les problèmes évoqués — qui restent toujours d'actualité aujourd'hui.
+	L'article ayant principalement adopté un point de vue d'IHM, il reste peu détaillé sur les pistes d'implémentation du côté des langages de programmation, ce qui a probablement été insuffisant pour convaincre les chercheurs de la communauté GL.
+	Néanmoins, le point correspondant à la notification globale a été sujet à des recherches actives en IHM peu après l'article de Fekete, avec en particulier la création du bus logiciel Ivy [<a href=#buisson_ivy_2002>Bui02</a>], le protocole d'entrées <i>multi-touch</i> TUIO [<a href=#kaltenbrunner_tuio_2005>Kal05</a>], et le concept de composants activables publiquement de djnn [<a href=#chatty_verification_2015>Cha15</a>].
+<!-- 	<del><notesh>OK, par contre, il y a peut-être eu quand même des contributions depuis qui ont amélioré l'état de l'art sur chacun de ces points indépendamment les uns des autres ? (et sans même connaitre cet article de JDF ;)). Je pense par exemple à i-star/djnn pour la partie notifications/gestion des evts (il me semble que leur principe des bindings rend tout observable, non ?), etc.</notesh></del> -->
+</p>
+
+<h3><i>Usability requirements for interaction-oriented development tools</i></h3>
+
+<!--
+	_ étudiés par Letondal et Chatty à l'ENAC dans le cadre du développement de systèmes critiques pour l'aviation
+	_ observent un fossé entre ce qu'offrent les langages de programmation (conçus pour le calcul), et les pratiques et besoins identifiés en IHM
+	_ énumèrent donc les différences entre applications interactives et de calcul, et en dégagent des recommandations pour orienter la conception d'outils de programmation (un peu comme les Cognitive Dimensions of Notations)
+	_ s'adressent à un public de théoriciens de la programmation, plutôt que de techniciens
+	_ minimiser la complexité en information, complexité de l'accès (réduire la fragmentation de logique), et imprévisibilité. fournir des concepts de graphisme, d'adaptation à l'environnement, de modèles d'interaction, et d'application distribuée. supporter la production de code, la visualisation et de débogage à l'exécution. gérer la vie du projet, la réutilisation de code et de connaissances, et le développement à plusieurs.
+	_ notables pour avoir accompagné la formalisation des bindings dans djnn, et avoir mené au développement de djnn et du langage Smala, avec des réalisations techniques industrielles concrètes
+	_ reconnaissent que les interfaces sont une cible mouvante, et que les solutions proposées dans la recherche sont peut-être trop éloignées des pratiques industrielles
+	_ cependant ce sont des recommandations de haut niveau, pour lesquelles la concrétisation en innovations de langages et frameworks demande encore beaucoup de travail, de plus ils ne se sont pas adressés à des techniciens des langages
+-->
+<p>
+	Les “Exigences d'usabilité pour les outils de développement orientés-interaction” [<a href=#letondal_usability_2010>Let10</a>] ont été étudiées par Letondal et al. à l'ENAC, dans le cadre du développement de systèmes critiques pour l'aviation civile.
+	Dans ce contexte, les auteurs observent un fossé entre ce qu'offrent les langages de programmation communs (conçus pour la plupart pour le calcul), et les pratiques et besoins identifiés en IHM.
+	Ils énumèrent donc les différences entre les programmes de calcul et les programmes interactifs, afin d'en dégager des recommandations pour orienter la conception d'outils de programmation.
+	Ainsi, leur travail s'apparente à des dimensions de comparaison des outils de programmation vis-à-vis du support de l'interaction, à la manière des <i>Cognitive Dimensions of Notations</i> de Green pour les langages [<a href=#green_usability_1996>Gre96</a>].
+	Ils tirent de chaque dimension des recommandations de haut niveau, que nous synthétisons ici :
+</p>
+<ul>
+	<li>minimiser la complexité des informations, la complexité des accès (qui s'apparente à réduire la fragmentation du code et des structures de données), et l'imprévisibilité</li>
+	<li>fournir des concepts de graphisme, d'adaptation à l'environnement, de différents modèles d'interaction (machines à états, flux de données, parallélisme, réactivité), et d'applications distribuées</li>
+	<li>supporter la production de code, et la visualisation ainsi que le débogage à l'exécution <!-- <del><notesh>Ce point me fait penser à <a href="http://worrydream.com/#!/LearnableProgramming">Learnable Programming</a> de Bret Victor. Ce n'est peut-être pas le bon endroit, mais il me semble que tu devras en parler quelque part dans ton manuscrit (i.e. si quand tu parles des environnements de programmation).</notesh></del> --></li>
+	<li>gérer la vie du projet (en ses différentes étapes), la réutilisation de code et de connaissances, et le développement à plusieurs</li>
+</ul>
+<!-- <traf>Merci pour le lien ! Intégré succintement à la fin de <a href=#sec1x3x1x2>1.3.1.2</a>, vu que je n'avais pas de section sur les environnements de développement, et qu'il traite de l'utilisabilité des outils plutôt que de l'expressivité du langage.</traf> -->
+<p>
+	Pour justifier le faible impact de telles recommandations en dehors du domaine IHM, les auteurs reconnaissent que les interfaces sont une cible mouvante, et que les solutions proposées dans la recherche sont probablement trop éloignées des pratiques industrielles.
+	Leur étude est remarquable pour avoir été suivie par le développement d'un modèle d'architecture par “composants interactifs” [<a href=#chatty_reconcilier_2012>Cha12</a>], ainsi que la formalisation de relations de causalité avec les <i>bindings</i> de djnn/Smala [<a href=#magnaudet_djnn/smala_2018>Mag18</a>].
+	Ces travaux à la fois théoriques et pratiques ont abouti à des réalisations techniques concrètes, qui valident écologiquement la faisabilité des concepts produits.
+	Cependant, le public visé par les travaux théoriques est resté lié à l'IHM plutôt qu'au Génie Logiciel, et de haut niveau plutôt que basé sur des descriptions techniques.
+	Ce manque de diffusion auprès des communautés concernées par le type d'innovations requises, a probablement, et pour le moment du moins, limité <!-- <del><notesh>ne pas être si catégorique, il faut parfois du temps... dire plutôt "a probablement, et pour le moment du moins, limité..."</notesh></del> --> l'adoption de leurs exigences d'utilisabilité pour adapter les outils de programmation à l'interaction.
+</p>
+
+<h3>Factorisons la gestion des évènements des applications interactives !</h3>
+
+<!--
+	_ un seul point, très explicite, et expliqué en détails
+	_ les auteurs ont développé de nombreuses applications interactives et outils de programmation
+	_ dans ce cadre, ils utilisent plusieurs types de bibliothèques ("composants"), qu'ils doivent faire cohabiter
+	_ le problème est que chaque composant définit son propre mécanisme de gestion des évènements, souvent partiellement incompatible avec les autres
+	_ les auteurs proposent donc d'en factoriser la gestion, en s'adressant à des chercheurs en IHM, donc probablement plus orientés toolkits
+	_ ils présentent trois approches communes de propagation des évènements dans les systèmes interactifs : l'enregistrement de callback sans intermédiaire (aiguilleur), un aiguilleur unique (comme un bus d'évènements genre Ivy), ou plusieurs aiguilleurs
+	_ l'apport de leur travail est un problème éprouvé, bien identifié et décrit, sur lequel les auteurs attirent l'attention
+	_ cependant, ils ne se positionnent pas sur le type de solution à apporter, et surtout ne précisent pas comment une telle solution se démarquerait des autres "composants" et faciliterait leur cohabitation
+	_ enfin, s'adressent à un public IHM, donc solutions plutôt toolkit
+-->
+<p>
+	Dans leur article présenté lors de la conférence IHM'98 [<a href=#conversy_factorisons_1998>Con98</a>], Conversy et al. présentent une prise de position à partir d'une recommandation unique, très explicite et présentée en détails.
+	Dans le cadre de leur travail, les auteurs ont développé de nombreuses applications interactives et outils de programmation d'interactions.
+	Ils relatent l'utilisation de plusieurs types de bibliothèques logicielles, qu'ils qualifient de <i>composants</i>, et qu'ils doivent faire cohabiter dans les applications interactives.
+	Le problème qu'ils soulèvent dans ce contexte est que chaque composant définit des sources d'évènements, et propose son propre mécanisme de gestion des évènements, souvent partiellement incompatible avec les autres composants.
+	Les auteurs suggèrent donc d'en factoriser la gestion, et présentent trois approches communes de propagation des évènements dans les systèmes interactifs :
+</p>
+<ul>
+	<li>l'enregistrement d'un callback au niveau de chaque source d'évènement, à la manière du patron de conception <i>listener</i></li>
+	<li>la notification de chaque évènement à un intermédiaire unique (“aiguilleur”), auquel les drains d'évènements s'abonnent pour écouter (à la manière du bus de communication Ivy [<a href=#buisson_ivy_2002>Bui02</a>])</li>
+	<li>l'utilisation de plusieurs aiguilleurs intermédiaires, pour permettre éventuellement l'existence de plusieurs contextes d'interaction</li>
+</ul>
+<p>
+	Leur travail est notable pour avoir mis en lumière un problème éprouvé, bien identifié, et d'avoir détaillé les sources de ce problème.
+	L'article nous donne une bonne vision du contexte de la gestion des évènements, et nous laisse imaginer des solutions potentielles à sa factorisation.
+	Cependant, les auteurs s'adressent principalement à un public de chercheurs en IHM, qui sont susceptibles de contribuer à la création de boîtes à outils plutôt que de travaux sur les langages de programmation.
+	De plus, faute d'un positionnement sur le type de solution à apporter, l'article ne peut pas nous montrer comment une telle solution résoudrait le problème posé.
+	En particulier, une boîte à outils factorisant la gestion des évènements pourrait être considérée comme un nouveau “composant”, et accentuer les problèmes de cohabitation plutôt que les résoudre.
+</p>
+
+<h3><i>The Natural Programming Project</i></h3>
+
+<!--
+	_ projet de plus de deux décennies visant à produire des outils de programmation “naturels” (plus proches de la manière dont les gens pensent les algorithmes et la résolution de tâches (myers_more_2008)
+	_ ils cherchent à s'adresser aux très nombreuses personnes qui interagissent professionnellement avec des ordinateurs, voire se disent programmeurs, sans être “professionnels”
+	_ très nombreux projets, et nombreuses études utilisateurs pour guider le design des projets
+	_ un de ces projets a été la création d'un langage de programmation et son environnement, HANDS, à partir d'études sur les raisonnements naturels liés à la résolution de problèmes de programmation
+	_ ce langage vise donc les personnes qui ne sont pas nécessairement familières de la programmation
+	_ quatre points issus des études de myers_natural_2004 sont intéressants comme recommandations (nous traduisons et reprenons leurs exemples) : une structure basée sur des évènements ou règles est souvent utilisée (“when PacMan loses all his lives, it's game over”), des opérations sont spécifiées sur des groupes d'éléments plutôt qu'en itérant sur chacun (“Move everyone below the 5th place down by one”), les opérations logiques booléennes sont rarement utilisées et ne correspondent pas à la logique mathématique usuelle, et les comportements et actions sont généralement spécifiées avec du texte plutôt que des dessins.
+	_ les points sont notables car ils tranchent des choix de conception à plusieurs solutions (ex. langage textuel vs visuel), et sont donc utilisables directement et clairement pour orienter le design d'outils de programmation
+	_ de plus ils ont été mis en application pour concevoir un environnement de programmation, qui a été testé ensuite
+	_ on peut reprocher à ce travail d'avoir dérivé vers une interface de programmation infantile, qui tend à réduire leur travail pour une population de novices, alors que la programmation naturelle pourrait concerner les professionnels aussi
+	_ leur travail mériterait donc d'être appliqué à des langages intermédiaires à avancés, qui correspondent mieux au domaine d'étude de la présente thèse
+-->
+<p>
+	Le <i>Natural Programming Project</i> est en cours depuis plus de deux décennies au HCII de l'université Carnegie Mellon [<a href=#myers_more_2008>Mye08</a>].
+	Il vise à produire des outils de programmation “naturels”, c'est-à-dire plus proches de la manière dont les personnes pensent les algorithmes et la résolution de tâches.
+	Le projet s'adresse aux très nombreuses personnes qui interagissent professionnellement avec des ordinateurs, voire qui se disent programmeurs, sans pour autant être des “professionnels”.
+	L'équipe travaillant sur ce thème de recherche a produit un très grand nombre d'études et d'outils, synthétisés dans [<a href=#carnegie_mellon_university_natural_2019>Car19</a>].
+	L'un de ces projets a été la création d'un langage de programmation et son environnement, HANDS, à partir d'études sur les raisonnements naturels liés à la résolution de problèmes de programmation [<a href=#myers_natural_2004>Mye04</a>].
+	Le projet se concentre sur la réalisation de l'outil plutôt que pour dégager des recommandations explicites.
+	Cependant, quatre points énumérés à l'issue des études préliminaires nous semblent être des recommandations pertinentes.
+	Ces études visaient à observer des personnes résoudre des problèmes de programmation, sans informatique, et sans influencer le type de raisonnement à adopter.
+	Nous traduisons les points et reproduisons leurs exemples :
+</p>
+<ul>
+	<li>Une structure basée sur des évènements ou règles est souvent utilisée (« <i>When PacMan loses all his lives, it's game over.</i> »).</li>
+	<li>Des opérations sont spécifiées sur des groupes d'éléments plutôt qu'en itérant sur chacun (« <i>Move everyone below the 5th place down by one.</i> »).<!-- <notesh>intéressant ça pour justifier ton approche ECS, j'espère que tu le discutes plus tard.</notesh> --></li>
+	<li>Les opérations logiques booléennes sont rarement utilisées, et ne correspondent pas à la logique mathématique usuelle.</li>
+	<li>Les comportements et actions sont spécifiées avec du texte plutôt que des dessins.</li>
+</ul>
+<p>
+	Ces points sont intéressants car ils apportent des réponses claires et orientées à des choix de conception débattus (ex. le choix d'un langage textuel ou visuel).
+	Ils sont donc utilisables directement et clairement pour orienter le design d'outils de programmation.
+	De plus, ils ont été appliqués en pratique pour la conception de l'environnement de programmation HANDS, dont l'utilisation a été testée expérimentalement ensuite.
+	Cependant on peut remarquer que ce travail a dérivé vers une cible d'utilisateurs jeunes et novices (<a href=#fig-hands>figure</a>), alors que le projet ne ciblait pas uniquement les jeunes initialement.
+	Leur travail pourrait donc être appliqué à des langages intermédiaires à avancés, qui correspondent mieux au domaine d'étude de la présente thèse.
+</p>
+<figure id=fig-hands>
+	<img src=figures/hands.jpg style="width:9cm">
+	<figcaption>Interface de l'environnement HANDS (figure extraite de [<a href=#myers_natural_2004>Mye04</a>]).</figcaption>
+</figure>
+
+<h3>Limites de l'état de l'art et leçons à tirer</h3>
+
+<p>
+	Malgré les nombreux travaux signalant le manque d'adéquation des langages de programmation à l'expression d'interactions, et les travaux présentés offrant des pistes d'améliorations, l'état des outils de programmation a peu évolué dans le sens voulu.
+	Nous imputons deux raisons principales à ce constat : la trop grande distance entre les besoins relevés et les améliorations techniques requises, et le manque de portée écologique des recommandations.
+</p>
+
+<h4>Des recommandations aux réalisations</h4>
+
+<p>
+	Les travaux que nous avons étudiés se concentrent sur la formulation de recommandations pour l'implémentation de langages ou de frameworks dédiés à l'interaction.
+	Malheureusement, la plupart de ces recommandations n'ont pas abouti à des réalisations tangibles.
+	Plusieurs raisons peuvent expliquer cette observation.
+	D'abord, l'implémentation de ces recommandations peut s'avérer beaucoup plus difficile qu'envisagé.
+	Lorsqu'on commence par modifier un langage ou framework existant, celui-ci a souvent une extensibilité limitée, qui peut imposer des contraintes inattendues aux solutions.
+	Si on souhaite développer un langage ou framework à partir de rien, il faudra développer de très nombreuses fonctionnalités pour obtenir un système testable en conditions réelles (ou même contrôlées).
+	Ensuite, l'ingénierie de langages et frameworks demande des compétences spécifiques, distinctes de l'ingénierie d'applications interactives.
+	Elle nécessitera de faire appel à des personnes n'ayant pas nécessairement participé à la définition des recommandations.
+	Si ces personnes n'ont pas été impliquées au début du projet, elles peuvent avoir des avis différents, qui risquent d'entraver et ralentir la poursuite du projet.
+	Enfin, nous observons qu'une fois présentées, les recommandations liées à l'évolution des systèmes interactifs sont souvent insuffisamment valorisées par leurs auteurs.
+	Il est probable qu'un “mur” effectif entre les idées et leurs réalisations décourage les auteurs, qui ont déjà investi beaucoup d'efforts dans l'identification de problèmes pertinents, et renoncent à investir plus d'efforts faute de perspectives claires de résultats.
+</p>
+<p>
+	<i>À quoi servent donc de telles recommandations ?</i>
+	Puisque peu de langages ont répondu à des recommandations énoncées en IHM, nous devons justifier leur intérêt, en particulier pour les Essentiels d'Interaction formulés dans ce manuscrit.
+	La fonction principale de ce type de recommandations n'est pas leur utilisation par d'autres chercheurs pour guider la conception de systèmes interactifs.
+	En effet, ces points sont toujours discutables, particulièrement lorsqu'ils ne se ramènent pas à des hypothèses vérifiables expérimentalement.
+	Ils peuvent éventuellement éclairer les décisions d'autres chercheurs, voire les conforter dans leurs décisions.
+	Néanmoins nous considérons que ce sont principalement des <i>déclarations d'intentions</i>.
+	On les formule afin de susciter des discussions, et de recueillir les avis d'autres chercheurs.
+	En ce sens, les Essentiels d'Interaction sont une étape de notre travail et non sa finalité.
+	Elles sont conçues pour orienter les réalisations présentées dans ce manuscrit, et n'ont pas de portée en outre.
+	Ainsi ce sont les réalisations techniques qui véhiculeront nos véritables recommandations sur l'évolution des outils de programmation des systèmes interactifs, et ce sont elles que nous nous efforcerons de valoriser à l'avenir.
+</p>
+<!-- <del><sh>Très bien, j'aime beaucoup ces deux derniers paragraphes.</sh></del> -->
+
+<h4>Des réalisations aux utilisateurs</h4>
+
+<p>
+	Parmi les travaux que nous avons étudiés, nous avons remarqué qu'ils répondent peu à la question <i>Pourquoi devrait-on améliorer les outils de programmation d'interactions ?</i>
+	Cette question doit justifier l'énumération de recommandations, et ensuite les travaux de modification des langages et frameworks de programmation.
+	C'est en y répondant qu'on peut convaincre les développeurs d'outils de programmation d'adopter nos recommandations.
+	Sans cela, il sera difficile pour eux d'imaginer les apports de telles contributions.
+	Cependant nous avons observé que certaines justifications sont endogènes, en ce qu'elles se ramènent à la difficulté des chercheurs à implémenter leurs recommandations, plutôt qu'à des besoins externes aux auteurs<!-- <del>s'appuient sur des problèmes causés par la recherche elle-même</del> -->.
+	Les solutions apportées tendent alors à s'éloigner des besoins exprimés par les utilisateurs des langages et frameworks d'interaction, au risque de ne plus les influencer.
+	Face à ce problème, il nous semble important de prévoir en amont l'<i>intégration écologique</i> des réalisations techniques à une communauté d'utilisateurs.
+</p>
+<p>
+	Cette communauté devrait être clairement identifiée, ainsi que l'a fait Fekete avec le Groupe de Travail Programmation.
+	Il est préférable également de travailler de pair avec elle, afin de s'assurer l'aboutissement des réalisations techniques et recueillir régulièrement des retours sur leur adoption.
+	De par nos observations des travaux ayant proposé des recommandations liées à l'interaction, nous considérons le rapprochement à une communauté d'utilisateurs comme un critère essentiel de réussite.
+<!-- 	<del>De plus, nous proposons d'énoncer un <i>critère de succès</i> pour chaque projet, lié à son adoption par des utilisateurs, afin de mesurer sa réussite, et d'en évaluer précisément la fin.<notesh>Où est-ce que tu reparles de ces "critères de succès" ?</notesh></del> -->
+	De plus, la réussite ou l'échec d'un projet devrait pouvoir être mesurée, à l'aide de critères énoncés au préalable.
+	Dans notre cas, nous évaluons la réussite de nos travaux à l'un de ces critères :
+</p>
+<ul>
+	<li>l'utilisation de nos outils par des développeurs extérieurs à nos collaborateurs directs</li>
+	<li>l'adoption d'un des concepts proposés, dans une autre bibliothèque logicielle que la nôtre</li>
+	<li>la publication de travaux inspirés par (ou remettant en question) nos résultats</li>
+</ul>
+
+<link rel=stylesheet href=style.css>
+<script src=scripts.js></script>
+<script>prefix_headers(2, 1)</script>

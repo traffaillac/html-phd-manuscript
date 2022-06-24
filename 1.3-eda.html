@@ -1,0 +1,537 @@
+<h2>État des connaissances sur le prototypage d'interactions</h2>
+<!--
+	_ Pourquoi doit-on faire un état des connaissances sur le prototypage d'interactions ?
+	_ Qu'aurait-on besoin de savoir fondamentalement ? Quelles questions en découlent ?
+	_ Quelles classes de travaux existent et à quelles questions répondent-elles ?
+-->
+<p>
+	Dans le cadre de cette thèse, il est important de faire un état des connaissances sur le prototypage de techniques d'interaction dans un contexte de recherche.
+	En effet, les outils de programmation d'interfaces et d'interaction ont été principalement conçus pour des utilisateurs souhaitant réutiliser des modalités d'interaction standard et éprouvées (ex. boutons, onglets, raccourcis clavier), et acceptant des interfaces stéréotypées.
+	Leurs besoins sont bien connus, et ont contribué à façonner les outils actuels.
+</p>
+<p>
+	Pour un contexte de recherche et de prototypage de nouvelles techniques d'interaction, les besoins sont moins bien connus, ce qui amène à mettre en question la pertinence des outils de création classiques pour ces usages.
+	De plus, la notion de “prototypage” est floue, elle s'applique dans de nombreux domaines, et n'est pas cantonnée à l'informatique.
+	Nous cherchons donc ici à clarifier l'<b>activité de programmation de prototypes fonctionnels démontrant des techniques d'interaction avancées</b>.
+	<!-- <del>Clarifier l'activité de prototypage nous aiderait à caractériser l'activité de recherche en nouvelles techniques d'interaction. <notesh>trop ambitieux...</notesh>
+	Enfin, la recherche est une cible mouvante, qui évolue avec les nouvelles technologies, et dont les méthodes évoluent aussi.</del> -->
+	L'état des connaissances présenté ici doit nous permettre de décrire cette activité aujourd'hui, afin de former une base à compléter par les travaux de cette thèse.<!-- <del><notesh>Je n'ai pas lu la suite encore, mais je pense d'ores et déjà qu'il faut que tu réduises dès ici à "clarifier l'activité de programmation de prototypes fonctionnels de nouvelles techniques d'interaction/techniques avancées" (et c'est ce que tu fais ensuite je pense), et pas de l'activité de prototypage complète, qui comporte une part de design/conception qui n'est pas l'objet de ton travail. Dis comme tu le dis, c'est un peu too much...</notesh></del> -->
+	Nous avons analysé les travaux existants selon un ensemble de questions :
+</p>
+<ul>
+	<li>Qu'est-ce qu'ils nous apprennent concrètement sur l'activité de programmation de techniques d'interaction avancées ?</li>
+	<li>À quels contextes s'intéressent-ils ?</li>
+	<li>Est-ce qu'ils soulèvent d'autres problématiques que celles que nous avons énoncées ?</li>
+	<li>Quelles solutions proposent-ils de réaliser ?</li>
+</ul>
+<!-- <del><p>
+	Nous avons donc commencé par énumérer un ensemble de questions liées à la compréhension du prototypage<notesh>du développement de prototypes</notesh> de nouvelles techniques d'interaction :</p>
+<ul>
+	<li>En quoi consiste le <i>prototypage</i>, et l'activité de recherche en IHM ?<notesh>En quoi consiste le développement de <i>prototypes</i> au sein de l'activité de recherche en IHM ?</notesh></li>
+	<li>Quelles activités occupent la majorité du temps et des efforts des chercheurs ?</li>
+	<li>Quels outils et frameworks sont principalement utilisés par les chercheurs ?</li>
+	<li>Quels problèmes les dérangent le plus selon différents critères ? (temps, efforts, créativité, évolutivité, maintenabilité, absence de bugs, performance)</li>
+	<li>Quels aspects des outils les aident le plus selon les mêmes critères ?</li>
+	<li>Comment réagissent-ils face aux difficultés rencontrées ?</li>
+</ul>
+<p>
+	Nous avons cherché en priorité des travaux répondant à ces questions.
+	Plus généralement, nous tentons de répondre à la question “<b>Comment supporter au mieux le développement de nouvelles techniques d'interaction ?</b>”<notesh>c'est assez abrupt et surprenant que tu passes directement à cette question très générale après avoir focusé très fort sur le prototypage/dév. de prototypes... en fait, en lien avec les 2 sections précédentes, est-ce que le raisonnement à mettre en avant ne serait pas:
+		<ul>
+			<li><notesh>les interfaces se sont stéréotypées à cause de certains usages/besoins et ont donc entrainé des outils adaptés mais stéréotypés eux aussi et  ne  permettant de s'écarter que très peu de ce type d'interfaces (cercle vicieux)</notesh></li>
+			<li><notesh>de plus en plus de besoin de sortir de ce type d'interfaces/techniques d'interaction pour (i) tester des hypothèses de recherche (recherche); (ii) s'adapter à de nouveaux usages (industrie).</notesh></li>
+			<li><notesh>le (ii) est quand même moins fréquent (à mon avis, mais c'est subjectif), donc du coup, en se focalisant sur le (i) -- développement de prototypes qui sortent des stéréotypes -- on devrait pouvoir améliorer (au moins en partie) toutes les situations.</notesh></li>
+		</ul>
+	</notesh>
+</p></del> -->
+<!--<traf>Commentaire pris en compte de façon générale dans l'introduction.</traf>-->
+<p>
+	Cet état de l'art est divisé en trois parties.
+	Dans la première partie, nous présentons une vue d'ensemble des types de travaux ayant pour but d'améliorer l'utilisabilité<!-- <del>usabilité <notesh>je suggère de dire plutôt utilisabilité qui me semble plus communément admis dans la communauté</notesh></del> --> des outils de programmation.
+	Ces travaux sont pour la plupart présentés pour des contextes hors recherche, cependant le fait qu'ils soient souvent testés et validés par des chercheurs nous incite à les mentionner ici.
+	Dans la deuxième partie, nous présentons le domaine de la Programmation Opportuniste [<a href=#brandt_writing_2009>Bra09</a>]<!-- <del><notesh>mettre une ref. ?</notesh></del> -->, qui a eu pour objet une activité de programmation similaire à la nôtre.
+	Dans la troisième partie, nous décrivons les travaux mentionnant ou visant spécifiquement le contexte de la recherche en IHM.
+</p>
+
+<h3 class=break>Utilisabilité des bibliothèques logicielles</h3>
+
+<!-- Le domaine d'étude de l'usabilité (ou utilisabilité) des outils de programmation est très vaste. Cependant nous énumérons les aspects sur lesquels les travaux se concentrent, car ces aspects influencent aussi certainement les chercheurs.
+	_ Qualité des APIs
+	_ Programmation par les utilisateurs (end-users)
+	_ Programmation par l'exemple
+	_ Fonctionnalités des environnements de développement (complétion, visualisation)
+	_ Conception et évaluation de design patterns
+-->
+<p>
+	Le domaine d'étude de l'utilisabilité des outils de programmation est très vaste.
+	La norme ISO 9241-11 [<a href=#iso/tc_159/sc_4_iso_2018>ISO18</a>] la définit comme « <i>le degré selon lequel un produit peut être utilisé par des utilisateurs identifiés pour atteindre des buts définis, avec efficacité, efficience et satisfaction dans un contexte d’utilisation spécifié</i> ».
+	L'utilisabilité des outils influence directement la productivité des programmeurs, et a motivé des recherches actives dans ce domaine.
+	Nous n'avons pas pour ambition de toutes les répertorier ici, <!-- <del>cependant les différents types de contributions nous aideront à acquérir une première compréhension des besoins des chercheurs en IHM.  <notesh> des besoins pour la recherche en IHM ?</notesh></del> -->mais l'étude des facteurs affectant l'utilisabilité peut nous aider à mieux comprendre l'activité de programmation à l'origine de ces facteurs.
+</p>
+
+
+<h4>Qualité des APIs</h4>
+
+<!-- TODO: Ajouter une analogie aux panneaux de contrôle avec 1 ou pleins de boutons -->
+<p>
+	Une API (<i>Application Programming Interface</i>) est l'ensemble des fonctions et types de données proposées par une bibliothèque logicielle pour ses utilisateurs (programmeurs).
+	Elle est l'interface entre les fonctionnalités de la bibliothèque et les programmeurs.
+	La conception d'une API implique le choix des fonctions qui sont exposées (certaines peuvent rester internes à la bibliothèque), leurs noms, ainsi que l'ordre dans lequel elles vont être utilisées.
+	C'est le résultat d'un compromis entre puissance d'utilisation (contrôler chaque aspect de la bibliothèque), et simplicité (utiliser moins de fonctions).
+	L'API est le deuxième artefact auquel sont confrontés les utilisateurs d'une bibliothèque (après la documentation).
+	Elle conditionne la quantité de code qu'ils vont écrire, et le temps qu'ils vont passer à comprendre sa logique.
+	C'est donc un élément majeur de l'<i>expérience utilisateur</i> de toute bibliothèque logicielle.
+</p>
+<p>Les contributions caractéristiques liées aux API ont pour objets de :</p>
+<ul>
+	<li>déterminer ce qu'est une <i>bonne</i> API [<a href=#bloch_how_2006>Blo06</a>, <a href=#mclellan_building_1998>McL98</a>]</li>
+	<li>déterminer ce qu'est une <i>mauvaise</i> API [<a href=#piccioni_empirical_2013>Pic13</a>, <a href=#grill_methods_2012>Gri12</a>, <a href=#zibran_useful_2011>Zib11</a>, <a href=#henning_api_2009>Hen09</a>]</li>
+	<li>mesurer le succès ou l'utilisabilité d'une API [<a href=#bore_profiling_2005>Bor05</a>]</li>
+	<li>faciliter leur apprentissage par des utilisateurs [<a href=#duala-ekoko_asking_2012>Dua12</a>, <a href=#robillard_field_2011>Rob11</a>, <a href=#ko_role_2011>Ko11</a>, <a href=#robillard_what_2009>Rob09</a>]</li>
+	<li>favoriser leur utilisation “correcte”, c'est-à-dire comme l'ont anticipé leurs concepteurs [<a href=#saied_observational_2015>Sai15</a>]</li>
+	<li>permettre l'évolution d'APIs existantes pour accompagner celle des bibliothèques [<a href=#stylos_case_2008>Sty08</a>]</li>
+</ul>
+<!-- <del><sh>OK, mais là c'est plus une liste de références... il faudrait faire un petit paragraphe de synthèse après cette liste pour en tirer des conclusions/enseignements, et en particulier ce qui a un lien avec ta question de recherche (comme tu le fais dans la sous-section suivante 1.3.1.2)</sh></del> -->
+<!--
+	_ facteurs influençant l'utilisabilité d'une bibliothèque : son API, des métriques définies, un apprentissage facile, une utilisation conforme, son évolutivité
+	_ nous apprennent sur l'activité de programmation : on peut quantifier/mesurer en partie son succès (à l'aide de métriques de causes ou conséquences ?), le modèle mental qu'on se fait d'une lib est très important (lier aux travaux sur mesures), beaucoup de travaux cherchent à combler le Gulf of Execution, les connaissances rassemblées sur les APIs tendent à révéler des comportements "universels" (préférer un faible nombre de fonctions, ...) -> on peut s'appuyer sur des tendances générales parmi les utilisateurs (non démontrées, mais déduites par le croisement de nombreuses sources)
+	_ s'intéressent aux contextes : industriels, pour lesquels l'optimisation d'une API doit avoir un impact mesurable (bor05), qui justifie en retour l'investissement qu'on y a mis
+	_ soulèvent les problématiques : la flexibilité est à double tranchant et peut désorienter les novices (Pic13), confirmation de l'importance de la complexité (Gri12)
+	_ proposent les solutions :
+-->
+<p>
+	Par les connaissances qu'ils nous donnent sur l'utilisation des APIs, ces travaux soulignent que l'activité de programmation repose sur la formation d'un modèle mental de la bibliothèque utilisée, et qu'on observe principalement les symptômes de son inconsistance [<a href=#ko_role_2011>Ko11</a>, <a href=#grill_methods_2012>Gri12</a>, <a href=#duala-ekoko_asking_2012>Dua12</a>].
+	Dans cette optique, l'apprentissage est une part importante des efforts consacrés à l'utilisation d'une bibliothèque [<a href=#robillard_field_2011>Rob11</a>], et les concepteurs d'APIs reconnaissent que leurs choix de conception ont des conséquences importantes qu'il faut anticiper.
+	Enfin, les recommandations faites par ces travaux nous révèlent des hypothèses sur les programmeurs, qui sans être démontrées explicitement, peuvent être inférées à partir des observations.
+	Ainsi les programmeurs seraient réfractaires au changement [<a href=#bloch_how_2006>Blo06</a>], consacrent peu d'efforts à la lecture de documentations [<a href=#duala-ekoko_asking_2012>Dua12</a>], ne font jamais ce qu'on attend d'eux [<a href=#bloch_how_2006>Blo06</a>], et supportent mal l'ambiguïté dans une documentation [<a href=#bore_profiling_2005>Bor05</a>].
+</p>
+<p>
+	Les problématiques soulevées ici sont principalement la complexité des APIs, et le temps passé à les utiliser.
+	De plus, les travaux que nous avons étudiés décrivent peu les contextes dans lesquels ils s'appliquent, se concentrant principalement sur l'expérience de programmation de leurs participants, et décrivant des tâches génériques pouvant s'appliquer dans plusieurs contextes.
+	Ces travaux s'inscrivent principalement dans un cadre industriel, pour lequel l'optimisation d'une API doit avoir un impact mesurable [<a href=#bore_profiling_2005>Bor05</a>], qui puisse justifier en retour ce qu'on y investit.
+</p>
+<p>
+	À la lumière de l'importance des choix de conception, les solutions proposées sont souvent d'étudier soigneusement des scénarios d'utilisation avant de concevoir une API [<a href=#stylos_case_2008>Sty08</a>].
+	Certains auteurs proposent aussi de fournir des exemples et une documentation cohérente pour faciliter la construction d'un modèle mental consistant [<a href=#robillard_field_2011>Rob11</a>, <a href=#ko_role_2011>Ko11</a>], et de concevoir de nouveaux outils pour l'exploration et l'utilisation d'une API [<a href=#duala-ekoko_asking_2012>Dua12</a>].
+</p>
+
+<h4>Programmation par les utilisateurs finaux</h4>
+
+<!--
+	_ Qu'est-ce que la programmation par l'exemple/démonstration ?
+	_ Qui l'a mis en oeuvre notablement ?
+	_ Pourquoi l'utilise-t-on principalement ?
+	_ Dans quels contextes s'utilise-t-elle ? (domotique)
+	_ Quels rapports entre ces contextes et celui qui nous intéresse ?
+	
+	_ Qu'est-ce que la programmation par les utilisateurs finaux ?
+	_ Qui est notable pour l'avoir développée/étudiée ?
+	_ Quelles sont ses influences/recommandations les plus importantes ?
+	_ Contextes/rapports avec celui qui nous intéresse
+-->
+<p>
+	La Programmation par les Utilisateurs Finaux (<i>End-User Programming</i>) désigne les outils permettant à des personnes qui ne se considèrent pas comme des développeurs professionnels, de programmer.
+	Ces outils se substituent généralement aux langages de programmation, en laissant les utilisateurs décrire des comportements et des structures de données, sans nécessiter la maîtrise d'un langage.
+	Les tableurs comme Excel sont un exemple de programmation par les utilisateurs finaux : la manipulation de formules dans les cellules d'un tableur permet, comme avec un langage, de spécifier des comportements complexes de transformation de données.
+</p>
+<p>On trouve de la programmation par les utilisateurs finaux dans :</p>
+<ul>
+	<li>les tableurs (ex. Excel, Google Docs, Open/Libre Office)</li>
+	<li>la programmation visuelle, avec des paradigmes par flux de données [<a href=#appert_flowstates_2009>App09</a>, <a href=#dragicevic_input_2001>Dra01</a>], machines à états [<a href=#appert_swingstates_2006>App06</a>, <a href=#buxton_three-state_1990>Bux90</a>], ou réseaux de Pétri [<a href=#navarre_model-based_2001>Nav01</a>, <a href=#beaudouin-lafon_architecture_2000>Bea00</a>]</li>
+	<li>la programmation par démonstration (ou par l'exemple), dans laquelle le système observe les actions de l'utilisateur pour les reproduire en les traduisant en un programme [<a href=#myers_visual_1986>Mye86</a>, <a href=#cypher_watch_1993>Cyp93</a>, <a href=#lieberman_your_2001>Lie01</a>]<!-- <del><notesh>Deux autres réf. communes de PBD: <a href="https://mitpress.mit.edu/books/watch-what-i-do">Watch What I do</a> et <a href="https://www.sciencedirect.com/book/9781558606883/your-wish-is-my-command">Your wish is my command</a></notesh></del> --></li>
+	<li>les langages de scripts, dans une moindre mesure, lorsqu'ils sont destinés à des utilisateurs avec une faible expérience de la programmation (ex. Arduino, Processing, PHP)</li>
+</ul>
+<p>
+	Ce type de programmation est particulièrement utile dans les contextes où se rencontrent des utilisateurs qui ne sont pas des développeurs de formation (ex. domotique, production audiovisuelle, arts, administration).
+	C'est aussi le cas dans le domaine IHM, où cohabitent des personnes issues des domaines Informatique, Design, et Sciences Sociales.
+	En outre, c'est un moyen d'améliorer l'adaptabilité des systèmes interactifs, en permettant aux utilisateurs de ces systèmes de les paramétrer et les contrôler au plus près de leurs besoins.
+	<!-- <del><noteSH>Tu peux dire que c'est un moyen pour améliorer l'adaptabilité des systèmes interactifs, en permettant aux utilisateurs de les paramétrer et les contrôler au plus près de leurs besoins. (pas forcément besoin de ref, c'est un peu une évidence, mais au pire tu peux citer <a href="https://www.springer.com/gp/book/9781402042201">ce livre</a></noteSH>
+	En particulier, certains travaux de modélisation des techniques d'interaction s'apparentent à de la programmation par les utilisateurs finaux — comme Proton, qui permet de créer de nouveaux types de gestes à l'aide d'un outil graphique [<a href=#kin_proton_2012>Kin12</a>]. <notesh>Il y a peut-être aussi des inconvénients, non ?</notesh></del> -->
+</p>
+<!-- Activité de programmation :
+	_ Part importante de l'apprentissage et de l'expertise
+	_ La plupart des techniques d'interaction se représentent bien avec des graphes d'états, où les arêtes sont les actions que vont réaliser les utilisateurs -> les actions sont généralement en nombre raisonnable, et plutôt séquentielles, donc se prêtent bien à la EUD
+	_ Construction incrémentale d'un programme, en conservant toujours quelque chose qui fonctionne
+-->
+<p>
+	Tout comme les travaux sur l'utilisabilité des APIs, on remarque ici que l'apprentissage et l'expertise jouent un rôle crucial, puisque les travaux discutés dans cette section ont pour but de les réduire.
+	La programmation visuelle se dégage des autres domaines, car elle a été utilisée extensivement pour programmer des techniques d'interaction.
+	En effet, la plupart des techniques d'interaction se représentent bien avec des graphes, où les arêtes sont les actions que doivent réaliser les utilisateurs.
+	Le nombre d'actions à prendre en compte étant souvent réduit, et les tâches principalement séquentielles (à cause de la difficulté humaine à gérer des tâches simultanées), il est envisageable de représenter ces graphes visuellement.
+	On remarque enfin que beaucoup de travaux de programmation par les utilisateurs finaux sont liés à une construction <i>incrémentale</i> des programmes.
+	Cette méthode de programmation consiste à maintenir un programme fonctionnel (mais incomplet) à tout instant, et d'ajouter au fur et à mesure les fonctionnalités manquantes, plutôt que d'obtenir un programme fonctionnel uniquement à la fin du développement.
+	La construction incrémentale est particulièrement adaptée à la programmation des interactions humaines, lorsque celles-ci sont segmentées en tâches (elles-mêmes subdivisées en actions).
+</p>
+<!-- Problématiques :
+	_ Ticket d'entrée élevé de la programmation d'interactions
+	_ Gulf of Evaluation -> difficulté de contrôler qu'un programme fait bien ce qu'on veut qu'il fasse
+	_ Difficulté d'abstraire le fonctionnement d'une technique quand les actions à réaliser sont très concrètes
+-->
+<p>
+	Pour ce qui est des problématiques soulevées ici, la programmation par les utilisateurs finaux répond principalement au “ticket d'entrée” élevé de la programmation d'interfaces et d'interactions.
+	Comme nous l'avons évoqué au début de cette thèse, les systèmes informatiques sont des écosystèmes très complexes, qui dissuadent les novices de contribuer à proposer de nouvelles formes d'interaction.
+	Les plateformes proposées ici cachent donc une partie de cette complexité, améliorant l'accessibilité à la programmation d'interactions.
+	En outre, elle répondent à la difficulté pour les programmeurs novices d'<i>abstraire</i> le fonctionnement d'une technique d'interaction, quand les actions à réaliser semblent très concrètes.
+	Un périphérique d'interaction pourra par exemple être représenté avec un objet manipulable directement, sur lequel le programmeur pourra attacher des comportements [<a href=#dragicevic_input_2001>Dra01</a>].
+	Enfin, une autre problématique soulevée par ces travaux est qu'il est difficile avec des frameworks “classiques” de contrôler qu'un programme (ou une portion d'un programme) se comporte comme on le souhaite.
+	C'est particulièrement important dans des contextes de sûreté de fonctionnement, pour lesquels il est essentiel d'avoir une vue complète et inambigue du programme.
+	Pour ce problème, des représentations plus riches (telles qu'en programmation visuelle) permettront d'inclure plus de détails, pour décrire exhaustivement l'état du programme.
+</p>
+<!-- Contextes :
+	_ très spécifiques, pour des raisons et des besoins précis
+	_ tableurs -> bureautique
+	_ visuelle -> critique, arts, enseignement
+	_ Dans le cas de la programmation visuelle, l'intérêt est pour la spécification rigoureuse, d'avoir une représentation complète et inambigue
+	_ pbd -> domotique, robotique, enseignement
+	_ scripts -> non-programmeurs
+-->
+<p>Les contextes auxquels s'adresse la programmation par les utilisateurs finaux sont très variés et spécifiques, chacun avec des besoins précis :</p>
+<ul>
+	<li>Les tableurs sont conçus pour l'automatisation des tâches de bureautique.</li>
+	<li>La programmation visuelle est utilisée pour la sûreté de fonctionnement, mais aussi dans les arts, et l'enseignement.</li>
+	<li>La programmation par démonstration est utilisée en domotique, qui se prête bien à la définition de règles simples (ex. <i>Si quelqu'un entre dans la pièce, allumer la lumière</i>), mais aussi en robotique, et en enseignement.</li>
+	<li>Les langages de scripts “accessibles” sont utilisés dans tous les domaines où de nombreux programmeurs sont novices ou autodidactes (ex. Web, informatique embarquée, arts).</li>
+</ul>
+<!-- Solutions :
+	_ principalement des outils complets autonomes, qui contrôlent en grande partie l'expérience utilisateur, et épargnent l'interaction avec d'autres outils (pour minimiser le ticket d'entrée)
+-->
+<p>
+	Pour finir, la majorité des solutions proposées dans les travaux étudiés ici sont des plateformes complètes et autonomes.
+	Elles contrôlent ainsi en grande partie l'expérience utilisateur, et épargnent aux utilisateurs l'interaction avec d'autres outils.
+	Cette autonomie leur permet de réduire les connaissances nécessaires avant de commencer à programmer, au prix d'une liberté plus limitée pour concevoir des techniques avancées.
+	En outre, dans le cas de l'utilisation de programmation visuelle, une question beaucoup débattue est celle du choix par rapport à un modèle de programmation textuelle [<a href=#conversy_existe-t-il_2013>Con13</a>].
+	Historiquement on les distinguait clairement, par l'utilisation d'un éditeur de texte d'un côté, et d'un éditeur graphique de l'autre.
+	Or aujourd'hui les deux mondes tendent à se rapprocher, avec des éditeurs capables de gérer aussi bien du texte que des formes graphiques.
+	La question est alors de savoir <i>comment</i> combiner le meilleur des deux mondes [<a href=#conversy_unifying_2014>Con14</a>].
+	Un exemple notable est l'exploration d'une interface pour apprendre la programmation par Bret Victor, qui enrichit l'interactivité du texte, et présente des vues graphiques sur le code [<a href=#victor_learnable_2012>Vic12</a>].
+	Des pistes de solutions sont donc possibles et à explorer, qui intègreraient des éléments de programmation visuelle avec des langages textuels.
+</p>
+
+<!-- <del><sh>Quelque chose qui est à mon avis transversal à tout ça, et qui mériterait peut-être sa propre section à la suite de celles-là est la question du "Visual Programming" (ça peut-être lié au End User Programming, au Prog. By Exemple/Demonstration, aux IDE). C'est un composant de l'utilisabilité de la programmation, non ? Et du coup, il faudrait parler et discuter des publications de S. Conversy sur le sujet <a href="https://hal.inria.fr/hal-00737414">A visual perception account of programming languages : finding the natural science in the art</a>, <a href="https://dl.acm.org/citation.cfm?doid=2534903.2534911">Existe-t-il une différence entre langages visuels et textuels en termes de perception?</a>, <a href="https://dl.acm.org/citation.cfm?doid=2661136.2661138">Unifying Textual and Visual: A Theoretical Account of the Visual Perception of Programming Languages</a> (qui est si je ne me trompe pas une version plus avancée des 2 précédents), et son <a href="https://tel.archives-ouvertes.fr/tel-00853192">HDR</a>.</sh></del> -->
+<!--<traf>Discussion intégrée à cette section, car la programmation visuelle y était déjà mentionnée. De plus c'est un domaine que je connais très mal et qui est assez éloigné de ce que je fais (les domaines où c'est utilisé sont assez uniques et semblent obéir à leurs propres règles, il est difficile d'en tirer des choses applicables ici), donc j'ai fait le minimum pour ne pas risquer de dire n'importe quoi.</traf>
+<sh>Oui, c'est bien et suffisant</sh>-->
+
+<!-- <del><sh>De même, j'aurai bien vu une petite discussion un peu plus approfondie sur les modèles de programmation (objet, impératif, fonctionnel, data-flow, orienté états) sous l'angle de l'utilisabilité pour programmer l'interaction.</sh></del> -->
+<!--<traf>Pareil, je n'ai pas suffisamment d'expérience et de recul pour comparer les 4. De façon générale j'éviterais de les confronter directement, c'est un vieux débat houleux et je crois que le consensus académique aujourd'hui est de ne pas se prononcer dessus. Je parle quand même des différents modèles dans les Essentiels d'Interaction.</traf>
+<sh>OK !</sh>-->
+
+<h4>Environnements de développement intégrés</h4>
+
+<!--
+	_ Qu'est-ce qu'un environnement de développement ?
+	_ À quoi est-ce que ça sert ? (complétion automatique de code, coloration syntaxique, navigation dans les fichiers/classes, repliement de code/commentaires, intégration avec des outils de tests/régressions/versions/bug reporting, débugur, gestion des dépendances et toolchain de compilation)
+	_ On l'utilise principalement parce que ça fait gagner un temps considérable (ref ?)
+	_ Sur quoi se sont concentrés les travaux de recherche ? (complétion de code plus pertinente/contextuelle/experte, visualisation de code, recherche de documentation intégrée)
+-->
+<p>
+	Un Environnement de Développement Intégré (IDE, pour <i>Integrated Development Environment</i>) est un ensemble d'outils, généralement fournis dans un même programme, qui forment un environnement complet de programmation dans le but d'optimiser la productivité des utilisateurs.
+	Parmi les IDE connus, on peut citer Eclipse, Visual Studio, Xcode, ou encore Qt Creator.
+	Ils contiennent toujours un éditeur de texte, et un compilateur/interpréteur pour chaque langage de programmation supporté.
+</p>
+<p>En plus de ces fonctionnalités basiques, chaque IDE se distingue par des fonctionnalités avancées, qui peuvent offrir des gains de temps significatifs à leurs utilisateurs :</p>
+<ul>
+	<li>la coloration syntaxique, qui utilise un codage par couleur pour distinguer les différents éléments syntaxiques du programme (mots clés du langage, noms de variables, noms de fonctions, constantes)</li>
+	<li>la complétion automatique de code, qui permet sur pression d'une touche d'insérer un nom de fonction ou un bloc de code sans avoir à le taper entièrement au clavier</li>
+	<li>la navigation dans les fichiers et classes d'un même <i>projet</i> (ou entre projets), afin de passer rapidement des uns aux autres</li>
+	<li>le pliage de code, qui permet de cacher des blocs de code source (commentaires, corps de classe/fonction) afin de se concentrer sur le reste</li>
+	<li>l'intégration d'outils de tests, de débogage, ou de gestion des versions, accessibles à l'aide de raccourcis clavier, et dans des interfaces directement intégrées à l'IDE</li>
+	<li>l'export d'un projet dans une archive prête à installer et utiliser, afin de faciliter sa diffusion</li>
+</ul>
+<p>
+	Les environnements de développement sont un domaine de recherche actif, en particulier pour améliorer la contextualité et la pertinence des suggestions de code [<a href=#omar_active_2012>Oma12</a>, <a href=#mooty_calcite_2010>Moo10</a>, <a href=#bruch_learning_2009>Bru09</a>], la visualisation du code et des dépendances entre blocs de code [<a href=#conversy_visual_2012>Con12</a>, <a href=#asenov_effect_2016>Ase16</a>], et un accès à la documentation intégré aux outils de développement [<a href=#oney_codelets_2012>One12</a>, <a href=#duala-ekoko_using_2011>Dua11</a>, <a href=#zhong_mapo_2009>Zho09</a>].
+</p>
+<!-- Activité de programmation :
+	_ utilisation importante des fonctionnalités de raccourcis
+	_ combinaison de plusieurs outils qui améliorent indépendamment la qualité du logiciel (éditeur, compilateur, sauvegarde en ligne, tests, débogage, déploiement)
+	_ alternance entre des vues détaillées (code) et des vues d'ensemble (liste de fichiers, diagrammes UML)
+	_ importance de l'utilisation extensive du spectre visuel humain (conversy)
+-->
+<p>
+	Les connaissances que ces travaux nous apportent sur l'activité de programmation avec un IDE sont d'abord que les programmeurs <i>font usage</i> des fonctionnalités de facilitation de code, qui justifient l'intérêt et le succès d'outils comme Eclipse, ou Sublime Text.
+	Ensuite, l'intégration des différents outils dans une même interface nous rappelle que l'activité de programmation (y compris de techniques d'interaction) met en œuvre de nombreux outils : éditeur de texte, compilateur/interpréteur, sauvegarde et synchronisation du code en ligne, tests unitaires, débogage, et génération d'un installeur pour déploiement.
+	Lorsque chaque outil nécessite un apprentissage distinct, des approches plus accessibles comme celles présentées dans la partie précédente sont envisageables.
+	Une autre connaissance à tirer de l'utilisation des IDEs est la coexistence de vues détaillées (le code de l'application) avec des vues d'ensemble (ex. la liste des fichiers du projet, ou des diagrammes UML [<a href=#duruisseau_visuml_2018>Dur18</a>]).
+	L'activité de programmation requiert donc différents niveaux d'inspection, selon qu'on souhaite raisonner sur l'ensemble du projet ou se concentrer sur une portion précise.
+	Enfin, le succès des environnements de développement souligne l'importance d'une utilisation extensive du spectre visuel humain, avec l'exemple courant de la coloration syntaxique, et des travaux explorant des différenciations plus riches [<a href=#asenov_effect_2016>Ase16</a>, <a href=#conversy_unifying_2014>Con14</a>].
+</p>
+<!-- Problématiques :
+	_ trop grande quantité d'information accessible aux programmeurs (documentation, API, mais aussi surcharge visuelle)
+	_ unifier tous ces outils et limiter la friction entre eux (oma12,moo10) -> même problème que l'utilisation de plusieurs bibliothèques simultanément
+-->
+<p>
+	Un problème majeur auquel tentent de répondre les IDEs est en effet la trop grande quantité d'information accessible aux programmeurs.
+	Elle inclut la documentation, les tutoriels et forums d'entraide en ligne, les APIs, mais aussi la surcharge visuelle due aux modules de l'interface se partageant l'écran.
+	Cette remarque appuie le problème de complexité que nous avons soulevé au début de cette thèse.
+	Les travaux présentés ici cherchent moins à réduire cette quantité d'information, qu'à la <i>hiérarchiser</i>, c'est-à-dire mettre en valeur les éléments plus importants.
+	Ils aident ainsi les programmeurs à composer avec la complexité, lorsque celle-ci semble inévitable.
+</p>
+<!-- Contextes :
+	_ peu définis, comme pour les APIs
+-->
+<!-- Solutions :
+	_ des outils intégrés aux IDEs plutôt qu'indépendants (oma12)
+	_ des outils avec une meilleure compréhension du contexte et capables de s'y adapter (bru09)
+-->
+<p>
+	Pour finir, comme pour les travaux sur la qualité des APIs, les contextes de programmation visés ici sont peu définis, les auteurs s'adressant souvent à des programmeurs avec au moins une certaine expérience.
+	Beaucoup des travaux que nous avons étudiés plaident en faveur de contributions intégrées aux IDEs existants, plutôt que comme des outils indépendants [<a href=#mooty_calcite_2010>Moo10</a>, <a href=#stylos_jadeite_2009>Sty09</a>].
+	Ainsi que l'écrit Omar à propos de ces deux articles [<a href=#omar_active_2012>Oma12</a>], « <i>Empirical evidence presented in these studies, however, suggests that directly integrating these kinds of tools into the editor is particularly effective</i> ».
+	Une autre caractéristique utile des outils contribuant à l'activité de programmation est l'observation et l'adaptation au contexte d'utilisation.
+	Bruch et al. l'illustrent par un outil de complétion de code qui trie les suggestions par pertinence dans le contexte courant d'utilisation estimé dynamiquement [<a href=#bruch_learning_2009>Bru09</a>].
+</p>
+
+<h4>Connaissances issues de ces travaux</h4>
+
+<!-- <del><p>
+	Le nombre et la variété des travaux sur les APIs nous indiquent que la découverte et l'utilisation d'une API est une part importante des efforts des programmeurs utilisant une bibliothèque logicielle.
+	De même, le développement de modèles et outils pour limiter l'usage de langages de programmation pour les utilisateurs finaux, nous indiquent que la complexité des langages et outils existants est un problème majeur pour les programmeurs.<notesh>Je ne comprends pas bien l'argument, là... je ne vois pas en quoi le fait que l'on cherche à "simplifier" la programmation pour les non-programmeurs dénote aussi de la complexité de la programmation pour les programmeurs. Le problème me semble bien plus compliqué que cela. Il y a par exemple le "entry fee" qui ne sera pas le même (un programmeur doit s'y mettre et apprendre à maitriser la complexité, un non-programmeur non, et donc il faut trouver des moyens pour qu'il s'y mette à moindre cout). C'est il me semble lié à un compromis puissance-expressivité vs complexité différent pour les deux populations. Il faut aussi faire la différence entre complexité de la tâche (la programmation est la plupart du temps une tâche compliquée en soit) et le fait que l'outil qui permet de faire la tâche est compliqué d'usage (et rajoute ou non de la complexité, permet de la maitriser, etc.). C'est une partie du discours de Norman dans son bouquin Living with Complexity, qui à mon avis s'applique ici aussi. Ça vaut aussi pour la dernière phrase du paragraphe.</notesh>
+	Enfin, par les nombreux travaux touchant aux environnements de développement, nous pouvons estimer qu'ils sont aujourd'hui essentiels aux programmeurs, en particulier pour atténuer <notesh>maitriser plutôt que d’atténuer</notesh> la complexité de la tâche de programmation.
+</p></del> -->
+<p>
+	La plupart des travaux que nous avons étudié ici ont en commun un rapport étroit avec la <i>complexité</i>.
+	Ils s'intègrent dans un écosystème complexe, qu'ils cherchent à rendre plus accessible pour les programmeurs.
+	Dans le cas des travaux sur la qualité des APIs, la complexité est celle des interfaces avec les bibliothèques logicielles, qui reflète leur puissance et leur expressivité.
+	Dans le cas des outils de programmation par les utilisateurs finaux, ce sont les langages de programmation qui sont en cause.
+	Enfin pour les IDEs, la complexité réside essentiellement dans les sources de documentation, et l'accumulation visuelle d'informations.
+	Dans tous les cas, les travaux que nous avons étudiés cherchent peu à réduire la complexité, mais plutôt à la rendre acceptable.
+	Comme l'écrit Niedoba [<a href=#niedoba_managing_2019>Nie19</a>], « <i>Simplification is necessary. But there is a point, simplification reaches a limit. The limit is an unavoidable complexity</i> ».
+	On peut ainsi distinguer la complexité de la tâche (qui dépend de celle du système informatique), de la complexité de l'outil pour réaliser la tâche.
+	En admettant que la tâche soit aussi simple qu'elle puisse l'être, c'est l'utilisabilité de l'outil qui est en cause [<a href=#norman_living_2010>Nor10</a>].
+</p>
+<!--<sh>Bien !</sh>-->
+<p>
+	Ainsi, beaucoup des travaux d'utilisabilité des outils de programmation que nous avons étudiés se concentrent sur l'<i>interface</i> entre la bibliothèque logicielle et ses utilisateurs — c'est-à-dire les outils et documents qui permettent aux programmeurs d'interagir avec la bibliothèque.
+	Par ce choix, peu de travaux remettent en question la bibliothèque, son fonctionnement interne, ou sa position dans l'écosystème de bibliothèques auxquelles sont confrontés les utilisateurs.
+	En ce sens, c'est implicitement à l'utilisateur de s'adapter, et l'interface est là pour l'y aider.
+	Nous sommes encore loin d'un support de la co-adaptation (adaptation de la technologie par les utilisateurs, pour leur contexte) tel que mis en évidence par Mackay [<a href=#mackay_responding_2000>Mac00</a>], ni même d'une adaptation à l'initiative de la machine.
+	Des travaux comme la programmation par démonstration font de l'interface un traducteur (entre l'intention de l'utilisateur et les capacités de l'outil) qui épargne en partie cette adaptation, cependant ils sont limités en puissance d'expression et généralement peu utilisés aujourd'hui.<!-- <del><notesh>bien ce paragraphe</notesh></del> -->
+</p>
+<p>
+	Ainsi, la seule observation des travaux sur l'utilisabilité des outils de programmation peut nous laisser penser que les tâches de programmation sont préétablies, immuables, et doivent être correctement enseignées.
+	Nous considérons au contraire qu'il convient de remettre en question la nature de certaines tâches, dans une démarche effective de simplification, ce que nous abordons dans ce travail de thèse.<!-- <del>les difficultés liées à la communication entre plusieurs bibliothèques, ou à leur architecture logicielle, sont négligeables.<notesh>et ? Il faut que tu rajoutes un truc du genre "mais ce n'est pas le cas, et nous considérons que c'est une des racines du problèmes que nous abordons dans notre travail", non ?</notesh></del> -->
+</p>
+
+<h3>Développement opportuniste et <i>mashups</i></h3>
+
+<!--
+	_ Qu'est-ce que la programmation opportuniste de façon générale ?
+	_ Définition formelle de la programmation opportuniste
+	_ Dans quels contextes s'applique-t-elle ?
+	_ Pourquoi a-t-on défini cette notion ?
+	_ Quelles réponses donne-t-elle aux questions qu'on a posées, dans son contexte d'origine ?
+	_ En quoi notre contexte est similaire à leur contexte ?
+	_ En quoi notre contexte est différent de leur contexte ?
+	_ Que peut-on en déduire en réponses applicables pour nous ?
+	_ Quelles connaissances manquent encore ?
+-->
+<p>
+	Le développement <i>opportuniste</i> [<a href=#brandt_opportunistic_2008>Bra08</a>] et les applications composites (<i>mashups</i>) [<a href=#cao_end-user_2010>Cao10</a>, <a href=#weiss_evolution_2010>Wei10</a>] font référence à des pratiques de développement étudiées depuis une dizaine d'années, qui se concentrent sur le développement rapide d'application, quelle que soit la qualité du résultat.
+	On relie généralement ce type de pratiques aux communautés de “bidouilleurs”, au mouvement <i>Do It Yourself</i>, ainsi qu'à l'étape de prototypage dans un projet.
+	En effet, depuis le développement relativement récent du Web, les outils de développement et de diffusion des “créations informatiques” ont gagné en accessibilité, attirant de nombreux développeurs non-professionnels.
+	L'accroissement du nombre de développeurs aidant, des communautés se sont formées autour de la création informatique (ex. Arduino, Processing, Raspberry Pi), se distinguant des autres communautés par l'inclusion de membres amateurs.
+	Ces développeurs ont des usages particuliers, distincts des communautés plus professionnelles, et ont donc motivé des travaux de recherche afin de les comprendre, et de mieux supporter leurs usages.<!-- <del> et de mieux les supporter. <notesh>"de mieux supporter ces usages" (il vaut mieux répéter usages, on a l'impression que c'est comprendre et supporter les développeurs, ce qui est légèrement différent)</notesh></del> -->
+</p>
+<p>
+	Parmi ces recherches, le domaine de la programmation opportuniste s'est développé autour des pratiques de développements ponctuels, marqués par des projets de durées courtes, qui ne s'inscrivent pas dans des projets plus ambitieux.
+	L'édition de novembre 2008 (volume 25, numéro 6) d'IEEE Software en dresse une vue d'ensemble, à laquelle les lecteurs intéressés peuvent se référer [<a href=#ieee_computer_society_opportunistic_2008>IEE08</a>].
+	Brandt [<a href=#brandt_opportunistic_2008>Bra08</a>] définit la Programmation Opportuniste ainsi : « <i>It is an activity where non-trivial software systems are constructed with little to no upfront planning about implementation details, and ease and speed of development are prioritized over code robustness and maintainability</i> ».
+	Les mashups sont une pratique connexe à la programmation opportuniste, qui s'apparente à la réutilisation et la combinaison d'artefacts qui n'ont pas nécessairement été conçus pour être réutilisés.
+	Yu et al. [<a href=#yu_understanding_2008>Yu08</a>] les définissent dans le contexte du Web par : « <i>Web mashups are Web applications generated by combining content, presentation, or application functionality from disparate Web sources</i> ».
+</p>
+<p>
+	La programmation de nouvelles techniques d'interaction dans un contexte de recherche se rapproche de la programmation opportuniste, en ce que les chercheurs se concentrent sur le résultat, souvent au détriment de sa robustesse.
+	Les travaux de ce domaine nous aident donc à clarifier en quoi les activités de programmation en IHM sont “opportunistes”.
+<!-- 	<del>en ce qu'elle est souvent qualifiée d'opportuniste.<notesh>La Palice n'aurait pas dit mieux :D</notesh>
+	Ces travaux nous aident donc à clarifier l'aspect opportuniste de ces activités.</del> -->
+	D'après Brandt [<a href=#brandt_two_2009>Bra09</a>], elles consistent en :
+</p>
+<ul>
+	<li>l'apprentissage ponctuel de nouvelles compétences et méthodes</li>
+	<li>la clarification et l'extension de connaissances existantes</li>
+	<li>la réobtention de connaissances jugées inutiles à retenir</li>
+</ul>
+<!-- <del><notesh>Il faudrait peut-être développer un peu (plus concrètement ?) en quoi ces 3 points sont pertinents et se retrouvent dans le contexte recherche et dév. de nouvelles techniques d'interaction ?</notesh>
+<p>
+	Or ces travaux, s'ils nous aident à comprendre une partie de l'activité de création de nouvelles techniques d'interaction, donnent peu de pistes quant aux outils qui pourraient faciliter cette activité.<notesh>OK, mais du coup, est-ce que cela permet au moins de tirer des questions de recherche à explorer sur les outils à concevoir pour cette activité ? Si oui, lesquelles et en quoi elles viennent alimenter ta problématiques ? (l'idée est quand même qu'à la fin de l'état de l'art tu factorise un peu toutes ces discussions/questions ouvertes sur ces travaux dont tu parles dans ces 3 différents thèmes pour déduire/consolider tes questions de recherche).</notesh>
+</p></del> -->
+<p>
+	Ce type de pratiques répond au manque d'interopérabilité horizontale que nous avons évoquée en problématique.
+	Les concepteurs de mashups sont confrontés à des artefacts aux fonctionnalités complémentaires, mais qui n'ont pas nécessairement été conçus pour cohabiter.
+	Certains ne sont d'ailleurs pas non plus conçus pour être réutilisés.
+	Ces problèmes peuvent être causés par l'insuffisance de documentation, ou l'inaccessibilité au code source, qui les transforment en “boîtes noires” pour les programmeurs [<a href=#obrenovic_stimulating_2008>Obr08</a>].
+	Enfin, comme le suggère la définition de Brandt ci-dessus, la programmation opportuniste est liée à des besoins peu connus en amont, voire changeants.
+	Ce problème limite la robustesse des prototypes, en ce que leur architecture est sujette à changer en cours de projet.
+</p>
+<p>
+	Les contextes liés à la programmation opportuniste et aux mashups sont peu détaillés par rapport aux domaines d'utilisation des artefacts créés.
+	Cependant, tous les articles que nous avons étudiés sont liés au moins en partie aux technologies du Web.
+	Ce medium a aujourd'hui un rôle central dans la gestion des connaissances, pour leur mise à disposition, leur navigation, et leur référencement.
+	Les solutions proposées s'intègrent principalement avec le Web, et promeuvent son intégration plus étroite avec les outils de développement [<a href=#brandt_two_2009>Bra09</a>].
+	Nous rejoignons et appuyons cette recommandation dans les discussions à l'issue de ce chapitre.
+</p>
+
+<h3>Études des besoins de programmation en IHM</h3>
+
+<!-- Questions à poser :
+	_ Quelles sont l'origine et les auteurs de cette recherche ?
+	_ Quels problèmes cherchaient-ils à résoudre en priorité ?
+	_ Comment peut-on résumer leurs contributions au domaine ?
+-->
+<!-- TODO: figures -->
+<p>
+	La compréhension des besoins des développeurs de systèmes interactifs est un problème étudié depuis longtemps dans la littérature scientifique.
+	Pourtant, c'est aussi l'un de ceux qui sont les moins bien compris aujourd'hui.
+	En effet, à mesure que les technologies évoluent, de nouveaux usages émergent ou deviennent possibles, pour lesquels il faut développer de nouveaux outils [<a href=#norman_technology_2010>Nor10</a>].
+	En retour, l'évolution des usages crée une tension (des besoins) sur les technologies, qui les pousse à évoluer, dans un cheminement des <i>découvertes</i> à la <i>maturité</i> illustré par le modèle BRETAM [<a href=#gaines_modeling_1991>Gai91</a>].
+	Le cycle d'interdépendances entre les évolutions technologiques et d'usages, est quant à lui illustré par le concept de <i>Designeering Interaction</i> proposé par Huot [<a href=#huot_designeering_2013>Huo13</a>].
+	Ainsi, aussi bien les systèmes interactifs que leurs utilisateurs sont des cibles mouvantes, sur lesquels il faut régulièrement réévaluer les connaissances.
+<!-- 	<del><notesh>C'est bien ça comme argument, mais il faudrait juste le développer en un ou deux phrases de plus, en parlant rapidement des liens entre technologie et usages: la technologie évolue et permet de nouvelles choses (qui n'avaient pas forcément été anticipées et donc ne sont pas vraiment supportée par les outils de dév.) et de nouveaux besoins/usages entrainent de nécessaires évolutions technologiques (qui n'avaient pas forcément non plus été anticipée et nécessitent aussi de nouveaux outils). Il faut appuyer ça avec une ou deux réfs., encore une fois (j'abuse...) mon HDR (mais bon, pas obligé, même si ça fait une bonne synthèse du problème vu sous cet angle), mais l'article de Greenberg <a href="http://citeseerx.ist.psu.edu/viewdoc/download?doi=10.1.1.88.345&rep=rep1&type=pdf">Toolkits and Interface Creativity</a> dit un peu la même chose (même si plutôt dans une seule partie du "cycle", des besoins à la technologie, celle qu'il illustre à partir du modèle BRETAM), Norman est plutôt sur l'autre partie (la technologie permet les besoins) <a href="https://dl.acm.org/citation.cfm?id=1699784">Technology first, needs last: the research-product gulf</a>; même si les deux évoque les deux sens, ils en privilégient un (alors que moi non dans mon HDR). Bref, tout ça pour dire encore une fois que c'est très pertinent ce que tu dis, mais d'autres y ont pensé avant, plus ou moins pour d'autres raisons et avec d'autres objectifs, et il faut t'appuyer dessus pour renforcer la pertinence des questions que tu poses dans ton contexte et des réponses que tu y apportes (Même si e.g. Norman ne réfère par directement à la programmation, c'est à haut niveau, plus généralement le rapport à la technologie qui est  le même).</notesh></del> -->
+</p>
+
+<h4>Études des besoins des designers</h4>
+
+<p>
+	Parmi les catégories de développeurs, les <i>designers</i> ont souvent été au cœur des études de besoins.
+	On leur associe l'expertise de la conception d'interfaces graphiques, mais aussi une moindre maîtrise de la programmation, qui les rend plus exigeants sur ce point.
+	Ils sont donc souvent considérés comme des utilisateurs extrêmes, 
+	car leurs difficultés à programmer sont exacerbées par rapport aux programmeurs de systèmes interactifs.
+	Certains travaux se focalisent donc sur ces utilisateurs, avec l'hypothèse que les contributions qu'ils en tirent puissent se généraliser à d'autres contextes.
+<!-- 	<del>dont <notesh>c'est plutôt "car leurs" que "dont"</notesh> les difficultés et besoins sont exacerbés <notesh>exemple(s) ? ou courte explication de ces besoins exacerbés ? (e.g. dire qu'ils sont plus enclins à pousser les technologies à leurs limites, voir à en avoir besoin de nouvelles ?)</notesh> par rapport à tous les programmeurs de systèmes interactifs. <notesh>"tous" n'est pas un peu fort ? Peut-être juste dire "par rapport aux programmeurs de systèmes interactifs standards (i.e. applications WIMP) pour qui les difficultés se situent plutôt au niveau du noyau fonctionnel que des interfaces et interactions".</notesh>
+	Implicitement, un outil qui s'adresse aux designers est accessible aux autres catégories de programmeurs.<notesh>bah... oui et non... pourquoi cela te parait si évident ? accessible oui, probablement (et quoi que... si par exemple c'est un outil qui est très fortement basé sur des concepts et un workflow métier expert, pas certain qu'il soit accessible même pour un très bon programmeur généraliste, non ?). Après, même si accessible, pas certain qu'il soit adapté (pour les même raisons). Je pense qu'il faut préciser et limiter un peu se point (ou le fonder un peu mieux). Une approche est de dire que se focaliser sur des outils pour ces experts devrait nous enseigner des choses pour qu'au moins une partie de soit généralisable et aussi bénéfique dans d'autres contextes(i.e. pour d'autres populations).</notesh></del> -->
+</p>
+<!-- myers_how_2008 :
+	_ observent que les designers savent protoyper l'apparence des interfaces sans problèmes, mais que l'exploration de comportements interactifs leur est plus difficile
+	_ suggèrent le développement d'outils permettant d'explorer plusieurs versions des comportements, ainsi qu'une meilleure intégration des outils de code aux outils de dessin
+-->
+<p>
+	Ainsi en 2008, Myers et al. ont observé dans une étude de 259 designers, que 86% considèrent que les comportements sont plus difficiles à prototyper que l'apparence, et que 78% du temps ils doivent collaborer avec des développeurs pour concevoir les comportements interactifs [<a href=#myers_how_2008>Mye08</a>].
+	Ils suggèrent le développement d'outils permettant d'explorer des comportements plus complexes qu'en les sélectionnant dans de simples menus, et d'en tester plusieurs simultanément.
+	Ils appellent aussi à une meilleure intégration des outils de code aux outils de dessin.
+</p>
+<!-- grigoreanu_what_2009 :
+	_ observent que les besoins des designers sont peu connus, et qu'on connait mal leurs difficultés avec des outils tels que Adobe Dreamweaver et Microsoft Expression Blend
+	_ à partir d'une étude qualitative, des discussions sur des mailing lists et forums d'utilisateurs, et 10 interviews, extraient 20 besoins exprimés par les designers
+	_ ces besoins peuvent directement être reliés à des propositions d'outils, ou pour de l'idéation (incluent même une discussion sur l'interprétation de ces besoins en outils)
+	_ deux besoins se dégagent : représenter comment les données, évènements, et autres ressources circulent dans l'application, et s'assurer que le “ressenti” (feel) de l'application est correct
+-->
+<p>
+	En 2009, Grigoreanu et al. ont observé que les besoins des designers sont peu connus, et qu'on connaît mal leurs difficultés avec des outils tels que Adobe Dreamweaver, Adobe Flash, et Microsoft Expression Blend [<a href=#grigoreanu_what_2009>Gri09</a>].
+	À partir d'une étude complète incluant des discussions sur des listes de diffusion et forums d'utilisateurs, ainsi que 10 interviews de designers, ils extraient 20 besoins régulièrement exprimés par les designers, et classés par importances perçues.
+	Deux besoins se dégagent des autres : (i) représenter comment les données, évènements, et autres ressources circulent dans l'application, et (ii) s'assurer que l'interactivité (<i>feel</i>) de l'application est conforme à l'intention de l'auteur.
+	L'étude est notable pour le pragmatisme des besoins formulés.
+	Tous peuvent directement être utilisés pour suggérer de nouveaux outils, et les auteurs incluent même une discussion sur la conversion des différents besoins en outils.
+</p>
+<!-- letondal_models_2014 :
+	_ étudient les besoins des designers d'interaction liés à l'utilisation de MBUIs, sur un projet réel d'application industrielle, afin d'améliorer les modèles qu'ils utilisent et le processus d'ingénierie en général
+	_ concluent sur l'utilité des modèles comme interface entre designers et ingénieurs, et suggèrent un meilleur partage des représentations, afin d'améliorer la collaboration entre équipes
+-->
+<p>
+	Dans le cadre d'un projet industriel de surveillance maritime, Letondal et al. ont étudié les besoins des designers liés à l'utilisation d'architectures dirigées par les modèles [<a href=#letondal_models_2014>Let14</a>].
+	Ils cherchent ainsi à adapter et améliorer les modèles qu'ils utilisent, et leur processus d'ingénierie d'applications interactives en général.
+	À l'aide d'interviews en situation et de conception participative, ils concluent sur l'utilité des modèles comme support d'échanges entre designers et ingénieurs, bien qu'ils ne soient pas utilisés pour générer des interfaces.
+	Ils suggèrent aussi un meilleur partage des représentations, afin d'améliorer la collaboration entre équipes.
+</p>
+
+<!-- <del><sh>OK, bien ces 3 paragraphes, mais manque encore une fois d'une très courte synthèse...</sh></del> -->
+<p>
+	Parmi ces travaux, on remarque l'importance donnée à la transparence des applications.
+	Ce point rejoint le “Gulf of Evaluation” de Norman évoqué plus haut [<a href=#norman_design_1988>Nor88</a>].
+	Le manque d'informations sur l'état interne des applications force les designers à le deviner à partir de ce qu'ils observent.
+	Enfin, tous les travaux suggèrent le développement de nouveaux outils pour faciliter l'activité de programmation par les designers.
+	En ce sens, ils rejoignent les travaux sur l'utilisabilité des bibliothèques logicielles.
+</p>
+
+<h4>Besoins en outils de programmation</h4>
+
+<p>
+	Il est bien connu que la programmation d'interactions avec des utilisateurs humains est différente de celle d'algorithmes [<a href=#beaudouin-lafon_interaction_2008>Bea08</a>].<!-- <del><notesh>Je ne citerai pas Wegner, là mais MBL <a href="http://www.csc.kth.se/utbildning/kth/kurser/DH3050/hcihist11/MichelBLonWegner.pdf">Interaction is the Future of Computing</a>. L'interaction dont parle Wegner est plutôt en général et entre machines.</notesh></del> -->
+	L'informatique étant née avec le calcul scientifique, les premiers langages de programmation ont été conçus pour le calcul.<!-- <del><notesh>Oui ! Comme on dit avec Nicolas, à cette époque on cherchait avec l'informatique à modéliser, automatiser et résoudre plus rapidement des problèmes connus, dont on connaissait la/les solution(s) mais dont on avait besoin de faciliter le calcul. L'interaction se focalise en partie plutôt sur le support à l'humain pour l'aider à apporter des solutions à des problèmes pour lesquels il n'y a pas forcément de solution connue.</notesh></del> -->
+	Ainsi, les concepts de base des langages utilisés aujourd'hui sont issus du calcul (fonctions, expressions arithmétiques, structures de données).
+	Ces langages relèguent souvent la programmation d'interactions à un rang secondaire, et la rendent naturellement difficile [<a href=#myers_challenges_1994>Mye94</a>]
+	Des initiatives de recherche ont donc visé les langages et outils de programmation, afin d'y améliorer le support de l'interaction.
+</p>
+<!-- letondal_usability_2010 :
+	_ reconnaissent que la programmation de logiciels interactifs est complexe et coûteuse, observent que les nombreux outils, langages, patrons d'architecture et modèles proposés n'ont pas eu d'influence significative, s'intéressent aux requirements des applications interactives (vs computationnelles)
+	_ avancent que le code interactif est par nature différent du code computationnel (4 points)
+	_ à partir de l'analyse de toolkits, énumèrent des requirements : minimiser la complexité d'information, minimiser la complexité d'accès, minimiser l'imprévisibilité, supporter le graphisme, supporter l'adaptation à l'exécution, supporter différentes modalités d'interaction, supporter les applications distribuées sur plusieurs machines, supporter la production de code, vérifier l'exécution du code par tests et débogage, gérer le cycle de vie, gérer la réutilisation et la capitalisation des connaissances, gérer le développement en équipes
+-->
+<p>
+	Parmi ceux-ci, en 2010 Letondal et al. se sont concentrés sur les besoins d'utilisabilité des outils de programmation [<a href=#letondal_usability_2010>Let10</a>].
+	Ils reconnaissent que les nombreux outils, langages, patrons d'architecture et modèles proposés pour supporter l'interaction n'ont pas eu d'influences significatives.
+	Ils dressent donc une liste de 12 exigences pour ces travaux, construite à partir de l'étude d'une cinquantaine de travaux précédents.
+	Ces exigences sont formulées comme des discussions de haut niveau sur les objectifs qu'ont partagé des travaux notables.
+	Elles on pour but d'orienter les travaux futurs pour mieux correspondre aux besoins des programmeurs d'interactions.
+</p>
+<!-- chatty_what_2014 :
+	_ dans le contexte de la création de djnn/Smala, Chatty et Conversy cherchent à caractériser les langages futurs pour les concepteurs d'applications interactives
+	_ ils appuient les besoins de création et d'innovation des concepts et constructions des langages
+-->
+<p>
+	Dans le contexte de la conception du framework <i>djnn</i>, Chatty et Conversy ont cherché à caractériser les langages futurs pour les concepteurs de systèmes interactifs [<a href=#chatty_what_2014>Cha14</a>].
+	À partir de trois thèmes de recherche en ingénierie des systèmes, ils formulent six directions de recherche, pour orienter l'évolution des langages adaptés à l'interaction : étendre les fonctionnalités, unifier les concepts, formaliser les concepts, étendre les concepts des langages (leur sémantique), étendre les notations des langages (leur représentation), et consolider les résultats passés.
+	Ces travaux ont accompagné l'évolution de djnn, et mené à la création du langage de programmation Smala [<a href=#magnaudet_djnn/smala_2018>Mag18</a>].
+	Parmi ces directions de recherche, l'extension des fonctionnalités se rapporte aux contributions par les outils que beaucoup d'autres travaux ont proposés.
+	L'étude des concepts de programmation, et en particulier leurs liens aux langages de programmation, est une démarche originale, qui s'est très bien illustrée par la <i>réification</i> du concept de binding [<a href=#chatty_multiple_2007>Cha07</a>] en des opérateurs du langage Smala (→ et ⇒).
+	Nous fournissons une autre illustration de cette démarche dans cette thèse, pour les animations.
+	Enfin la consolidation des résultats existants est une démarche intéressante, qui mérite d'être appuyée.
+	L'écosystème de l'informatique évoluant rapidement, des travaux de fond peuvent avoir du mal à s'imposer, lorsqu'ils nécessitent du temps pour arriver à maturité.
+	Ce phénomène peut expliquer la relative inertie des architectures des interfaces, qui ont peu évolué dans les dernières décennies.
+<!-- 	<del>Ces travaux ont abouti avec la création du langage de programmation Smala [<a href=#magnaudet_djnn/smala_2018>Mag18</a>], qui se distingue par sa syntaxe originale et adaptée aux comportements interactifs. <notesh>Peut-être en dire un peu plus, au moins sur leurs contributions ? (les 6 directions de recherche, et quelques points sur "la syntaxe originale" ?) Et se positionner par rapport à ces 6 directions de recherche ? (lesquelles tu utilises, ou pas, combinées avec tes réflexions, propositions, etc. ?) Ou alors tu le fais après ? Je me souviens qu'il y a un peu de positionnement par rapport à leur travaux dans le chapitre sur ECS, mais il me semble qu'il en faudrait aussi un peu ici ou après (dans les interaction essentials ?) à la fois pour se démarquer mais aussi s'inspirer.</notesh></del> -->
+</p>
+
+<h4>Limites et opportunités de recherche en besoins de programmation</h4>
+
+<!-- Limites de ces travaux :
+	_ Concernent souvent les designers d'interaction, mais traitent peu ou pas du contexte de recherche (quelles différences ?)
+	_ Aboutissent à des recommandations d'encore assez haut niveau, sur lesquelles il est difficile de capitaliser pour la création de nouveaux outils ou la modification d'outils existants
+-->
+<p>
+	La plupart des travaux étudiant les besoins en programmation d'IHMs se basent sur des populations externes aux équipes de recherche.
+	Ce sont des designers, des ingénieurs, ou encore des utilisateurs finaux.
+	Rares sont ceux qui observent spécifiquement des chercheurs concevant de nouvelles formes d'interaction.
+	Pourtant cette catégorie de programmeurs lutte aussi face à la complexité des outils de programmation.
+	De plus ce sont des utilisateurs extrêmes, comme les designers, puisqu'ils utilisent les frameworks d'interaction au-delà des cas d'utilisation prévus.
+	Le contexte de la recherche se distingue des autres contextes d'utilisation par les points suivants :
+</p>
+<ul>
+	<li>des temps d'itération courts, le temps d'évaluer si un projet a des chances d'aboutir</li>
+	<li>une population formée à l'Informatique, de bon niveau en programmation</li>
+	<li>la combinaison fréquente de multiples bibliothèques logicielles, pas forcément conçues pour cohabiter</li>
+	<li>une utilisation “avancée” des frameworks hors du cadre de l'utilisation prévue et recommandée</li>
+</ul>
+<p>
+	Le dernier point est caractéristique de la démarche de recherche, et est un point important qu'il nous faut encore clarifier dans ce chapitre.
+	Il s'agit des <b>besoins des chercheurs, dans le cadre spécifique de la programmation de nouvelles techniques d'interaction</b>.
+	De nombreux travaux présentés ici ont cherché à comprendre l'activité de prototypage dans son ensemble, dans l'enchaînement de ses étapes, et là où on rencontre des difficultés.
+	Or peu d'études se penchent à plus bas niveau sur les problèmes spécifiques rencontrés par les utilisateurs de frameworks d'interaction.
+	La conséquence est qu'on peut aujourd'hui proposer des outils pour <i>accompagner</i> le développement de prototypes de recherche, mais pas remettre en question les outils déjà utilisés, faute de savoir comment ils devraient être améliorés.
+	Il en découle une accumulation d'outils, qui contribuent malgré eux à alimenter la complexité de l'activité de programmation en IHM.
+	L'objet des études qui suivent est donc de combler ce manque.
+<!-- 	<del>En effet, toute démarche d'<i>innovation</i> implique que des artefacts qui étaient inconnus jusqu'alors soient développés.
+	Il est naturellement impensable de les anticiper (sinon à les inventer nous-mêmes), cependant on peut étudier des outils de développement à plus haut <notesh>à plus haut quoi ?</notesh>, qui <i>favorisent</i> l'innovation.</del> -->
+</p>
+<p>
+	De nombreux travaux précédents ont reconnu la difficulté de programmer l'interaction, et ont proposé des directions de recherche pour améliorer la situation.
+	Or ces propositions sont souvent de haut niveau, et il est difficile de les capitaliser en évolutions pragmatiques des outils de développement.
+	Par exemple, dans les six pistes de recherche appuyées par Chatty et Conversy, les “concepts” évoqués sont difficiles à lier à des exemples de réalisations possibles.
+	Ils s'adressent principalement à un public de chercheurs en IHM, qui peuvent comprendre la portée de ces concepts dans le cadre de la programmation d'interactions.
+	Ils leur permettent aussi d'expliquer et de justifier leurs travaux en cours (voir <a href=#sec2x1x5x1>section 2.1.5.1</a>).
+	Ce problème fait écho aux travaux sur l'utilisabilité des bibliothèques logicielles, qui contribuent beaucoup par l'intermédiaire de nouveaux outils, et recommandent souvent ce type de contributions.
+	Nous en sommes venus à nous demander s'il existe <b>d'autres manières de contribuer à la programmation de techniques d'interaction</b>, que par de nouveaux outils de développement.
+	Cette question alimente principalement les discussions à la fin de ce chapitre, ainsi que la conclusion de ce manuscrit.
+</p>
+<p>
+	Dans les sections qui suivent, nous présentons deux études qui ont eu pour but d'acquérir une compréhension plus fine des besoins pratiques des programmeurs, pour le développement de prototypes de recherche en IHM.
+</p>
+<!-- <del><p>
+	Le problème est qu'on cherche principalement à comprendre l'activité de prototypage dans son ensemble, dans l'enchaînement de ses étapes et leurs importances relatives.
+	Peu d'études se penchent à bas niveau sur les problèmes spécifiques rencontrés par les utilisateurs de frameworks d'interaction.
+	La conséquence est qu'aujourd'hui on peut énoncer des faits sur ce qu'est et n'est pas l'activité de prototypage de techniques d'interaction, mais on peut difficilement imaginer comment la soutenir.
+	Il manque donc des connaissances de bas niveau sur l'utilisation des frameworks d'interaction, afin d'énoncer plus précisément comment les améliorer.
+</p>
+<sh>OK pour cette synthèse de haut niveau, mais n'y  a-t'il pas quand même des choses à prendre dans les autres contextes d'utilisation pour le contexte de la recherche en interaction ?<br/>
+Aussi, manque une courte transition vers la section suivante genre "et bien du coup, on va commencer par faire ça, essayer de mieux comprendre l'utilisation es outils actuels (langages, frameworks, etc.) à bas niveau dans ce contexte pour y apporter des solutions"</sh></del> -->
+
+<link rel=stylesheet href=style.css>
+<script src=scripts.js></script>
+<script>prefix_headers(1, 3)</script>

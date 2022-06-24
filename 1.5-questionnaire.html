@@ -1,0 +1,371 @@
+<!-- TODO: Questionnaire en anglais pour viser le plus de participants -->
+<!-- TODO: Comparer les données démographiques à l'état de l'art pour valider le fait que l'échantillon de participants est représentatif de la population -->
+<!-- TODO: Rappeler que le bootstrapping dépend de l'hypothèse que l'échantillon est représentatif ! (pas seulement issu de la population) -->
+
+<h2>Questionnaire en ligne</h2>
+
+<!-- Plan de l'intro :
+	_ Quels types de découvertes les interviews nous ont suggéré ?
+	_ En quoi peuvent-elles nous faire progresser vers un meilleur support du dev de NTI ?
+	_ Quelles sont nos questions de recherche à présent ?
+	_ Comment avons-nous décidé de répondre à ces questions ?
+	_ Quel est le plan de cette section ?
+-->
+<p>
+<!-- 	<del>Les interviews de chercheurs en IHM nous ont permis d'observer que les outils principalement utilisés sont des frameworks majeurs (Qt, Android, JavaFX, HTML, etc. <notesh>COCOA ?</notesh>) <notesh>beh non, tu ne le dis pas dans les résultats, ça...</notesh>, et qu'ils sont peu adaptés au prototypage de nouvelles techniques d'interaction.
+	Ces frameworks étant bien établis dans les pratiques de programmation, il convient de s'intéresser à des pistes d'<i>amélioration</i> pour qu'ils soient plus adaptés, sans chercher à changer les habitudes de programmation des chercheurs.<notesh>C'est une hypothèse/orientation forte... pourquoi ?</notesh></del> -->
+	Les interviews de chercheurs en IHM nous ont permis d'observer le manque de compréhension entre les concepteurs de frameworks et leurs utilisateurs, dans le contexte de la recherche.
+	Pourtant les frameworks (Qt, Android, JavaFX, Cocoa, HTML, etc.) sont bien établis dans les pratiques de programmation.
+	Comme nous avons observé dans l'état de l'art, peu de travaux se sont attachés à <i>améliorer</i> les frameworks d'interaction, faute de connaissances sur leurs limites.
+	Nous cherchons donc ici à compléter ces connaissances, pour contribuer à l'adaptation des outils existants au contexte de la recherche.
+	Nous espérons ainsi contribuer à réduire de façon générale la difficulté de programmation de nouvelles techniques d'interaction.
+	Les interviews nous ont permis d'avoir un premier ensemble d'observations, qui nous ont permis de dégager des tendances à confirmer.
+	Nous formulons donc les questions de recherche suivantes :
+<!-- 	<del>Nous avons donc formulé des questions de recherche centrées sur les bibliothèques d'interaction, et qui valident les observations recueillies lors des interviews : <notesh>Plutôt que "valident les observations recueillies", il faudrait je pense plutôt dire que les interview nous ont permis d'avoir un premier ensemble d'observations large, mais limité (nombre de participants d'un même milieu), mais permettant déjà de dégager des tendances à confirmer par une étude plus large, en se posant les questions suivantes...</notesh></del> -->
+</p>
+<ul>
+	<li><b>Q1 — Quels sont les critères de choix principaux des bibliothèques logicielles utilisées pour programmer des applications interactives en contexte de recherche ?</b></li>
+	<li><b>Q2 — Quels sont les problèmes limitant le plus le travail des chercheurs avec l'utilisation de ces bibliothèques ?</b></li>
+	<li><b>Q3 — Quelles stratégies de développement sont principalement utilisées pour contourner les problèmes rencontrés dans ce contexte ?</b></li>
+</ul>
+
+<h3 class=break>Protocole de l'étude</h3>
+
+<p>
+	Pour répondre à ces questions, nous avons opté pour un questionnaire en ligne et en anglais, qui nous permet de recueillir plus de réponses qu'avec des participants locaux, et de réduire le biais d'un domaine de recherche local.
+</p>
+
+<h4>Plan du questionnaire</h4>
+
+<!--
+	_ De quelles données avons-nous besoin ?
+	_ Quels formats de questions avons-nous choisis ? Pourquoi ?
+	_ Quelle liberté pour des compléments de réponses ?
+	_ Sur quelles hypothèses implicites se base-t-on ? Comment peut-on garantir qu'elles ne remettent pas en cause la validité de ce travail ?
+	_ Quelles hypothèses cherche-t-on à confronter ? Comment peut-on garantir qu'on n'influence pas leur résultat ?
+	_ Quelles modifications ont été opérées après les pilotes ?
+	_ Quelles limites/erreurs avons-nous rencontrées ? Comment les a-t-on atténuées ? Quelle est leur influence probable sur les résultats ?
+-->
+<p>
+	Le questionnaire était conçu pour évaluer différentes réponses possibles<!-- <del>la pertinence de différentes réponses <notesh>bizarre comme formulation "évaluer la pertinence de différentes réponses"... "évaluer les réponses possibles à..." ?</notesh></del> --> à nos trois questions de recherche.
+	Des questions préliminaires recueillaient l'environnement dans lequel les participants programmaient de l'interaction (profession<!-- <del>position professionnelle <notesh>Anglicisme ? profession et fonction(s) ?</notesh></del> -->, type d'institution, nombre de collaborateurs), leur expertise dans la programmation d'applications interactives, et la proportion de leur temps de travail passé à programmer.
+	Ces questions étaient destinées à cerner le contexte de la recherche et du développement de systèmes interactifs, pour orienter à terme les propositions de travaux futurs.
+	Ensuite, trois séries de questions évaluaient la pertinence de différents critères pour chacune des questions de recherche : importance des critères de choix des bibliothèques d'interaction (Q1), sévérité des problèmes rencontrés (Q2), et fréquence des types de solutions apportées (Q3).
+	Les critères pour le choix des bibliothèques ont été formulés initialement par notre expérience du domaine, puis raffinés par des questionnaires pilotes.
+<!-- 	<del>Les critères pour le choix des bibliothèques ont été formulés initialement à la main <notesh>euuuuh... tout a été formulé "à la main", non ? Plutôt: "Les critères pour le choix des bibliothèques ont été formulé initialement par notre expérience du domaine puis raffiné par des questionnaires pilotes" ?</notesh>, puis raffinés après les questionnaires pilotes.</del> -->
+	Les sélections des problèmes et solutions ont été formulées à partir des classifications des problèmes et stratégies issues des interviews, et raffinées après les questionnaires pilotes.
+</p>
+<p>
+<!-- 	<del><notesh>Mettre le questionnaire complet en annexe et le référencer ici.</notesh></del> -->
+	Le questionnaire tel que présenté en ligne est inclus en <a href=#Ax2>annexe</a>.
+	Nous avons opté pour des questions à choix multiples, afin de limiter tout biais lié à l'interprétation des résultats, et pour gérer éventuellement un plus grand nombre de réponses.
+	L'évaluation de la pertinence des critères se fait avec des échelles de Likert à 5 niveaux, avec pour les problèmes un niveau supplémentaire permettant de distinguer les problèmes jamais rencontrés des problèmes déjà rencontrés mais de sévérité nulle.
+	Pour chaque critère de choix de bibliothèques (Q1) et chaque type de solution (Q3), nous avons inclus un champ de texte libre pour que les participants puissent éventuellement détailler et préciser leurs réponses<!-- <del>pour détailler éventuellement les réponses.
+	Chaque point étant assez large, nous voulions permettre aux participants de préciser les réponses auxquelles ils pensaient</del> -->.
+	Ces champs nous ont aussi permis de réorganiser les différentes catégories à l'issue des questionnaires pilotes.
+	Enfin, avec les critères de choix des bibliothèques (Q1), nous avons demandé aux participants de renseigner les frameworks ou boîtes à outils qu'ils utilisaient le plus, pour pouvoir en faire une première estimation.
+</p>
+<p>
+	Notre hypothèse principale était que les participants utilisent systématiquement des frameworks majeurs plutôt que des boîtes à outils issues de la recherche.
+	Nous avons donc pris soin d'adopter des formulations neutres (“<i>interaction libraries</i>”, “<i>frameworks/toolkits</i>”) pour ne pas induire les participants à répondre avec un type de bibliothèque donné, et qu'ils considèrent tout type de bibliothèque logicielle permettant de programmer des applications interactives.
+	Concernant les critères de choix des bibliothèques (Q1), nous voulions également évaluer la prévalence de critères subjectifs (ex. réputation, expérience personnelle) par rapport à des critères objectifs plus directement actionnables (ex. performance, qualité de la documentation).
+	L'<i>objectivité</i> des différents critères étant sujette à interprétation, nous avons simplement mélangé les critères que nous considérions objectifs, et subjectifs.
+</p>
+<p>
+	Un premier questionnaire pilote a été soumis à quatre participants.
+	Les réponses nous ont permis d'inclure de nouveaux critères de choix des bibliothèques (Q1).
+	Nous avons aussi retiré des problèmes trop spécifiques (Q2) afin de limiter le nombre de critères à évaluer, ainsi que le temps passé à répondre.
+	Enfin, pour les types de solutions aux problèmes (Q3), nous avons retiré toutes les mentions à des exemples factuels, que les participants citaient fréquemment dans les détails des réponses, et qui risquaient de biaiser les résultats en fonction de l'expérience des participants.
+	À cause de la modification des critères de choix des bibliothèques, les réponses au questionnaire pilote ont été exclues des résultats.<!-- <del>de la Q1.<notesh>Il faut les exclure complétement !</notesh></del> -->
+</p>
+<p>
+	Nous avons utilisé le logiciel <i>open source</i> en ligne Framaforms [<a href=#framasoft_creez_2019>Fra19</a>] pour créer et publier le questionnaire.
+	À cause de la présence de champs permettant de détailler les réponses (Q1 et Q3), Framaforms ne nous permettait pas de mélanger la présentation des différents critères aux participants.
+	Pour ces questions nous avons donc choisi un ordre logique entre les critères (ex. <i>Tool reputation</i> → <i>Developer reputation</i> → <i>User community</i> → <i>Documentation quality</i>), afin de réduire l'effort de mémoire à transitionner entre chacun.
+	Nous discutons plus loin de l'influence probable de cette limitation sur les résultats.
+</p>
+
+<h4>Sélection des participants</h4>
+
+<!--
+	_ Quelle catégorie de participants avons-nous cherché a priori ? Qu'est-ce qui les caractérise ?
+	_ Quelles listes de diffusion avons-nous visées ? Pourquoi ?
+	_ Comment a été conçu le mail d'introduction pour sélectionner les participants ?
+	_ Comment a été conçue l'introduction du questionnaire pour sélectionner les participants ?
+	_ Combien avons-nous reçu de participations ? Comment avons-nous complété les participations ?
+	_ Au final quel est le profil moyen des participants vs celui qu'on visait ?
+	_ Peut-on dégager des sous-groupes au sein de nos données ?
+-->
+<p>
+	Les participants de ce questionnaire devaient idéalement avoir prototypé de nouvelles formes d'interaction (techniques d'interaction, interfaces, artefacts interactifs) dans un contexte de recherche.
+	Comme il est difficile de caractériser précisément ce qui qualifie des personnes à avoir une expérience suffisante dans ce domaine, nous avons recruté des participants exclusivement au sein de la communauté IHM.
+	Le questionnaire a été diffusé une première fois par l'intermédiaire des listes de diffusion <i>chi-Announcements@acm.org</i> et <i>annonces@afihm.org</i>, afin d'atteindre un maximum de participants en réduisant le nombre de mails reçus en doublon.
+	Ces premières listes ont ensuite été complétées par des diffusions auprès des anciennes équipes de nos collègues.
+</p>
+<p>
+	L'introduction du questionnaire indiquait clairement le contexte de la recherche, afin de sélectionner spécifiquement des chercheurs : « <i>The goal of this survey is to better understand the process of programming new interactive artefacts for research and innovation purposes, and the software libraries used to support this process. We are interested in projects where you reached the limits of libraries (e.g. undocumented needs, accessing private functionalities, interfacing with existing applications, combining with other libraries), for the prototyping and implementation of innovative interactive artefacts (e.g. non-standard interaction techniques, data visualisations, UI toolkits, interactive applications)</i> ».
+</p>
+<p>
+	Nous avons recueilli 32 réponses au total, sur une période de 2 mois.
+	<!-- À vérifier si OK, les pilotes n'incluaient pas cette question -->
+	25 des participants ont comme activité principale chercheur, et 27 travaillent pour une université, école ou institution publique.
+	Deux tiers des participants se disent de niveau <i>au moins</i> avancé.
+	Les profils des participants sont donc très pertinents pour le contexte de notre étude.
+	Néanmoins, nous ne sommes pas en mesure d'affirmer s'ils sont représentatifs des proportions générales d'utilisateurs qui prototypent des applications interactives dans un contexte de recherche.
+</p>
+<!-- <del><sh> RàS sur ces paragraphes descriptifs, ok...</sh></del> -->
+
+<h3 class=break>Analyse et interprétation des résultats</h3>
+
+<!--
+	_ Quel était notre but en termes de livrable final ?
+	_ Comment avons nous analysé les données afin d'atteindre ce but ?
+-->
+<p>
+	Le but du questionnaire était de comprendre les choix de bibliothèques et leurs usages pour prototyper de nouvelles techniques d'interaction, puis de formuler des recommandations pour les concepteurs d'outils ainsi que les chercheurs.
+	Nous avons donc concentré notre analyse sur les aspects des bibliothèques qui importent le plus pour les chercheurs lors de la conception de nouvelles interactions, ainsi qu'à l'opposé les aspects qui importent moins.
+</p>
+<p>
+	Nous pouvons d'abord relever des questions préliminaires que deux tiers des participants disposent de moins de 40% de leur temps pour programmer, et que les participants collaborent en moyenne avec deux autres personnes.
+	En somme, les participants disposent de peu de temps et de moyens pour mener à bien leurs projets, ce qui n'est pas étonnant si on considère que la majorité sont des chercheurs, dont il est généralement admis que le développement informatique est une fraction de leur activité.<!-- <del><notesh>peut-être rappeler que ce n'est pas très étonnant comme constat car 29 sur 36 des participants sont des chercheurs ? (Et donc ont d'autres choses à faire...)</notesh></del> -->
+	Cette observation justifie l'idée que les améliorations soient principalement à chercher du côté des outils de programmation, plutôt que des méthodes de programmation des utilisateurs.
+</p>
+
+<h4>Bibliothèques d'interaction utilisées</h4>
+
+<p>
+	Immédiatement après les questions préliminaires du questionnaire, nous avons demandé aux participants quels frameworks ou boîtes à outils ils utilisaient le plus.
+	Plusieurs réponses pouvaient être données, séparées par des virgules.
+	Les résultats sont présentés en <a href=#fig-frameworks>figure</a>.
+<!-- 	<del><notesh>Il va falloir faire apparaitre les numéros des figures... aussi, si les numéros de figures redémarrent à 1 à chaque chapitre, il faut les préfixer par le numéro du chapitre</notesh></del> -->
+	Nous y avons représenté en abscisse les noms des bibliothèques citées dans les réponses, et en ordonnée <!-- <del><notesh>abscisse et ordonnée au singulier</notesh></del> --> les nombres de participants ayant cité chacune des bibliothèques.
+	À citations égales, les bibliothèques sont classées par ordre alphabétique.
+	Nous avons exclu des résultats les réponses qui n'étaient clairement pas des bibliothèques d'interaction (“Atom” et “Eclipse”).
+</p>
+<!-- <traf>Modification effectuée, les numéros ne redémarrent que dans les fichiers individuels, ils sont corrects dans le manuscrit complet.</traf> -->
+<figure id=fig-frameworks>
+	<img src=figures/frameworks.svg style="width:16cm">
+	<figcaption>Liste des bibliothèques citées dans les réponses, classées par nombre de participants. Les frameworks sont indiqués par une étoile.<!-- <del><notesh>Lisp c'est un langage, pas une bibliothèque. Android c'est un OS, pas un framework (mettre Android SDK ?).</notesh></del> --></figcaption>
+</figure>
+<p>
+	Nous observons d'abord la prédominance nette du framework Qt, utilisé par plus du quart des participants.
+	Les frameworks Swing et JavaFX (le successeur officiel de Swing) totalisent à eux deux le quart des participants, aucun n'ayant cité les deux simultanément.
+	Ensuite, nous pouvons observer que les frameworks Web (basés sur les technologies HTML, CSS, et JavaScript) sont très largement représentés.
+	Ils représentent 14 des bibliothèques citées, et 37,5% des participants en ont cité au moins une.
+	Enfin, un grand nombre de bibliothèques ont été citées une seule fois.
+	La majorité d'entre elles sont apparues il y a moins de 10 ans, en particulier parmi les outils Web.
+	Cette observation soutient le caractère <i>opportuniste</i> de la recherche et du prototypage de techniques d'interaction, en ce qu'elle s'appuie pour une part non négligeable sur des technologies récentes et émergentes.
+</p>
+<!-- <del><sh>Je suis assez partagé sur le fait de mettre ces paragraphes de définition framework/toolkit ici, c'est nécessaire, mais ça coupe le fil de l'analyse du questionnaire car ce n'est pas lié aux réponses données. Mettre ailleurs, plus tôt dans le manuscrit ?</sh></del>
+<traf>Section "Qu'est-ce qu'un framework ?" déplacée en <a href=#sec1x1x4>1.1.4</a>.</traf> -->
+<p>
+	Nous avons indiqué par une étoile (✱) sur la <a href=#fig-frameworks>figure</a> les bibliothèques que nous considérons comme des frameworks, d'après la définition donnée en <a href=#sec1x1x4>section 1.1.4</a>.
+	Ainsi, 48 des citations cumulées des participants sont des frameworks, tandis que 17 n'en sont pas.
+	On remarque de plus que les bibliothèques les plus utilisées (sur la gauche de la figure) sont principalement des frameworks.
+	Enfin, parmi les 33 bibliothèques citées, 4 sont issues de la recherche académique (D3 [<a href=#bostock_d3_2011>Bos11</a>], djnn [<a href=#chatty_designing_2016>Cha16</a>], Max/MSP, et Vega [<a href=#satyanarayan_declarative_2014>Sat14</a>]), pour un total de 7,6% citations.
+	Cette observation peut être modérée par le fait que D3 et Max/MSP sont très utilisés dans des communautés spécifiques (Visualisation et Musique Assistée par Ordinateur), qui n'ont pas été spécifiquement ciblées par nos listes de diffusion.
+	De plus, djnn et Vega sont des bibliothèques relativement récentes, ce qui peut expliquer leurs faible proportions dans les citations.
+	Néanmoins, le faible nombre de boîtes à outils issues de la recherche est préoccupant pour ce qui est de faire le lien entre les besoins des chercheurs et leurs outils, puisque ce sont principalement des développeurs hors du contexte de la recherche qui doivent répondre à ce contexte.
+	De plus, cela signifie que les bibliothèques faites <i>par</i> des chercheurs <i>pour</i> des chercheurs ne rencontrent pas suffisamment de succès.
+	Les critères de choix peuvent expliquer ce phénomène.
+<!-- 	<del><notesh>Il y a aussi ce que je disais dans mon commentaire, que par exemple pour Max/MSP, c'est très utilisé par les communautés recherche en Computer Music et Music technology (et en dehors dans le milieu artistique), mais que l'on a très peu de cette communauté dans la population sondée... aussi, il y a peut-être à modérer par rapport à "l'age" des bibliothèques: e.g. Djnn, c'est tout récent.</notesh></del> -->
+<!-- 	<del>Cette observation est préoccupante pour ce qui est de faire le lien entre les besoins des chercheurs et les solutions, puisque les bibliothèques (frameworks ou toolkits) créées pour y répondre sont peu utilisées en pratique. <notesh>C'est tout de même une observation à modérer car c'est un petit échantillon, et en plus probablement sur une communauté très ciblée (recherche IHM). D3 par exemple est probablement très utilisé dans la communauté recherche en visualisation d'information (et à l'extérieur de la communauté recherche, c'est énormément utilisé par exemple pour l'enseignement. les journalistes, etc.). De même pour Max/MSP qui est très utilisé par les communautés recherche en Computer Music et Music technology (et en dehors dans le milieu artistique).</notesh></del> -->
+</p>
+
+<h4>Critères de choix des bibliothèques d'interaction</h4>
+
+<!--
+	_ [Calculer les médianes de chaque critère]
+	_ [Calculer les nombres de réponses au moins "Very important" pour chaque critère]
+	_ Les plus importants sont Documentation quality (27), User community (24), API quality (23), et Compatibility (22) -> Le plus important est l'interface entre la bibliothèque et le programmeur, puis avec les autres bibliothèques
+	_ Les critères objectifs sont User community, Documentation quality, API quality (car EDA complet), Range of use cases, Compatibility, Technical efficiency -> les participants ont favorisé des critères objectifs, donc on peut supposer qu'en agissant sur des critères mesurables un outil aura naturellement tendance à être plus utilisé
+	_ L'efficacité technique (15) n'est pas si importante, au moins à l'adoption de l'outil
+-->
+<p>
+	Les résultats d'évaluation de l'importance des critères de choix des bibliothèques sont résumés en <a href=#fig-criteres>figure</a>.
+	Nous les avons classés en fonction du nombre de votants ayant répondu <i>Very important</i> ou <i>Absolutely essential</i>, pour distinguer les critères plus importants que la moyenne.
+	Pour chacun, nous avons affiché un intervalle de confiance à 95% obtenu par la méthode du bootstrapping [<a href=#efron_bootstrap_1979>Efr79</a>]<!-- <del><notesh>bootstrapping</notesh> <notesh>mettre une référence, eg: <a href="https://web.williams.edu/Psychology/Faculty/Kirby/bootes-kirby-gerlanc-in-press.pdf">https://web.williams.edu/Psychology/Faculty/Kirby/bootes-kirby-gerlanc-in-press.pdf</a></notesh></del> -->, qui correspond à la probabilité qu'un ré-échantillonnage avec remise issu des données donne un nombre de votants compris dans l'intervalle.
+	Lorsque la borne supérieure de cet intervalle est inférieure à la moitié des votants, nous considérons qu'il est <b>très probable</b> que plus de la moitié des chercheurs en IHM issus de la communauté représentée par notre échantillon considèrent le critère comme au moins <i>Very important</i><!-- <del><notesh>c'est bien la façon dont tu expliques comment tu tires tes conclusions et que tu évites d'avoir une approche dichotomique en utilisant "très probable" (proud of you ;)). Par contre, fais attention avec "la moitié des chercheurs en IHM"... ton échantillon est très petit quand même, et les CIs en dépendent tout de même. Peut-être modérer en mettant "la moitié des chercheurs en IHM issus de la communauté représentée par notre échantillon" ?</notesh></del> -->.
+</p>
+<p>
+	Trois critères se dégagent : <i>Documentation quality</i> (24 votants), <i>Quality of the API</i> (23 votants), et <i>User community</i> (22 votants).
+	Ils nous suggèrent que le facteur principal influençant le choix d'une bibliothèque est sa facilité d'appentissage et d'utilisation par les programmeurs.
+	Le critère <i>Compatibility with other tools/libraries</i> se dégage également par le nombre important de votes <i>Absolutely essential</i>, et nous suggère que les frameworks sont rarement utilisés seuls dans le contexte de la recherche en IHM.
+</p>
+<figure id=fig-criteres>
+	<img src=figures/criteres.svg style="width:16cm">
+	<figcaption>Évaluation des critères de choix des bibliothèques par les participants, classés en fonction du nombre de réponses au minimum <i>Very important</i>, avec les intervalles de confiance à 95% pour ces nombres.<!-- <del><notesh>Je ne comprends pas très bien l'échelle sur l'axe horizontal... Est-ce que les nombres ne devraient pas être dans l'autre sens ? (i.e. de 32 à 0 ?)</notesh></del> --></figcaption>
+</figure>
+<p>Enfin, pour évaluer la possibilité pour les concepteurs de frameworks d'influencer ces critères, nous les avons répartis en trois groupes :</p>
+<ul>
+	<li>mesurables (<i>Documentation quality</i>, <i>Range of use cases</i>, <i>Quality of the API</i>, <i>Technical efficiency</i>)</li>
+	<li>mixtes (<i>User community</i>, <i>Compatibility with other tools/libraries</i>)</li>
+	<li>subjectifs (<i>Tool reputation</i>, <i>Developer reputation</i>, <i>Project constraints</i>, <i>Personal experience</i>)</li>
+</ul>
+<p>
+	Les critères mesurables sont ceux pour lesquels il existe des outils permettant d'évaluer leur qualité, et des méthodes pour l'améliorer.
+	Pour les critères mixtes, certaines métriques et méthodes existent mais ne suffisent que partiellement.
+	Par exemple, pour <i>Compatibility with other tools/libraries</i>, on peut mesurer le nombre de <i>plugins</i> disponibles pour un framework, mais il est difficile d'évaluer leur utilisabilité (absence de bugs, fonctionnalités implémentées, etc.).
+	Pour les critères subjectifs, il n'existe pas ou peu de mesures objectives, et les concepteurs de frameworks n'ont pas de contrôle direct pour améliorer leur évaluation sur ces critères.
+</p>
+<!-- <del><sh>C'est bien ces 3 groupes de critères !</sh></del> -->
+<p>
+	Les critères mesurables ont en moyenne 55% des votes au dessus de <i>Of average importance</i>.<!-- <del>Les critères mesurables ont une moyenne de votes au dessus de <i>Of average importance</i> à 14,25.</del> -->
+	Les critères mixtes sont à 64%<!-- <del>11,5</del> -->.
+	Les critères subjectifs sont à 43%<!-- <del>18,25</del> -->.
+	Les participants de notre étude ont donc eu tendance à favoriser des critères objectifs,<!-- <del><notesh>bah... les subjectifs ont plus, non ?</notesh></del> --> sans toutefois qu'une différence significative puisse être inférée pour l'ensemble de la population.
+	Ces résultats nous suggèrent aussi que les deux critères mixtes <i>User community</i> et <i>Compatibility with other tools/libraries</i> gagneraient à bénéficier d'outils de mesures et de méthodes d'amélioration dans la littérature.
+</p>
+
+<h4>Problèmes liés à l'utilisation des bibliothèques d'interaction</h4>
+
+<!--
+	_ [Calculer les nombres de réponses au moins "Very important" pour chaque problème]
+	_ [Calculer les nombres de réponses au plus "No trouble" pour chaque problème]
+	_ [Calculer les médianes de chaque critère]
+	_ Les plus importants sont Documentation lacking context and examples (11), Significant effect/behavior being undocumented (11), Inconsistent behavior across versions/systems (10), et Lack of a functionality that would require pulling another library (9) -> c'est cohérent avec les critères de choix
+	_ Documentation requiring too much investment (6) vs Documentation lacking context and examples (11) -> il vaut mieux beaucoup documenter que mal documenter
+	_ [Calculer les ratios (Major + Insurmountable) / (Total - Not)]
+	_ On peut isoler des problèmes "cachés" qui ne sont pas fréquents mais critiques lorsqu'ils surviennent -> Forbidden access to functions and data, Bad compatibility between two libraries, et Buggy implementation
+	_ On repère aussi des problèmes "secondaires" qui surviennent plus en aval dans les projets (Medium important) -> Problems scaling up et Documentation requiring too much investment
+	_ On peut estimer la proportion de participants "avancés" à la moyenne de (Total - Not) / Total
+-->
+<p>
+	Les résultats de criticité des différents problèmes liés à l'utilisation des bibliothèques d'interaction sont résumés en <a href=#fig-problemes>figure</a>.
+	Ils sont classés en fonction du nombre de votants ayant répondu au moins <i>Met, medium trouble</i>, seuil à partir duquel nous considérons que les problèmes ont accaparé une part suffisante de temps/énergie des participants.
+	En dessous de chaque type de problème, des barres plus fines représentent les mêmes résultats mais en incluant uniquement les participants se disant <i>Advanced</i> ou <i>Expert</i> (20 des 32 participants).
+	<!--<notesh>Pas la peine de dire ça, tu expliques ce que représentent les barres dans la légende de la figure.</notesh>-->
+<!-- 	<del>Les intervalles de confiance ne sont pas affichés, car nous ne les utilisons pas ici <notesh>mets les quand même... ça donne une idée de la réplicabilité.</notesh>.</del> -->
+</p>
+<figure id=fig-problemes>
+	<img src=figures/problemes.svg style="width:16cm">
+	<figcaption>Évaluation des problèmes liés à l'utilisation des bibliothèques d'interaction, classés en fonction du nombre de réponses au minimum <i>Met, medium trouble</i>, avec les intervalles de confiance à 95% pour ces nombres, et des barres secondaires représentant les mêmes résultats pour les participants d'expertise au minimum <i>Advanced</i>.</figcaption>
+</figure>
+<p>
+	Parmi les problèmes les plus importants, ceux liés à la <b>documentation</b> occupent les 1ᵉ, 2ᵉ et 5ᵉ positions, ce qui est cohérent avec les observations sur les critères de choix des bibliothèques.
+	Nous n'observons pas de fortes variations entre les résultats complets et ceux n'incluant que les participants avancés et experts.
+	Ce peut être dû au faible nombre de participants, qui ne nous permet pas de diviser la population en deux et d'observer des différences significatives.
+	Cependant, nous observons que de nombreux participants ont répondu <i>Not met</i>, y compris parmi les participants avancés.
+</p>
+<p>
+	Nous avons donc représenté en <a href=#fig-problemesCrit>figure</a> les résultats de criticité des différents problèmes pour les participants n'ayant pas répondu <i>Not met</i>.
+	Nous considérons que c'est une estimation plus fiable de la criticité des problèmes pour la population des chercheurs en IHM.
+	En effet, le fait de rencontrer un type de problème particulier dépend beaucoup des projets sur lesquels les participants ont travaillé.
+	Si un groupe de participants d'une même équipe a répondu à notre questionnaire, ils peuvent ainsi biaiser l'évaluation en <a href=#fig-problemes>figure</a>, en faveur des problèmes qu'ils ont rencontrés en groupe.
+	En représentant la criticité uniquement pour les personnes ayant rencontré les différents problèmes, nous limitons ce biais, au prix d'un plus faible nombre de réponses par problème.
+	Nous avons donc écarté 33% des données, ce qui explique l'élargissement des intervalles de confiance à 95%, représentés sur la figure.
+<!-- 	<del><notesh>oui, au prix d'un autre biais (moins de données)... mais tu te justifie bien ça va. Il faut par contre que tu précise le % de données que tu as écarté du coup.</notesh>
+	Les intervalles de confiance à 95% sont représentés sur la figure.</del> -->
+</p>
+<figure id=fig-problemesCrit>
+	<img src=figures/problemesCrit.svg style="width:16cm">
+	<figcaption>Évaluation de la criticité des problèmes par les participants les ayant déjà rencontrés, avec les intervalles de confiance à 95%.</figcaption>
+</figure>
+<p>
+	Deux problèmes se dégagent par rapport à la figure précédente, <i>Buggy implementation</i> et <i>Non-deterministic behavior</i>.
+	Avec le problème <i>Significant effect/behavior being undocumented</i>, ils nous suggèrent que la caractéristique la plus importante d'un framework est sa <b>fiabilité</b>.
+	C'est-à-dire qu'un framework devrait toujours <i>documenter ce qu'il fait et faire ce qu'il documente</i>.
+	Ce point ainsi que le précédent nous ramènent à l'importance de la documentation soulevée par de nombreux travaux de l'état de l'art.
+	Ils nous incitent à considérer les travaux de documentation comme des contributions importantes, en ce qu'ils pourraient avoir un impact majeur de réduction des problèmes rencontrés.
+</p>
+<p>
+	Un certain nombre de problèmes secondaires ont eu une criticité majeure pour plus d'un quart des participants les ayant rencontrés.
+	Ainsi, <i>Inconsistent behavior across versions/systems</i> et <i>API too complex to use/understand</i> nous amènent à considérer la <b>cohérence</b> comme une caractéristique secondaire des frameworks.
+	<i>Forbidden access to functions and data</i> nous font considérer la <b>transparence</b> comme une autre caractéristique importante.
+	Enfin, <i>Bad compatibility between two libraries</i> et <i>Inadequate paradigm for this particular context</i> nous amènent à ajouter l'<b>adaptabilité</b>.
+	Alors que nous pouvons ramener la cohérence et la transparence à des travaux de documentation, l'adaptabilité est un concept qui nous semble intéressant à approfondir.
+	Il pourrait être associé à la flexibilité et au caractère dynamique des frameworks et langages de programmation.
+	En pratique nous avons exploré ces points dans les prototypes présentés dans les chapitres 2 et 3.
+</p>
+<!-- <del><sh>Bien ces points (fiabilité, cohérence, transparence, adaptabilité). Est-ce que tu ne peux pas les connecter à de l'état de l'art du domaine ?(c'est peut-être le cas dans la discussion, je ne l'ai pas encore lue).</sh></del> -->
+
+<h4>Stratégies de prototypage de techniques d'interaction</h4>
+
+<!--
+	_ Les plus importantes sont Reimplementing (9), Probing (8), et Aggregating (6) -> les fonctionnalités de réutilisation, et de transparence des données sont essentielles
+	_ [Calculer les proportions (Very + Always) / (Total - Never) pour estimer les besoins rares mais importants]
+	_ Les participants vont plutôt intercepter que reconstruire -> il est important de donner un accès aux données transformées
+	_ Low-level est le moins populaire -> confirme que les chercheurs ne sont pas à l'aise à bas niveau, et qu'il vaut mieux faire remonter explicitement les données que compter sur les programmeurs pour les retrouver
+	_ Overlay est une technique spécifique, et pourtant n'est pas rare (36% >= Sometimes) -> l'extensibilité d'un système interactif est très importante pour le prototypage
+	_ Reverse-engineering est une pratique courante (42% >= Sometimes) -> à chaque fois qu'une fonctionnalité n'est pas documentée, il y a une opportunité de rétro-ingénierie
+-->
+<p>
+	Dans la dernière partie du questionnaire, nous demandions aux participants d'évaluer la prévalence de différentes stratégies de programmation dans leur travail.
+	Les résultats sont présentés en <a href=#fig-strategies>figure</a>.
+	Une stratégie, <i>Reimplementing an existing widget/mechanism [...]</i>, se distingue nettement des autres.
+	Dans un framework, cette pratique de programmation est rendue possible par les mécanismes d'<b>extension</b> et de <b>réutilisation</b>.
+	Ensuite, pour les 2ᵉ et 3ᵉ stratégies, <i>Using accessible raw data to reconstruct/reinterpret a state[...]</i> et <i>Using an external mechanism to obtain and process data that is not exposed by an application</i>, c'est l'accès à des données cachées qui est important, donc la <b>transparence</b> des frameworks.
+	Enfin, parmi les stratégies suivantes, les 4ᵉ (<i> Aggregating multiple sources of interaction data [...]</i>), 5ᵉ (<i>Using a visual overlay [...]</i>) et 7ᵉ (<i>Introducing a different programming model [...]</i>) se rapportent à l'extensibilité des frameworks, et la 6ᵉ (<i>Reverse-engineering a closed tool or library</i>) appuie leur transparence.
+</p>
+<figure id=fig-strategies>
+	<img src=figures/strategies.svg style="width:16cm">
+	<figcaption>Évaluation de la fréquence d'utilisation de différentes stratégies de programmation, classées en fonction du nombre de réponses au minimum <i>Sometimes</i>, avec les intervalles de confiance à 95% pour ces nombres, et des barres secondaires représentant les mêmes résultats pour les participants avancés.<!-- <del><notesh>idem précédemment, mets quand même les CIs</notesh></del> --></figcaption>
+</figure>
+<p>
+	Nous remarquons que beaucoup de participants ont répondu ne jamais avoir utilisé chacune des stratégies.
+	Comme pour les problèmes évalués dans la partie précédente, il est possible qu'un biais lié à des sous-groupes de participants ait favorisé certaines stratégies au détriment des autres.
+	Si deux participants ayant travaillé sur les mêmes projets ont répondu à notre questionnaire, leurs évaluations de la prévalence de chaque stratégie pourraient ainsi être corrélées.
+	Cependant ici nous ne pouvons pas éliminer ce biais en ignorant les réponses <i>Never</i>, car la prévalence est une mesure plutôt objective (donc pouvant être similaire entre deux participants d'une même équipe), alors que la criticité était principalement subjective (donc propre à chaque participant).
+<!-- 	<del>Néanmoins, ce biais reste limité car il nécessite que des participants aient eu <i>beaucoup</i> de projets en commun, ce qui n'est pas systématique.<notesh>pas besoin de cette dernière phrase...</notesh></del> -->
+</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel=stylesheet href=style.css>
+<link rel=stylesheet href=prism.css>
+<script src=scripts.js></script>
+<script src=prism.js></script>
+<script>prefix_headers(1, 5)</script>

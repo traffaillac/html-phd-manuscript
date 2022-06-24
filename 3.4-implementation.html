@@ -1,0 +1,362 @@
+<!-- TODO: Étude des opportunités de composition
+	_ Qu'est-ce que la composition ?
+	_ Qu'est-ce que n'est pas la composition ?
+	_ Pourquoi est-ce utile dans le jeu vidéo ?
+	_ Comment sont structurées la plupart des interfaces graphiques aujourd'hui ?
+	_ Qu'y a déjà apporté la composition ?
+	_ Que peut-on encore espérer de la composition ?
+-->
+
+<h2>Implémentation du modèle Entité-Composant-Système</h2>
+
+<p>
+	Dans la section précédente, nous avons décrit les principes essentiels d'ECS, ainsi que l'architecture de Polyphony à haut niveau.
+	Nous n'y avons <i>pas</i> décrit nos choix de conception à bas niveau (Les Entités sont-elles des objets ? Où sont stockés les Composants ? etc.), afin de faciliter l'application de Polyphony à tout type de langage de programmation (orienté-objet, impératif, statique ou dynamique).
+	La présente section est dédiée à l'implémentation de Polyphony.
+	Nous commençons par étudier trois implémentations majeures d'ECS, afin d'identifier un espace de conception où nous positionner.
+	Ensuite nous étudions les différences entre les domaines du Jeu Vidéo et des IHM, qui justifient nos écarts par rapport aux implémentations existantes.
+	Enfin, nous présentons en détails les choix d'implémentation de Polyphony.
+</p>
+
+<h3>Analyse d'implémentations existantes</h3>
+
+<p>
+	Il existe de nombreux frameworks basés sur ECS, chacun avec des variations des mêmes concepts.
+	Cette multiplicité rend difficile le choix d'une implémentation plutôt qu'une autre, pour quiconque ayant besoin d'utiliser ce modèle de programmation.
+	Pour mieux informer documenter et renseigner<!-- <del><notesh>"informer" ça fait un peu anglicisme, trouve-je... c'est correct, mais dans cet usage, ça ne sonne pas top. Je mettrai "Pour mieux documenter et renseigner" ?</notesh></del> --> l'utilisation d'ECS comme modèle de programmation, et en particulier dans le cas des IHM et techniques d'interaction, nous avons construit un <i>espace de conception</i> des implémentations d'ECS.
+	Il est basé sur l'étude de 3 frameworks parmi les plus référencés [<a href=#martin_whats_2014>Mar14</a>] et mieux documentés, ainsi que notre expérience dans le développement d'une nouvelle variante dédiée à la programmation d'interactions, <i>Polyphony</i>.
+	Tous les frameworks que nous avons trouvés ciblent le développement de jeux vidéo, et nous n'en avons trouvé aucun dédié aux interfaces graphiques.
+</p>
+<p>Nous avons sélectionné :</p>
+<ul>
+	<li><b>Artemis</b> (Java), une des premières implémentations historiques d'ECS. La version originale n'étant plus documentée et plus maintenue, nous avons sélectionné son successeur le plus populaire, Artemis-odb [<a href=#papari_artemis-odb_2018>Pap18</a>].</li>
+	<li><b>Entitas</b> (C#), une interprétation populaire d'ECS pour Unity, qui inclut un méta-langage et un préprocesseur pour C# [<a href=#schmid_entitas-csharp_2018>Sch18</a>]. Sa base d'utilisateurs ainsi que sa documentation complète en font une implémentation majeure d'ECS.</li>
+	<li><b>GameplayKit</b> (Swift), un des nombreux frameworks inspirés d'ECS qui implémentent les comportements directement sur les Composants, plutôt que dans des Systèmes distincts — avec par exemple CORGI (C++) et Nez (C#) [<a href=#google_inc._corgi_2015>Goo15</a>, <a href=#prime31_nez_2018>Pri18</a>]. Ils sont parfois qualifiés d'<i>Entity-Component systems</i> (systèmes à Entités-Composants), ce qui alimente la confusion avec le modèle ECS original. Unity (C#) implémentait aussi cette approche initialement, et s'est converti plus tard au modèle original, mais n'est pas encore suffisamment documenté [<a href=#unity_technologies_unity_2017>Uni17</a>].</li>
+</ul>
+<p>
+	L'analyse présentée dans le <a href=#tab-implementations>tableau</a> n'est pas exhaustive, mais met en lumière les choix de conception sur lesquels les interprétations d'ECS diffèrent principalement.
+	Nous avons aussi inclus nos propres choix pour l'implémentation de Polyphony, et les discutons à la fin de la section.
+	Les critères de notre analyse sont :
+</p>
+<ul>
+	<li><b>Représentation des Entités</b> — comment les Entités sont matérialisées dans le framework</li>
+	<li><b>Représentation des Composants</b> — comment les Composants sont matérialisés, et définis par les programmeurs</li>
+	<li><b>Représentation des Systèmes</b> — comment les Systèmes sont matérialisés, et définis par les programmeurs</li>
+	<li><b>Structuration du Contexte</b> — comment l'environnement est matérialisé dans le framework, pour instancier de nouveaux Systèmes/Composants/Entités, et pour obtenir des Sélections</li>
+	<li><b>Sélection d'Entités</b> — comment les Entités sont regroupées à partir de leurs Composants</li>
+	<li><b>Changements d'états</b> — quels mécanismes sont disponibles pour réagir aux changements d'états</li>
+	<li><b>Stockage des Composants</b> — comment et où sont stockés les Composants</li>
+	<li><b>Ordonnancement des Systèmes</b> — quel mécanisme permet d'ordonner les Systèmes dans la chaîne d'exécution</li>
+	<li><b>Fabriques d'Entités</b> — comment définit-on des modèles d'Entités à réutiliser</li>
+	<li><b>Extensions de langage</b> — le framework implémente-t-il des extensions de <i>méta-langage</i>, c-à-d de nouvelles syntaxes non permises dans le langage hôte</li>
+</ul>
+<style>#tab-implementations td,#tab-implementations th { vertical-align: middle }</style>
+<table id=tab-implementations class=striped>
+	<colgroup>
+		<col style="width:15%">
+		<col style="width:21%" span=4>
+	</colgroup>
+	<tr style="border-bottom:1px solid black"><th>Framework<br/>(Langage)</th><th>Artemis-odb<br/>(Java)</th><th>Entitas<br/>(C#)</th><th>GameplayKit<br/>(Swift)</th><th>Polyphony<br/>(JavaScript)</th></tr>
+	<tr><th>Représentation des Entités</th><td>entier, ou entier dans un objet</td><td>objet</td><td>objet</td><td>objet</td></tr>
+	<tr><th>Représentation des Composants</th><td>sous-classes de <code>Component</code> avec valeurs par défaut</td><td>sous-classes de <code>IComponent</code></td><td>sous-classes de <code>GKComponent</code> avec valeurs par défaut</td><td>tout objet</td></tr>
+	<tr><th>Représentation des Systèmes</th><td>sous-classes de <code>BaseSystem</code>, attachées à une Sélection, exécution périodique</td><td>sous-classes de <code>ISystem</code>, attachées à une Sélection, exécution périodique ou unitaire</td><td>méthode de Composant <code>updateWithDeltaTime:</code></td><td>Entité initialisée avec une fonction</td></tr>
+	<tr><th>Structuration<br>du Contexte</th><td>objet <code>World</code></td><td>objet <code>Context</code></td><td>arbre de scène</td><td><i>global</i></td></tr>
+	<tr><th>Sélection d'Entités</th><td>par liste de Composants, avec algèbre <i>all/one/none</i></td><td>par liste de Composants, avec algèbre <i>all/one/none</i></td><td>par liste de Composants, ou condition programmable</td><td>par condition programmable</td></tr>
+	<tr><th>Changements d'états</th><td><i>listeners</i> sur Sélections</td><td><i>listeners</i> sur Sélections</td><td><i>non explicitement supportés</i></td><td>Composants temporaires</td></tr>
+	<tr><th>Stockage des Composants</th><td>par Composant, avec table Entité→Valeur</td><td>par Entité, avec <i>slots</i> prédéterminés</td><td>par Entité, avec table Composant→Valeur</td><td>comme propriétés d'objets natifs</td></tr>
+	<tr><th>Ordonnancement des Systèmes</th><td>dynamiquement par priorité</td><td>dynamiquement par insertion dans une liste</td><td>statiquement</td><td>dynamiquement par priorité</td></tr>
+	<tr><th>Fabriques d'Entités</th><td>objet <i>fabrique</i>, chargement de fichier</td><td>chargement de fichier</td><td><i>non explicitement supporté</i></td><td>fonction <i>fabrique</i></td></tr>
+	<tr><th>Extensions<br>de langage</th><td>post-traitement de l'exécutable compilé</td><td>pré-compilation d'une surcouche du langage</td><td><i>aucune</i></td><td>syntaxe des Entités par objets <i>Proxy</i></td></tr>
+	<caption>Analyse de trois variantes d'ECS et de Polyphony selon notre espace de conception.</caption>
+</table>
+
+<h3 class=break>Polyphony : choix de conception</h3>
+
+<p>
+	Les principales dimensions de conception pour implémenter ECS ayant été présentées, nous devons à présent les appliquer à la programmation d'IHM.
+	Il convient d'abord d'étudier l'utilisation d'un paradigme de composition dans les jeux vidéo, et de justifier son application à la construction d'interfaces graphiques et d'interactions.
+	Nous soulignons ensuite les différences entre le développement de jeux vidéos et d'interfaces graphiques, puis discutons nos choix au regard de ces différences.
+</p>
+
+<h4>Adaptation d'ECS au contexte IHM</h4>
+
+<p>
+	Toutes les boîtes à outils que nous avons étudiées sont dédiées exclusivement au développement de jeux vidéos.
+	Or ce type d'applications a des besoins très particuliers, parfois similaires, mais souvent différents de la programmation d'interactions, que nous détaillons ici.
+</p>
+<dl>
+	<dt>Multiples déclencheurs de Systèmes</dt>
+	<dd>
+		L'état du jeu est généralement mis à jour par une unique chaîne de Systèmes, avec un <i>tickrate</i> fixe (souvent 60Hz, une fréquence de rafraîchissement commune des écrans).
+		Comme les interfaces graphiques sont généralement mises à jour en réponse à des sources d'évènements multiples et variées, nous avons introduit de multiples déclencheurs de la chaîne de Systèmes, et le filtrage des Systèmes à exécuter en fonction de l'évènement déclencheur.
+	</dd>
+	<dt>Arbre de scène des Entités</dt>
+	<dd>
+		Les éléments d'un jeu ont des relations peu structurées entre eux. Ils se déplacent, apparaissent, disparaissent, et nécessitent peu de relations entre eux — mise à part l'utilisation de structures de partitionnement pour optimiser l'affichage [<a href=#bishop_designing_1998>Bis98</a>].
+		D'un autre côté, les éléments d'une interface graphique ont des relations d'ordre d'affichage, de positionnement relatif, et de styles hérités, qui s'expriment au mieux par des arbres de scène.
+	</dd>
+	<dt>Entités matérialisant les périphériques d'interaction</dt>
+	<dd>
+		Nombre de jeux obéissent au principe <i>un joueur par machine</i>, et supportent un seul couple clavier/souris (mais parfois plusieurs manettes).
+		Dans le cadre de la recherche et du prototypage de techniques d'interaction, nous voulons supporter une plus grande variété de périphériques, en multiples exemplaires, et supporter leur ajout/retrait à l'exécution.
+		Nous avons introduit les Entités <i>périphériques</i> pour permettre une gestion poussée des entrées.
+	</dd>
+	<dt>Définition de Composants temporaires</dt>
+	<dd>
+		Dans un jeu, la plupart des changements d'états observables sont liés soit aux actions du joueur, soit à l'environnement.
+		Dans le premier cas, un mécanisme global d'évènements sert généralement à signaler les changements d'états.
+		Dans le second cas, la plupart des implémentations que nous avons étudiées intègrent des <i>listeners</i> (donc des callbacks <i>en plus</i> des Systèmes)<!-- <del><notesh>des listeners ? donc des callbacks ? Ils faut peut-être justifier un peu plus, non ?</notesh></del> --> sur les Sélections, afin d'observer les changements de groupes d'Entités.
+		Dans les interfaces graphiques, les changements d'états sont courants, et on y associe de nombreux types d'actions — techniques d'interaction, commandes, positionnement.
+		Pour matérialiser et manipuler de nombreux types de changements d'état <i>sans introduire de listeners</i>, nous avons introduit l'utilisation de Composants temporaires, principalement pour les Entités périphériques.
+	</dd>
+</dl><dl>
+	<dt>Représentation des Systèmes en Entités</dt>
+	<dd>
+		Le <i>pipeline</i> d'exécution des différents Systèmes est généralement fixe, ce pourquoi les implementations d'ECS les ordonnent dans des simples listes.
+		Pour faciliter le prototypage et la manipulation des Systèmes à l'exécution, nous avons adopté une approche récursive et représentons les Systèmes par des Entités.
+		Le déclenchement des Systèmes est ainsi rendu plus flexible, grâce à la gestion des déclencheurs par des Composants, et à la mise en place d'un Méta-Système qui ordonne et exécute les Systèmes.
+	</dd>
+	<dt>Abandon des objets de Contexte</dt>
+	<dd>
+		Les jeux sont souvent organisés en “niveaux”, indépendants les uns des autres, et déclenchent des séquences de chargement entre eux.
+		Ils stockent les Entités, Composants, et Systèmes relatifs à chaque niveau dans des “objets de Contexte”, qui permettent de séparer clairement les niveaux.
+		À l'opposé, la navigation dans les interfaces graphiques implique des allers-retours entre vues, onglets ou modes, avec de nombreux éléments en commun, et en évitant les séquences de chargement qui pourraient interrompre l'interaction.
+		À cet effet, nous avons écarté l'utilisation d'objets de Contexte <!-- <del><notesh>c'est quoi ces "objets de contexte" ?</notesh></del> -->, préférant la flexibilité des Composants pour partager des éléments entre vues.
+	</dd>
+</dl>
+
+<h4>Implémentation des Entités et Composants</h4>
+
+<!-- Pourquoi ?
+	_ familiarité des programmeurs au modèle objet, et à la syntaxe d'appartenance "le champ <prop> de l'objet <obj>"
+	_ un entier présume qu'on va stocker dans un tableau, un objet ne présume rien (donc nous donne le plus de liberté)
+	_ aucune contrainte sur les Composants pour pouvoir expérimenter (méthodes setter, réutilisation de types comme Position ou Color, stockage de pointeurs d'Entités parfois, stockage extensible pour les variables privées des Systèmes)
+	_ le stockage des composants est une optimisation importante, or on considère que JS met déjà en oeuvre des optimisations pour ses objets, donc on réutilise !
+	_ Pour les fabriques, au début on générait les Entités de zéro, et dans une version récente où le dessin est enregistré par sérialisation des objets, on charge les Entités en exécutant le code JS du fichier
+-->
+<p>
+	Dans Polyphony nous représentons les Entités par des objets natifs, encapsulés dans des objets <i>Proxy</i> de JavaScript.
+	Les objets Proxy nous permettent d'intercepter toutes les opérations natives qu'ils recoivent, ce qui nous permet de proposer des Entités accessibles avec la syntaxe native de JavaScript [<a href=#ecma_international_ecmascript_2015>Ecm15</a>], mais se comportent différemment.
+	Ces opérations sont :
+</p>
+<ul>
+	<li><code>e.c</code> renvoie la valeur du Composant <code>c</code> pour l'Entité <code>e</code> (ou <code>undefined</code>) ;</li>
+	<li><code>e.c = v</code> associe le Composant <code>c</code> de valeur <code>v</code> à l'Entité <code>e</code> ;</li>
+	<li><code>'c' in e</code> renvoie <code>true</code> si et seulement si <code>e</code> est associée à <code>c</code> ;</li>
+	<li><code>delete e.c</code> dissocie <code>c</code> de l'Entité <code>e</code>.</li>
+</ul>
+<p>
+	Les raisons de la réutilisation d'une syntaxe d'objets sont principalement car les développeurs en IHM sont très familiers du modèle objet, donc de la syntaxe <code>obj.property</code> d'accès à un champ d'un objet.
+	Nous réutilisons donc un concept connu et bien maîtrisé.
+	L'autre raison de ce choix est que la représentation des Entités par des entiers (dans Artemis) présume qu'on va les stocker dans des tableaux, ce qui casse l'abstraction entre les Entités et leur stockage effectif.
+	Enfin, comme nous ne pouvions pas anticiper les usages qui allaient être faits des Entités, nous avons choisi de permettre un maximum de flexibilité dans l'évolution de notre modèle, en faisant des Entités de simples dictionnaires.
+	De même nous n'avons imposé aucune contrainte sur les Composants, pour expérimenter différents choix de conception : utilisation des méthodes <i>setter</i> sur les Composants, distinction des types et noms des Composants (ex. <code>backgroundColor</code> pour un type <code>Color</code>, alors que les implémentations font souvent coïncider les deux), réutilisation de Composants immutables (ex. <code>Color</code>), ou encore stockage dynamique dans les Composants pour que les Systèmes ajoutent des variables privées.
+</p>
+<p>
+	Pour ce qui est du stockage effectif des Composants, les implémentations que nous avons étudiées mettent en œuvre des bases de données sophistiquées, afin d'optimiser spécifiquement certains types de traitements.
+	Ainsi, Artemis optimise les traitements des Systèmes, car à partir de chaque Composant, les Systèmes peuvent obtenir toutes les valeurs qui les intéressent.
+	À l'opposé, Entitas stocke les Composants ensemble au sein d'une même Entité, et optimise ainsi les traitements effectués à la suite sur une même Entité.
+	Dans notre cas, nous avons considéré que l'optimisation du stockage des objets est déjà un problème majeur pour JavaScript, donc nous avons choisi de réutiliser les objets natifs.
+</p>
+<p>
+	Pour ce qui est des fabriques d'Entités, dans les premières versions de Polyphony nous initialisions chaque Entité par du code écrit à la main.
+	Lorsque nous avons pu dessiner des formes dans notre application d'exemple, nous avons implémenté l'enregistrement et le chargement des Entités du canevas.
+	Plutôt que d'importer un format externe et en compliquer l'apprentissage, nous avons choisi de <i>sérialiser</i> les Entités en code JavaScript, et de “charger” un tel fichier en l'exécutant simplement.
+</p>
+<!-- <del><p>
+	La définition d'un type de Composant est équivalente à celle d'un type d'objet dans JavaScript.
+	Ainsi nous n'empêchons pas la violation du paradigme ECS puisqu'il est théoriquement possible d'inclure des méthodes d'objet.
+	Notre implémentation d'ECS n'est pas conçue pour être robuste aux erreurs, mais plutôt pour offrir une syntaxe minimale, afin de construire des applications complexes tirant parti des atouts de la composition, à moindre effort.
+</p>
+<p>
+	De même, pour l'implémentation des Patrons d'Entités nous utilisons des <i>fabriques</i> d'Entités, qui sont de simples fonctions prenant en argument optionnel une Entité à “améliorer” en type prédéterminé.
+</p></del> -->
+
+<h4>Implémentation des Systèmes</h4>
+
+<!-- Pourquoi ?
+	_ Voulait rapprocher du concept de "fonction avec attributs", qui stockerait en particulier les évts extérieurs qui la déclenchent (plutôt que l'enregistrer en cb)
+	_ Pas d'exécutions autres que périodique car pas de besoin explicite a priori
+	_ Pas d'attachement à une sélection, car combinaison entre widgets et périphériques
+	_ Pour l'ordonnancement des Systèmes on veut pouvoir représenter la chaîne des Systèmes visuellement, voire à terme avec une interface d'édition
+	_ On aurait pu implémenter les dépendances explicites, mais si peu de Systèmes, ce n'est pas beaucoup de travail d'ordonner à la main
+-->
+<p>
+	Dans Polyphony, les Systèmes sont matérialisés par des fonctions de JavaScript, encapsulées comme des Entités dans des objets <i>Proxy</i>.
+	JavaScript permet en effet d'assigner des propriétés à des fonctions, tout en leur attribuant un type natif distinct (<code>function</code> plutôt qu'<code>object</code>).
+	Nous pouvons donc distinguer une Entité exécutable d'une Entité qui ne l'est pas, tout en supportant la gestion des Composants d'une manière commune.
+</p>
+<p>
+	Nous avons initialement choisi d'implémenter les Systèmes par de simples fonctions (plutôt que des méthodes d'objets) pour nous rapprocher d'un concept de “fonctions avec attributs” (qui stockeraient des variables).
+	Notre idée était alors d'<i>augmenter</i> la déclaraction d'une fonction avec des initialisations d'attributs, qui renseigneraient en particulier les déclencheurs extérieurs de la fonction.
+	Nous pouvions ainsi nous passer de l'enregistrement explicite de ces fonctions comme des <i>callbacks</i>, puisque le système se chargerait automatiquement de rediriger les évènements externes vers les fonctions avec les attributs correspondants.
+</p>
+<p>
+	Contrairement à Entitas, Polyphony supporte uniquement les Systèmes exécutés périodiquement, et contrairement à Artemis et Entitas, les Systèmes ne sont pas attachés explicitement à une Sélection.
+	Dans ces frameworks, il est courant que chaque Système opère sur une Sélection d'Entités.
+	Ils favorisent donc ces usages en offrant des Systèmes qui implémentent déjà l'itération sur une Sélection, et ne nécessitent qu'une fonction qui sera exécutée pour chaque Entité itérée.
+	Dans notre cas, la combinaison des widgets (Entités) et des périphériques (Entités) fait que de nombreux Systèmes itèrent sur plusieurs Sélection.
+	De plus, nous souhaitions ne pas limiter l'exécution d'un Système à une fonction exécutée par Entité, mais permettre des traitements de groupes si nécessaire.
+	Nous n'avons donc pas attaché explicitement les Systèmes aux Sélections qu'ils traitent.
+	Ce point pourrait changer à l'avenir, car il est difficile actuellement pour une Entité d'énumérer les Systèmes qui sont actifs pour elle, ce qui peut compliquer leur utilisation par les développeurs.
+</p>
+<p>
+	Pour l'ordonnancement des Systèmes, nous avons souhaité pouvoir <i>représenter</i> visuellement la chaîne des Systèmes, voire à terme proposer une interface d'édition.
+	Ce point nous a incités à limiter le nombre de Systèmes, et à opter pour une chaîne linéaire plutôt qu'un graphe de dépendances qui aurait été plus complexe à représenter.
+	Étant donné le faible nombre de Systèmes, il était envisageable de les ordonner à la main, plutôt qu'exprimer des dépendances explicites entre Systèmes, et les ordonner avec un parcours dans un graphe de dépendances.
+	Les Systèmes possèdent donc un Composant <code>order</code> pour ordonner manuellement leur liste.
+	Cependant, le support des Composants sur les Systèmes n'exclut pas l'ajout de dépendances entre Systèmes ultérieurement.
+</p>
+<!-- <del><p>
+	Ces fonctions sont nécessairement <i>nommées</i> — ce ne sont pas des fonctions lambda, anonymes.
+	En effet, pour la sérialisation et le débogage des applications, il est important que les Entités accessibles globalement connaissent leur nom.
+	Toute fonction nommée de JavaScript stocke son nom dans un attribut <code>name</code>, qui est automatiquement considéré comme un Composant.
+</p></del>
+ -->
+<h4>Implémentation du Contexte et des Sélections</h4>
+
+<!-- Pourquoi ?
+	_ Rappel des Sélections flexibles
+	_ En pratique on observe qu'on a principalement eu besoin de listes de Composants (sauf condition sur valeur de Composant, mais qui peut se convertir en Composant), et jamais d'algèbre -> intégration à des implémentations ECS majeures en future work
+	
+-->
+<p>
+	Artemis-odb et Entitas définissent chacun une classe pour stocker les Entités actives et matérialiser le Contexte.
+	Ils créent de nouvelles Entités, leur lient des Composants, et enregistrent de nouveaux Systèmes en appelant des méthodes sur l'objet Contexte.
+	Ils permettent également d'instancier plusieurs de ces Contextes pour représenter plusieurs <i>mondes</i>, par exemple pour charger le niveau suivant ou gérer un second joueur sur la même machine.
+	Polyphony à l'inverse ne fournit pas de Contexte explicite, et rend tout global, sans qu'il soit nécessaire de conserver une référence contextuelle.
+	A la place, on peut gérer plusieurs <i>mondes</i> en ajoutant un Composant <code>mondes</code> à chaque Entité, afin de gérer les Contextes parents de chaque Entité.
+</p>
+<p>
+	Comme expliqué en <a href=#sec3x3x2x3>section 3.3.2.3</a>, nous avons choisi d'implémenter chaque Descripteur par une fonction (plutôt qu'une liste de Composants à posséder).
+	De plus nous ne fournissons pas d'algèbre de composition des Sélections, afin de réutiliser de façon cohérence l'algèbre booléenne du JavaScript, et pour ne pas présupposer de l'utilisation qu'en auront les développeurs.
+	Jusqu'à présent, nos besoins se sont principalement résumés à des listes de Composants, quelques rares exceptions (des conditions sur les valeurs internes des Composants) pouvant se ramener à des Composants.
+	Il est donc envisageable à l'avenir d'intégrer Polyphony avec une implémentation existante d'ECS, pour bénéficier d'une exécution plus optimisée.
+</p>
+<!-- <del><p>
+	Enfin, pour les Sélections d'Entités nous fondons les Descripteurs sur les fonctions lambda natives de JavaScript, <i>accept: Entité→Booléen</i>.
+	Les algèbres de combinaison de Sélections <i>all/one/none</i> peuvent ainsi être implémentées à l'aide des opérateurs logiques <i>et/ou/non</i> de JavaScript.
+	Par exemple, pour filtrer toutes les Entités contenant les Composants <code>position</code> et <code>size</code> mais pas <code>origin</code>, on écrit : <code>e => 'position' in e && 'size' in e && !('origin' in e)</code>.
+	Cette syntaxe concise nous épargne la définition d'une algèbre supplémentaire par dessus le langage hôte, comme font Artemis-odb et Entitas.
+</p>
+
+<sh>Cette section laisse sur la faim... la discussion "de surface" de la section 2.4.1 sur les autres implémentations d'ECS, c'est OK pour un article, mais manque un peu de profondeur pour une thèse... c'est plutôt une liste de features sans vraiment rentrer dans la discussion plus  profonde qu'on attend. Et ensuite, les choix d'implémentation, c'est un peu pareil.  Au final, ça "n'informe" malheureusement pas beaucoup :(</sh></del> -->
+
+<h4>Intégration avec le langage JavaScript</h4>
+
+<!-- Pourquoi ?
+	_ Réutiliser les accesseurs d'objets et la syntaxe de déclaration récursive
+	_ Comparaison à une ancienne version en Java
+-->
+<p>
+	Comme discuté dans les Essentiels d'Interaction, nous avons voulu souligner le rapport étroit entre un framework et le langage de programmation qu'on utilise.
+	Dans Polyphony, ce rapport se manifeste par la réutilisation de la syntaxe d'accès aux objets, pour accéder aux Entités.
+	En particulier, l'initialisation des Entités réutilise et étend celle des objets de JavaScript :
+</p>
+<pre><code class="lang-js line-numbers">let e = Entity({
+	depth: 0,
+	bounds: new Bounds(0, 0, 100, 50),
+	shape: SHAPE_RECTANGLE,
+	backgroundColor: rgba(0, 0, 255),
+})
+</code></pre>
+<p>
+	La fonction <code>Entity</code> crée et renvoie un objet <code>Proxy</code> de JavaScript, qui intercepte tous les accès de lecture et écriture, et nous permettent de le faire se <i>comporter</i> comme une Entité.
+	Par extension, la définition d'un arbre d'Entités se fait avec une déclaration récursive, que la syntaxe de déclaration des objets de JavaScript permet déjà :
+</p>
+<pre><code class="lang-js line-numbers">let root = Entity({
+	children: [
+		Entity({
+			depth: 0,
+			bounds: new Bounds(0, 0, 100, 50),
+			shape: SHAPE_RECTANGLE,
+			backgroundColor: rgba(0, 0, 255),
+		}),
+		Entity({
+			depth: 1,
+			bounds: new Bounds(50, 20, 80, 50),
+			shape: SHAPE_RECTANGLE,
+			backgroundColor: rgba(255, 0, 0),
+		}),
+	],
+}
+</code></pre>
+<p>
+	À titre d'illustration, nous avons synthétisé dans le <a href=#tab-syntaxe>tableau</a> les différences de syntaxe de Polyphony, entre JavaScript et une version antérieure en Java [<a href=#raffaillac_application_2018>Raf18</a>].
+	Chacune de ces différences est permise par l'utilisation de métaprogrammation par l'objet <code>Proxy</code>.
+	La différence majeure entre les deux versions est dans la lisibilité de la syntaxe, plus courte et moins ponctuée.
+	Grâce à ce changement de langage, nous avons pu réduire la taille des applications utilisant Polyphony, et ainsi construire plus aisément des cas d'étude plus complexes.
+</p>
+<style>#tab-syntaxe th { vertical-align:middle }</style>
+<table id=tab-syntaxe>
+	<tr style="border-bottom:1pt solid black"><th></th><th>Java</th><th>JavaScript</th></tr>
+	<tr><th>Initialisation d'Entité</th><td><pre><code class="lang-java">Entity e = new Entity()
+	.add("property", value)
+	...</code></pre></td><td><pre><code class="lang-js">let e = Entity({
+	property: value,
+	...})</code></pre></td></tr>
+	<tr><th>Lecture de propriété</th><td><code class="lang-java">(Type)e.get("property")</code></td><td><code class="lang-js">e.property</code></td></tr>
+	<tr><th>Écriture de propriété</th><td><code class="lang-java">e.set("property", value)</code></td><td><code class="lang-js">e.property = value</code></td></tr>
+	<tr><th>Test de propriété</th><td><code class="lang-java">e.has("property")</code></td><td><code class="lang-js">'property' in e</code></td></tr>
+	<tr><th>Ajout de propriété</th><td><code class="lang-java">e.add("property", value)</code></td><td><code class="lang-js">e.property = value</code></td></tr>
+	<tr><th>Suppression de propriété</th><td><code class="lang-java">e.remove("property")</code></td><td><code class="lang-js">delete e.property</code></td></tr>
+	<caption>Comparaison des syntaxes d'utilisation de Polyphony entre Java et JavaScript</caption>
+</table>
+<p>
+	Pour bénéficier d'une syntaxe “intégrée” à celle du langage JavaScript (c'est-à-dire qui réutilise et détourne des éléments de syntaxe, plutôt que de proposer une API par fonctions), nous avons fait des compromis dans les choix de conception de Polyphony.
+	Ainsi, notre framework a été influencé en partie par certaines caractéristiques de JavaScript :
+</p>
+<ul>
+	<li>L'implémentation des objets comme dictionnaires nous a naturellement incités à utiliser cette structure de données pour les Entités, plutôt qu'une base de données.</li>
+	<li>L'absence de types pour les champs des objets nous a incités à ne pas en imposer a priori dans Polyphony, bien qu'à l'avenir nous n'excluons pas d'expérimenter leur utilisation.</li>
+</ul><ul>
+	<li>Une Entité ne “porte” pas son identifiant, à l'inverse de frameworks comme djnn [<a href=#magnaudet_what_2014>Mag14</a>] ou le DOM [<a href=#the_whatwg_community_dom_2015>WHA15</a>]. Les identifiants sont portés par les propriétés des objets ainsi que les variables du langage, qui <i>référencent</i> les Entités. Ainsi chaque Entité peut être référencée sous plusieurs noms. Cette caractéristique est intégrée dans JavaScript, et partagée par la majorité des langages de programmation, donc par cohérence nous l'avons adoptée dans Polyphony.</li>
+</ul>
+<p>
+	En pratique, Polyphony peut être implémenté dans de très nombreux langages.
+	Bien que les choix de conception aient été <i>orientés</i> pour être hautement compatibles avec des langages orientés objet dynamiques, l'implémentation dans un langage moins compatible est possible.
+	Le niveau de compatibilité d'un langage avec Polyphony dépendra du support de différentes caractéristiques.
+	Pour clarifier ce dernier point, nous énumérons dans le <a href=#tab-compat>tableau</a> les caractéristiques définissant cette compatibilité pour cinq langages impératifs.
+</p>
+<p>
+	JavaScript et Python ont la meilleure compatibilité, on peut y implémenter Polyphony en se basant sur les objets natifs du langage.
+	Smalltalk ne permet pas d'étendre les variables d'une instance en particulier.
+	Cependant il permet d'intercepter les accès aux propriétés (qui sont de simples envois de messages), donc d'implémenter les Entités comme des objets, mais avec des dictionnaires.
+	Java et C ne permettent pas d'intercepter les lectures/écritures de propriétés, nous ne pouvons donc pas utiliser la syntaxe native d'accès aux objets (voir le <a href=#tab-syntaxe>tableau</a>).
+	Enfin, pour les langages qui ne supportent pas la déclaration et l'initialisation simultanées d'objets, on ne pourra pas initialiser les Entités comme les objets de façon récursive.
+</p>
+<table id=tab-compat>
+	<tr style="border-bottom: 1pt solid black"><td></td><th>JavaScript</th><th>Python</th><th>Java</th><th>Smalltalk</th><th>C</th></tr>
+	<tr><th>Dictionnaires</th><td class=bgG>oui</td><td class=bgG>oui</td><td class=bgG>oui</td><td class=bgG>oui</td><td class=bgR>non</td></tr>
+	<tr><th>Déclaration/initialisation d'objet simultanées</th><td class=bgG>oui</td><td class=bgG>oui</td><td class=bgR>non</td><td class=bgR>non</td><td class=bgR>non</td></tr>
+	<tr><th>Initialisation d'objets récursive</th><td class=bgG>oui</td><td class=bgY>tableaux</td><td class=bgR>non</td><td class=bgG>oui</td><td class=bgG>oui</td></tr>
+	<tr><th>Typage</th><td class=bgY>nominatif,<br>dynamique</td><td class=bgY>nominatif,<br>dynamique</td><td class=bgR>nominatif,<br>statique</td><td class=bgY>nominatif,<br>dynamique</td><td class=bgR>nominatif,<br>statique</td></tr>
+	<tr><th>Références vers fonctions</th><td class=bgG>objets</td><td class=bgG>objets</td><td class=bgG>objets</td><td class=bgG>objets</td><td class=bgG>pointeurs</td></tr>
+	<tr><th>Fonctions avec propriétés</th><td class=bgG>oui</td><td class=bgG>oui</td><td class=bgR>non</td><td class=bgR>non</td><td class=bgR>non</td></tr>
+	<tr><th>Ajout/suppression de variable</th><td class=bgG>oui</td><td class=bgG>oui</td><td class=bgR>non</td><td class=bgR>non</td><td class=bgR>non</td></tr>
+	<tr><th>Ajout/suppression de méthode</th><td class=bgG>oui</td><td class=bgY>verbeux</td><td class=bgR>non</td><td class=bgR>non</td><td class=bgR>non</td></tr>
+	<tr><th>Itérateurs extensibles</th><td class=bgG>oui</td><td class=bgG>oui</td><td class=bgG>oui</td><td class=bgG>n/a</td><td class=bgR>non</td></tr>
+	<tr><th>Interception d'accès à une propriété</th><td class=bgG>oui</td><td class=bgG>oui</td><td class=bgR>non</td><td class=bgG>n/a</td><td class=bgR>non</td></tr>
+	<tr><th>Énumération de propriétés</th><td class=bgG>oui</td><td class=bgG>oui</td><td class=bgG>oui</td><td class=bgG>oui</td><td class=bgR>non</td></tr>
+	<caption>Compatibilités de cinq langages pour l'implémentation de Polyphony</caption>
+</table>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<link rel=stylesheet href=style.css>
+<link rel=stylesheet href=prism.css>
+<script src=scripts.js></script>
+<script src=prism.js></script>
+<script>prefix_headers(3, 4)</script>

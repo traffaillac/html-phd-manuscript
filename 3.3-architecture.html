@@ -1,0 +1,600 @@
+<!-- TODO: Indiquer que le modèle est encore assez immature, qu'il réutilise des éléments d'OOP, donc qu'on ne peut pas encore dire EOP. -->
+<!-- TODO: Dans les choix d'implémentation, comparer l'affichage par formes+images+texte à l'affichage de widgets prédéterminés -->
+<!-- TODO: Parler du problème de risque de perte d'évènements (tmpPressed/Released) avec l'aggrégation toutes les 25ms, et la nécessité de passer à une machine réactive -->
+<!-- TODO: Améliorer la discussion sur DnD en indiquant que les objets de drop sont statiques et donc susceptibles d'être objets d'intérêt, donc doivent porter les tmp... -->
+<!-- TODO: Faut-il réserver chaque type de Composant (ex: Coordinates) à un nom de Composant donné (ex: cursorPosition) ? -->
+<!-- TODO: Par extension au typage structurel, faut-il faire que les variables d'un Composant soient intégrées à l'Entité (ex: e.x) ? Travaux futurs ? -->
+<!-- TODO: Mentionner qu'il est difficile de différentier ECS d'OOP du fait que toutes les implémentations se basent sur des langages OOP -->
+
+<h2>Architecture de Polyphony</h2>
+
+<!-- Plan :
+	_ Fondements d'une architecture logicielle basée sur ECS
+	_ L'architecture d'interfaces graphiques de Polyphony
+	_ Modélisation des Composants et des Systèmes (et Sélections et périphériques)
+-->
+<p>
+	Cette section est dédiée à la construction d'une architecture logicielle pour Polyphony.
+	Le but de ce travail est de faciliter la <i>réplication</i> de Polyphony à des fins de recherche.
+	En effet, nous considérons que le modèle ECS est destiné à évoluer, à mesure que des applications plus complexes seront construites avec.
+	Polyphony étant un travail relativement jeune, nous manquons encore de recul pour juger de certains choix de conception.
+	Polyphony étant un travail relativement préliminaire et exploratoire, certains de nos choix de conception devront encore être évalués et mis à l'épreuve de situations plus écologiques, afin de mieux en cerner les avantages et inconvénients.
+<!-- 	<del><notesh>Tu cherches souvent le bâton pour te faire battre. L'objectif n'est pas de noyer le poisson ou cacher des choses, mais d'utiliser un vocabulaire plus objectif et neutre (sans porter toi même de jugement sur ton travail, mais en donnant de quoi le faire). Donc, par exemple : "Polyphony étant un travail relativement préliminaire et exploratoire, certains de nos choix de conception doivent encore être évalué et mis à l'épreuve de situations plus écologique afin de mieux en cerner les avantages et inconvénients."</notesh></del> -->
+	Il est donc important pour nous de documenter aussi clairement que possible son fonctionnement, afin que d'autres chercheurs puissent le reproduire et le faire évoluer.
+</p>
+<p>
+	Nous commençons par détailler la “philosophie” de la programmation avec ECS, à la lumière de ses différences avec la Programmation Orientée Objet (POO).
+	Ensuite nous présentons <i>l'architecture</i> de Polyphony, c'est-à-dire l'ensemble des structures qui la composent et leurs interactions, qui rendent les applications interactives vis-à-vis des utilisateurs finaux.<!-- <del>visibles <notesh>visibles ?</notesh> et interactives pour les utilisateurs.<notesh>qui sont les utilisateurs, là ? Ceux de Polyphony (développeurs) ou les utilisateurs finaux ? ...  préciser...</notesh></del> -->
+	Enfin, comme il existe de nombreuses manières de concevoir les Systèmes et les Composants d'une interface graphique avec ECS, nous mettons en évidence ces choix et expliquons nos décisions pour Polyphony.
+</p>
+
+<h3>Fondements d'une architecture logicielle basée sur ECS</h3>
+
+<!-- Différences et conséquences, puis résumé avec tableau et description de haut niveau de la "pensée" avec ECS. -->
+<p>
+	Les origines d'ECS sont étroitement liées au modèle objet.
+	En effet, le domaine du développement de moteurs de jeux vidéo (hors <i>scripting</i>) est notoirement dominé par C++ et la programmation par objets.
+	ECS y a émergé initialement comme une alternative à la POO, avec comme point de départ l'utilisation des données (Composants) comme interfaces entre programmeurs et designers/artistes<!-- <del><notesh>designers/artistes? (on peut utiliser designer en français)</notesh></del> -->.
+	Comme décrit par Leonard [<a href=#leonard_postmortem_1999>Leo99</a>], « <i>Programmers specified the available properties and relations, and the interface used for editing, using a set of straightforward classes and structures. Using GUI tools, the designers specified the hierarchy and composition of game objects independent of the programming staff. In Thief there was no code-based game object hierarchy of any kind</i> ».
+</p>
+<p>
+	Ensuite, les consoles de 7e génération (Playstation 3 et Xbox 360) ont contribué au développement et à la popularisation de la <i>conception orientée données</i> (<i>data-oriented design</i>) pour l'optimisation des jeux [<a href=#acton_data-oriented_2014>Act14</a>].
+	Ces consoles étant très sensibles à la fragmentation des accès mémoire, il fallait pouvoir contrôler précisément le stockage des différentes données, pour laquelle la POO était perçue comme limitante [<a href=#llopis_data-oriented_2009>Llo09</a>].
+	Grâce à son utilisation centrale des données, ECS s'est développé de pair avec la conception orientée données, acquérant ensuite une distinction plus précise entre l'abstraction des Composants et leur stockage en pratique.
+</p>
+<p>
+	De par son origine comme alternative à la programmation par objets, ECS se comprend au mieux à partir de ses différences avec la POO.
+	Nous les synthétisons dans le <a href=#tab-poo>tableau</a>, et les utilisons comme points de départ pour décrire l'architecture de Polyphony ci-dessous.
+	Dans les descriptions qui suivent, les “éléments” désignent à la fois les objets et les Entités.
+</p>
+<table id=tab-poo class=striped>
+	<colgroup><col style="width:23%"><col style="width:38%"><col style="width:38%"></colgroup>
+	<tr style="border-bottom:1pt solid black"><th></th><th>POO</th><th>ECS</th></tr>
+	<tr><th>Liens entre éléments<br>et données</th><td>l'objet <i>stocke</i> ses données</td><td>les données sont <i>attachées</i> aux Entités</td></tr>
+	<tr><th>Structure de données<br>des éléments</th><td>structure/<i>record</i> (langages statiques),<br>dictionnaire (langages dynamiques)</td><td>base de données (Composants)</td></tr>
+	<tr><th>Localisation du code</th><td>global (fonctions), local (méthodes d'objets)</td><td>global (Systèmes)</td></tr>
+	<tr><th>Modèle de flux d'exécution</th><td>messages (appels de méthodes) entre objets</td><td>séquence de Systèmes</td></tr>
+	<tr><th>Contrôle des accès<br>aux données</th><td>variables privées/publiques (encapsulation)</td><td>Composants publiques</td></tr>
+	<tr><th>Réutilisation de code<br>et variables</th><td>héritage (classes ou prototypes),<br>composition (interfaces, mixins, ...)</td><td>composition (Systèmes et Composants) <!-- <del>Systèmes (code),<br>Composants (variables)<notesh>sur cette ligne, tu ne mets pas des éléments du même niveau. Tu parles d'héritage et composition dans l'autre cellule, et ici des systèmes et composants. Changer ici en "centralisation du code (Systèmes) et composition (Composants)" ?</notesh></del> --></td></tr>
+	<tr><th>“Nature” d'un élément</th><td>types des classes/prototypes<br>dans sa chaîne d'héritage</td><td>ensemble des Descripteurs l'évaluant positivement <!-- <del><i>positifs</i><notesh>que veux dire positifs ?</notesh><br>pour une Entité</del> --> à tout instant</td></tr><!-- Mentionner le fait que cette "apparence" n'est pas uniforme mais change dans le temps -->
+	<tr><th>Visibilité d'un élément<br>non-global</th><td>en conservant une référence vers l'objet</td><td>en conservant une référence vers l'Entité<br>ou en l'obtenant par une Sélection</td></tr>
+	<tr><th>Suppression d'un élément</th><td>implicite (portée lexicale, ramasse-miettes),<br>explicite (C++)</td><td>explicite</td></tr>
+	<caption>Comparaison des caractéristiques discriminantes entre POO et ECS.</caption>
+</table>
+<!-- TODO: Ajouter une partie sur le fait qu'en OOP l'apparence d'un widget est matérialisée par du code (qu'on transforme ensuite en données pour la carte graphique), alors qu'en ECS ce sont des données (qu'on transforme aussi, mais avec optimisations) -->
+<!-- TODO: Préciser que comme dans ECS ce ne sont pas les Entités qui portent leur comportement, -->
+
+<h4>Liens entre éléments et données, et structure de données des éléments</h4>
+
+<p>
+	Dans ECS, on sépare clairement l'attachement des données aux Entités, de leur stockage en pratique.
+	Ainsi, si une Entité “possède” des Composants <code>bounds</code> et <code>backgroundColor</code>, il n'y a aucune raison de penser que ces deux données seront stockées conjointement dans une même structure ou dictionnaire.
+	Pourtant, ces données seront bien accessibles avec une syntaxe d'accesseurs commune aux objets, <code>e.bounds</code> et <code>e.backgroundColor</code> — le point symbolise alors la relation d'appartenance “Composant <i>de</i> l'Entité”.
+	Dans Polyphony nous avons choisi d'utiliser des dictionnaires, pour nous concentrer sur l'utilisation d'ECS à haut niveau plutôt que son implémentation.
+	Cependant, de nombreuses implémentations utilisent des bases de données sophistiquées dans le but d'améliorer la performance des accès mémoire, en particulier du point de vue des Systèmes (voir la <a href=#sec3x4>section 3.4</a> pour une analyse d'implémentations existantes<!-- <del>cf. la section suivante <notesh>section ou chapitre ? Dans tous les cas, préférer des références sous la forme "voir la section x.y "Titre de la section", p. P" avec si possible un lien dynamique</notesh></del> -->).
+</p>
+<p>
+	Il faut donc noter que la modification d'<i>un</i> Composant sur <i>une</i> Entité est une opération non triviale, en particulier dans les implémentations avec bases de données.
+	Le choix du stockage des Composants est un compromis entre fréquence des modifications d'Entités et fréquence des accès par les Systèmes, les derniers étant typiquement privilégiés car normalement plus fréquents.
+	Ce point explique que la description de l'architecture de Polyphony représente séparément Entités et Composants, alors que leur lien est en surface analogue à celui des objets et leurs données.
+</p>
+
+<h4>Localisation du code</h4>
+
+<p>
+	Contrairement aux objets, les Entités ne possèdent pas de code propre.
+	Le code de l'application est intégralement contenu dans les Systèmes, et leur exécution “fait vivre” <!-- <del><notesh>mettre "fait vivre" entre quotes</notesh></del> --> l'interaction avec les utilisateurs.
+	Dans une architecture d'interaction basée sur des objets comme MVC [<a href=#krasner_cookbook_1988>Kra88</a>], le fonctionnement d'une interface est modélisé par des échanges de messages (appels de méthodes) entre objets.
+	Par exemple, tout objet visible à l'écran possèderait une méthode <code>onDraw</code>, le rafraîchissement de l'affichage consisterait à parcourir tous les objets visibles dans un ordre prédéterminé, et pour chacun appeler la méthode <code>onDraw</code>.
+	On dit ainsi qu'un objet “sait s'afficher”.
+</p>
+<p>
+	Avec ECS, tout élément visible à l'écran possède des attributs (Composants) de couleur de fond, de couleur et épaisseur de bordure, d'image affichable, ou de texte.
+	Ainsi, il ne “sait” pas s'afficher, mais compose son affichage grâce à ses attributs.
+	Plusieurs Systèmes se chargent d'exécuter les instructions d'affichage :
+</p>
+<ul>
+	<li>Un “Système de rendu d'arrière-plan” obtient toutes les Entités possédant une couleur de fond et une forme, et pour chacune dessine une forme pleine à l'écran.</li>
+	<li>Un “Système de rendu de contours” obtient toutes les Entités possédant une bordure et une forme, et pour chacune dessine un contour de forme à l'écran.</li>
+	<li>Un “Système de rendu d'images” obtient toutes les Entités possédant une image à afficher, et pour chacune dessine leur image à l'écran.</li>
+	<li>Enfin, un “Système de rendu de texte” obtient toutes les Entités possédant un attribut de texte, une police d'affichage et une forme délimitante, et pour chacune dessine le texte à l'écran à l'intérieur de la forme délimitante.</li>
+</ul>
+<!--
+	_ chaque “type” de comportement est contenu dans un Système
+	_ lorsqu'un système implémente déjà un comportement donné, le fait qu'il soit directement accessible incite à l'utiliser
+	_ les développeurs peuvent très bien ne pas concevoir pour réutilisation, mais nous conjecturons que ce modèle encourage la réutilisabilité (sans la forcer)
+-->
+<p>
+	Dans certains cas un comportement peut ne pas être composable à l'aide des Systèmes existants.
+	Par exemple, une Entité peut nécessiter le dessin d'une figure en 3 dimensions.
+	Que ce comportement soit spécifique à <i>une</i> Entité, ou réutilisable par plusieurs Entités, il sera toujours implémenté avec un nouveau Système (plutôt qu'une méthode attachée à chaque Entité).
+	Avec ce mécanisme, chaque “type” de comportement est normalement contenu dans un Système.
+	En effet, lorsqu'un Système implémente déjà un comportement donné, le fait qu'il soit accessible publiquement promeut son utilisation.
+	Il est tout à fait possible que les développeurs ne conçoivent pas un Système pour qu'il soit réutilisé, mais nous conjecturons que le modèle ECS encourage la réutilisabilité dans le programme (sans toutefois l'imposer).
+<!-- 	<del><notesh>Est-ce que ça ne vaudrait pas le coup de déjà rapidement évoquer les bénéfices de cette approche ? e.g. ça "force" la ré-utilisabilité: si je n'ai qu'un objet 3D à afficher, en POO, je vais le coder en dur dans la classe et basta... rapide, mais pas réutilisable; avec ECS, il y a des chances que je pense tout de suite à faire que mon système soit capable d'afficher "des" objets 3D, pas que celui-là, du coup peut-être un peu plus d'efforts, mais plus générique/général. D'ailleurs, c'est un point intéressant que je note ici même si je n'ai pas encore lu les discussions de plus haut niveau qui vont suivre dans le manuscrit, mais un point peut être intéressant à discuter serait comment ce modèle "impose" une façons de penser et réaliser le système interactif, et en quoi cela diffère des autres approches. (edit: je viens de lire la 1ère phrase de la section suivante, c'est un peu ça... mais ça sera peut-être à développer encore plus en future work pour proposer une méthodo. pour évaluer l'influence du modèle sur la façons de "penser" et programmer l'interaction.)</notesh></del> -->
+</p>
+
+<h4>Modèle de flux d'exécution</h4>
+
+<p>
+	L'approche de conception orientée données fait qu'avec ECS on se représente une application interactive comme un <i>pipeline</i> transformant continuellement des données d'interaction en retours utilisateurs<!-- <del>sensoriels <notesh> "retours utilisateurs" plutôt que "sensoriels" ?</notesh></del> --> (voir <a href=#fig-modele_execution>figure</a>).
+	Les Systèmes sont les étages de ce pipeline.
+	Leur ordre est normalement fixe, ou change rarement dans le temps.
+	Les données qu'ils traitent sont les Composants des Entités visibles et interactives, ainsi que des Entités des périphériques.
+	Comme chaque Système effectue généralement une opération spécifique à un ensemble d'Entités, il se prête souvent bien à des optimisations de parallélisation (ex. <i>multithreading</i> sur CPU, ou rendu sur la carte graphique).
+</p>
+<figure id=fig-modele_execution>
+	<img src=figures/modele_execution.svg style="width:90%">
+	<figcaption>Schématisation du <i>pipeline</i> d'exécution des Systèmes dans Polyphony, qui transforme les données d'interaction en entrée en données de retours utilisateurs<!-- <del>sensoriels <notesh> "retours utilisateurs" plutôt que "sensoriels" ?</notesh></del> --> en sortie.<!-- <del><notesh>Est-ce que c'est la bonne représentation ? N'est-ce pas trop "linéaire" ? i.e. ne peut-il pas y avoir de sorties au milieu du pipeline ?</notesh></del> --></figcaption>
+</figure>
+<p>
+	Certaines implémentations comme Unity [<a href=#unity_technologies_dots_2019>Uni19</a>] font de ce <i>pipeline</i> un graphe plutôt qu'une chaîne linéaire, afin de permettre la parallélisation de certains traitements.
+	Cependant le modèle d'une chaîne reste commun à la majorité des implémentations d'ECS, et nous nous en sommes contentés dans ce travail.
+</p>
+
+<h4>Contrôle des accès aux données</h4>
+
+<p>
+	En POO, de nombreux langages supportent l'<i>encapsulation</i> des données des objets — c'est-à-dire que seul l'objet propriétaire peut accéder à ses données.
+	L'encapsulation peut faire partie intégrante du langage (ex. les slots privés de Smalltalk), être supportée de manière optionnelle (ex. les mots clefs <code>protected</code>/<code>private</code> de Java), ou être une pratique recommandée (ex. le préfixe <code>__</code> en Python).
+	Sa conséquence principale est qu'il faut “demander” à un objet l'accès à une de ses données, et qu'il est <i>responsable</i> de tout traitement fait avec ses données.
+	Dans un modèle comme PAC [<a href=#coutaz_pac_1987>Cou87</a>] ou MVC [<a href=#krasner_cookbook_1988>Kra88</a>], les objets contenant les données d'intérêt (respectivement l'Abstraction et le Modèle) occupent ainsi une position centrale dans les descriptions d'architecture, les autres facettes ayant pour rôles de leur transmettre les données.
+</p>
+<p>
+	Dans Polyphony, les Composants sont les supports du stockage des données, et occupent une position secondaire.
+	De même, les Entités servent uniquement à retrouver des Composants en commun.
+	Ce sont les Systèmes qui occupent la position centrale, et interagissent avec tous les autres acteurs de l'architecture.
+</p>
+
+<h4>Réutilisation de code et variables</h4>
+
+<p>
+	Dans ECS les Composants sont de simples structures, dont les champs sont prédéfinis et indivisibles.
+	Par exemple, si une Entité possède une valeur d'intensité rouge d'arrière-plan, alors elle possèdera généralement aussi des valeurs d'intensité verte et bleue, formant le composant <code>backgroundColor</code>.
+	Les Composants sont ainsi le modèle de réutilisation de variables d'ECS (tout comme les structures du C).
+	Ils permettent de raisonner à plus haut niveau que les variables atomiques des Entités — qui peuvent en outre être très nombreuses.
+	Dans la plupart des implémentations, chaque Composant est attaché à une seule Entité, cependant certaines implémentation permettent d'attacher un Composant à plusieurs Entités.
+	Par leur attachement dynamique aux Entités qui met en oeuvre l'ajout de comportements, ils sont analogues aux interfaces et <i>mixins</i> en POO, en étant cependant contraints à <b>ne définir que des données</b>.
+</p>
+<p>
+	La mise à disposition de code qui puisse être réutilisé se fait par les Systèmes.
+	Chaque Système est un bloc de code, qui <i>matérialise</i> un comportement du programme.
+	Ainsi, la détection des clics de souris est un Système, de même que l'affichage d'images à l'écran, ou la sérialisation d'un groupe d'Entités en texte.
+	Tous les Systèmes ne sont pas nécessairement des comportements destinés à être réutilisés dans le programme.
+	Par exemple, dans une barre d'outils, le déclenchement des commandes pour chaque clic sur un bouton sera typiquement implémenté dans un Système spécifique à la barre d'outils<!-- <del><notesh>pas clair... un Système pour la barre d'outils ? Un système par bouton ?</notesh></del> -->.
+	ECS décourage donc l'utilisation de <i>callbacks</i> dans l'application, qui sont reconnus pour fragmenter la logique du programme, et en compliquent la maintenance [<a href=#myers_separating_1991>Mye91</a>].
+	Ce regroupement des comportements se fait au prix d'un éclatement du point de vue des Entités.
+	En effet, pour énumérer les comportements observables d'une Entité, il faut énumérer ses Composants, et pour chacun repérer les Systèmes qui ont une influence dessus.
+	Le choix des Composants disponibles est donc important, car ils doivent rendre <i>implicites</i> les comportements qui seront observés pour les Entités qui les acquièrent.
+	Ils forment ainsi un ensemble <i>cohérent</i> d'attributs composables, qui s'ils sont bien choisis permettront aux développeurs d'anticiper les comportements observables des Entités à partir de leurs Composants.
+<!-- 	<del><notesh>Mais alors quelle différence si on doit multiplier les systèmes ? Un autre argument de contradiction est de dire que OK le comportement est factorisé et rassemblé dans les systèmes, mais ça reste fragmenté au niveau des entités, i.e. comment savoir/se rendre compte quand et comment une entité possède tel ou tel comportement, en particulier quand ces derniers sont ajoutés dynamiquement à l’exécution... et du coup comment comprendre la logique du programme ? (je me fais le contradicteur, là ;) )</notesh></del> -->
+</p>
+
+<h4>Nature des éléments</h4>
+
+<p>
+	En POO l'objet qui a servi à initialiser une instance d'objet (sa classe ou son prototype) définit son <i>type</i>.
+	Ce type caractérise la nature même de l'objet, par exemple une voiture aura le type <code>Car</code>, et ce dernier est lui-même un objet, qui définit les propriétés intrinsèques d'une voiture comme <code>height</code> ou <code>nbDoors</code>.
+	Le type est utilisé pour vérifier (statiquement ou à l'exécution) qu'un objet possède des variables et méthodes attendues.
+	Par exemple, une fonction définie en Java par <code>int open_door(Car)</code> s'attend à opérer sur une voiture, donc un appel avec un entier comme <code>open_door(42)</code> déclenchera une erreur de type lors de la compilation.
+</p>
+<p>
+	Avec ECS les Entités ne possèdent aucune propriété intrinsèque, c'est-à-dire qui soit toujours présente.
+	La nature d'une Entité est une notion variable dans le temps, qui change à mesure que des Composants sont ajoutés et retirés de l'Entité.
+	La fabrique ayant instancié une Entité ne peut pas présager de sa nature plus tard, et ne peut donc pas être utilisé comme un type.
+	L'association d'un ou plusieurs types à une Entité est donc nécessairement dynamique, c'est-à-dire qu'ils doivent être évalués chaque fois à l'exécution, et que leur validité court tant qu'aucune modification de Composants n'intervient.
+	C'est par l'intermédiaire des Descripteurs qu'on teste la <i>validité</i> d'une Entité pour une condition booléenne donnée.
+</p>
+<!-- <sh>C'est très bien expliqué tout ça, bravo ! Par contre, ça rejoint mon commentaire précédent sur "l'utilisabilité" d'une telle approche et notamment par exemple lors du débogage... compliqué de savoir et de se rendre compte comment une entité à évolué (e.g. cas simple: une entité que je devrai voir à l'écran ne s'affiche pas parce que à un moment elle a "perdu" un composant nécessaire). Ça soulève des problèmes, intéressants notamment au niveau du langage et de l'environnement de développement, mais sur lesquels tu n'as pas travaillé et il faudra en parler à un moment (au niveau des limitation, mais aussi des perspectives)</sh>
+<traf>Discuté en <a href=#sec3x5x1x5>3.5.1.5</a></traf> -->
+
+<h4>Visibilité d'un élément non-global, et suppression d'un élément</h4>
+
+<p>
+	Comme en POO, on accède à une Entité à partir du moment où on possède une référence vers celle-ci, et le fait de posséder une référence permet d'accéder librement à l'Entité, sans restriction sur l'origine de l'accès.
+	Avec ECS, un mécanisme supplémentaire (la Sélection), permet d'obtenir les références d'Entités répondant à un Descripteur donné.
+	Ce mécanisme est analogue aux sélecteurs de CSS [<a href=#w3c_cascading_1996>W3C96</a>].
+	Dans Polyphony il est utilisé au coeur de l'architecture d'interaction, pour permettre aux Systèmes d'énumérer les Entités sur lesquelles opérer.
+</p>
+<p>
+	En pratique, ce principe favorise une structuration moins forte de l'application.
+	La plupart des frameworks orientés objets se basent en effet sur la construction d'un <i>arbre de scène</i> [<a href=#bederson_jazz_2000>Bed00</a>, <a href=#lecolinet_molecular_2003>Lec03</a>, <a href=#huot_magglite_2004>Huo04</a>].
+	Cette structure de données contient tous les éléments interactifs de l'application.
+	Elle est utilisée à la fois pour énumérer les éléments interactifs (par parcours récursif), et pour représenter des relations de parenté, utiles aux contraintes de positionnement et à la propagation de propriétés [<a href=#bederson_jazz_2000>Bed00</a>].
+	Dans Polyphony, l'arbre de scène est utilisé uniquement pour les relations de parenté, et pour propager des informations de style (opacité, alignement de texte, etc.).
+	Toutes les Entités n'en font pas nécessairement partie (y compris celles visibles et interactives), d'où l'absence d'arbre de scène dans la description de l'architecture.
+</p>
+<p>
+	La contrepartie de ce principe est que contrairement à la POO, on ne peut plus induire qu'un objet est hors de portée si aucune référence ne pointe vers lui.
+	Avec ECS il est normal qu'une Entité ne soit référencée par aucune autre, mais qu'elle soit néanmoins toujours visible et interactive.
+	Les Entités doivent donc être supprimées explicitement.
+	L'invalidation des références (en les assignant à <code>null</code>, ou en retirant les Composants d'autres Entités qui les référencent) est du ressort du programmeur dans Polyphony, cependant il est envisageable dans le futur d'automatiser cette opération.
+</p>
+
+
+
+<h3>Description de l'architecture</h3>
+
+<p>
+	Dans cette partie, nous présentons les éléments constitutifs de Polyphony, ainsi que les relations qu'ils entretiennent entre eux.
+	Cette description de l'architecture est destinée à en donner une vue d'ensemble, ainsi qu'à mettre en lumière l'enchaînement des étapes d'exécution du programme.
+</p>
+<p>
+	Le principe de base de Polyphony est synthétisé en <a href=#fig-architecture>figure</a>.
+	Lorsqu'un Système est activé durant la chaîne d'exécution des Systèmes, il effectue plusieurs types d'opérations :
+</p>
+<ul>
+	<li>Il récupère les listes d'Entités et de périphériques sur lesquels opérer, par l'intermédiaire de Sélections (non représentées sur la figure).</li>
+	<li>Il lit et combine les Composants des Entités avec les périphériques. Par exemple, la combinaison des bornes d'une Entité avec la position d'une souris crée une information de ciblage de la souris vers l'Entité.</li>
+	<li>Enfin, il modifie éventuellement les Composants des Entités et périphériques énumérés, afin de propager les données pour les Systèmes suivants.</li>
+</ul>
+<p>
+	Dans les descriptions qui suivent, nous formulons les <i>services</i> nécessaires au fonctionnement de Polyphony, et les illustrons avec leur syntaxe en code JavaScript.
+	Les descriptions de cette section doivent permettre à quiconque de réimplémenter la première moitié de bas-niveau de Polyphony, en JavaScript ou tout autre langage.
+</p>
+<figure id=fig-architecture>
+	<img src=figures/architecture.svg style="width:12cm">
+	<figcaption>Illustration du fonctionnement d'un Système dans la chaîne d'exécution de Polyphony.</figcaption>
+</figure>
+
+<h4>Entités et Systèmes</h4>
+
+<p>
+	Les Entités sont le coeur de Polyphony.
+	Elles représentent tous les éléments actifs et interactifs de l'application, du point de vue des utilisateurs.
+	Dans Polyphony, chaque Entité se comporte comme un dictionnaire associant des noms à des références de Composants.
+	Une Entité peut être créée à partir d'une fonction, auquel cas elle est exécutable et représente un Système.
+	Cette fonction peut exister sous la forme d'un Composant spécial, ou à l'aide d'un type d'objet spécifique du langage (dans notre cas le type natif <code>function</code>).
+	Les services relatifs aux Entités et Systèmes sont :
+</p>
+<dl>
+	<dt>Création d'une Entité — <code>let e = Entity(obj, fct_params)</code></dt>
+	<dd>
+		Une Entité est instanciée, et sa référence est stockée dans la liste des Entités actives.
+		Un objet peut éventuellement être passé en premier paramètre, auquel cas il est utilisé pour fournir des Composants initiaux à l'Entité.
+		Cet objet peut aussi être une fonction, auquel cas un second paramètre fournit les Composants initiaux pour cette Entité.
+		La référence de l'Entité créée est aussi ajoutée à un ensemble (<code>Set</code>) interne des Entités modifiées, qui servira à mettre à jour les Sélections avant l'exécution de Chaque Système<!-- <del>ayant été modifiées au cours de l'exécution du Système courant</del> -->.
+		Les Sélections seront notifiées de ces modifications à l'issue de l'exécution de ce Système.
+	</dd>
+	<dt>Association/Remplacement d'un Composant à une Entité — <code>e.comp = reference</code></dt>
+	<dd>
+		Un lien est créé entre une Entité et un Composant donnés.
+		Chaque Entité peut être associée à plusieurs Composants, mais un Composant n'est associé qu'à une seule Entité.
+		Ainsi, lorsqu'une des variables d'un Composant est modifiée, l'Entité à laquelle il est attaché est automatiquement ajoutée à la liste des Entités modifiées.
+		Une exception à cette règle concerne les Composants <i>immutables</i> (dont les variables internes ne peuvent pas être modifiées), qui peuvent être partagés entre plusieurs Entités.
+		C'est le cas par exemple pour les couleurs, dont les structures sous-jacentes sont ainsi réutilisées.
+		Chaque Composant est en fait une association entre un nom et un emplacement (non typé), dont toute modification (ajout, remplacement, modification interne, suppression) entraîne l'ajout de l'Entité à la liste des Entités modifiées.
+<!-- 		<del><notesh>c'est pas clair... que se passe-t'il si j'ajoute un composant déjà ajouté à une entité à une autre entité ? Ça veut dire que les données sont dupliquées ? (e.g. dans le cas d'une couleur, il faut créer une nouvelle instance à chaque fois ?)</notesh>
+		Si l'Entité est déjà liée à un Composant <notesh>Pareil, pas clair... on parle d'un composant "de même type", right ?</notesh>, celui-ci est supprimé avant d'ajouter le nouveau.</del> -->
+		Lorsque le nom du Composant est préfixé par <code>tmp</code>, le lien est <i>temporaire</i>, c'est-à-dire qu'il sera détruit à l'issue de la chaîne d'exécution courante des Systèmes.
+		Ce type de Composants permet de faire transiter des informations des Systèmes en amont vers les Systèmes en aval, en stockant ces informations sur des Entités (comme <code>Pointer</code> et <code>Keyboard</code>).
+		Enfin la référence de l'Entité associée est ajoutée à l'ensemble interne des Entités modifiées.
+	</dd>
+</dl><dl>
+	<dt>Lecture d'un Composant d'une Entité — <code>let reference = e.comp</code></dt>
+	<dd>
+		Le lien entre une Entité et un Composant est retrouvé, et la référence vers le second est renvoyée.
+		S'il n'y a pas de tel lien défini, une valeur invalide est renvoyée (<code>undefined</code> en JavaScript).
+	</dd>
+	<dt>Vérification de l'association d'un Composant avec une Entité — <code>if ('comp' in e)</code></dt>
+	<dd>
+		L'expression renvoie un booléen indiquant si l'Entité est attachée à un Composant avec ce nom.
+		Cette opération n'est pas strictement nécessaire dans une implémentation de Polyphony, car elle peut être remplacée par <code>if (e.comp != undefined)</code> <!-- <del><notesh>mettre plutôt <code>if (e.comp != undefined)</code> pour la cohérence avec le test 'in' ?</notesh></del> -->.
+	</dd>
+	<dt>Itération sur les Composants d'une Entité — <code>for (let [c, r] of Object.entries(a))</code></dt>
+	<dd>
+		Un bloc de code est exécuté autant de fois qu'il y a de Composants attachés à une Entité, deux variables (<code>c</code> et <code>r</code>) renseignant à chaque itération le nom du Composant itéré ainsi que sa valeur.
+		Cette opération est utile en particulier pour la sérialisation d'une Entité en texte, lorsqu'il faut débugger le programme ou bien enregistrer son état courant dans un fichier.
+	</dd>
+	<dt>Suppression d'un Composant d'une Entité — <code>delete e.comp</code></dt>
+	<dd>
+		Le lien entre une Entité et un Composant est détruit, et la structure de données du second est effacée de la mémoire du programme (si aucune autre Entité n'y réfère, dans le cas des Composants immutables).
+		Si aucun Composant de ce nom n'était défini pour l'Entité, l'opération n'a aucun effet et ne renvoie pas d'erreur.
+		La référence de l'Entité est ajoutée à l'ensemble interne des Entités modifiées.
+	</dd>
+	<dt>Suppression d'une Entité — <code>e.delete()</code></dt>
+	<dd>
+		Tous les Composants liés à une Entité sont supprimés, et cette Entité est retirée de la liste des Entités actives.
+		Elle est aussi ajoutée à un ensemble interne des Entités supprimées.
+		Les Sélections seront notifiées de ce changement lors de l'exécution du prochain Système.
+		Si des références vers l'Entité à supprimer existent encore dans l'application, elles sont conservées (l'Entité pointée est alors une coquille vide).
+		Il serait aussi envisageable d'invalider automatiquement ces références, tel que décrit par Kedia [<a href=#kedia_simple_2017>Ked17</a>].
+	</dd>
+	<dt>Exécution d'un Système — <code>e(...)</code></dt>
+	<dd>
+		Toutes les Sélections sont d'abord mises à jour avec les ensembles des Entités modifiées et supprimées.
+<!-- 		<del><notesh>Tu parles plusieurs fois de ces ensembles des Entités modifiées avant d'en arriver là, et donc que l'on comprenne à quoi ils servent. Peut-être que la 1ère fois que tu en parles plus haut tu pourrais expliquer rapidement (avec e.g. ", ensembles qui serviront à la mise à jour des sélections avant l'exécution des systèmes")</notesh></del> -->
+		Ces ensembles sont ensuite réinitialisés dans leur état vide.
+		L'Entité qu'on tente d'exécuter est normalement associée à une fonction (stockée comme un Composant caché), qui est exécutée<!-- <del>Enfin la fonction associée à l'Entité est exécutée <notesh>"fonction associée à l'Entité" ? Mais les entités n'ont pas de fonctions ? Un truc du genre "fonction associée à l'Entité qui représente le Système" ? Ou rappeler que les Systèmes sont des Entités ?</notesh>,</del> --> en relayant les éventuels paramètres de l'appel de fonction.
+		L'absence d'une telle fonction déclenche une erreur lors de l'exécution du programme.
+	</dd>
+	<dt>Exécution du Méta-Système — <code>MetaSystem(eventType)</code></dt>
+	<dd>
+		Le Méta-Système est un Système particulier, dont la fonction est d'ordonner (selon le Composant <code>order</code>) et d'exécuter les autres Systèmes.
+		Il utilise une Sélection lui permettant d'itérer sur tous les Systèmes (à l'exception de lui-même).
+		Cette Sélection étant mise à jour à chaque exécution de Système, une copie en est faite au préalable afin de ne pas risquer de la modifier pendant qu'on itère dessus.
+		Le Méta-Système reçoit en argument le type d'évènement déclencheur lui permettant de sélectionner les Systèmes à inclure dans la chaîne d'exécutions (en fonction de leurs Composants <code>runOn</code>).
+		À la fin de son exécution, les Composants temporaires sont automatiquement supprimés.
+	</dd>
+</dl>
+
+
+
+<h4 class=break>Composants et environnement</h4>
+
+<!-- <del><sh>Est-ce que cette section ne devrait pas être avant les descripteurs et sélections, et juste après entités et systèmes ?</sh></del> -->
+<p>
+	Les Composants décrivent les attributs que les Entités peuvent acquérir (comme <code>shape</code> ou <code>backgroundColor</code>), ainsi que leurs capacités (comme <code>actionable</code> ou <code>draggable</code>).
+	Dans Polyphony, le Composant désigne une structure attachée à une Entité, plutôt que le type de donnée duquel il est instancié.
+	L'environnement, par l'intermédiaire des <i>bindings</i> avec le système d'exploitation, manipule les Composants des Entités matérialisant les périphériques d'interaction (souris, clavier, et écran), au début et à la fin de chaque chaîne d'exécution des Systèmes.
+	Les services relatifs aux Composants et à l'environnement sont :
+</p>
+<dl>
+	<dt>Création d'un type de Composant — <code>function Comp(i) { this.i = i }</code></dt>
+	<dd>
+		Un type global et permanent est créé, qui s'apparente à une déclaration de <i>structure</i> du langage hôte.
+		Cette structure définit un nombre fixe de variables, dans un ordre déterminé.
+		Chaque variable possède un nom, un type si le langage hôte le permet, et est accessible par tous sans restriction.
+		La définition d'un nouveau type de Composant implique l'existence d'une syntaxe permettant d'instancier de nouveaux Composants.
+	</dd>
+	<dt>Instanciation d'un Composant pour une Entité — <code>e.comp = new Comp(...)</code></dt>
+	<dd>
+		Un Composant est créé, et sa mémoire est initialisée avec les valeurs fournies en arguments (plus d'éventuelles variables calculées à partir des arguments).
+		Un lien est immédiatement créé entre ce Composant et l'Entité.
+	</dd>
+	<dt>Modification d'une valeur d'un Composant — <code>e.comp.i = val</code></dt>
+	<dd>
+		Le Composant voit une de ses variables en mémoire recevoir une nouvelle valeur.
+		Par le lien qui le lie à une Entité, celle-ci est automatiquement ajoutée à l'ensemble interne des Entités modifiées, afin que les Sélections puissent réagir à ce changement.
+	</dd>
+	<dt>Sérialisation un Composant en code — <code>serialize(reference)</code></dt>
+	<dd>
+		Il s'agit de transformer un Composant existant en une chaîne de caractères, telle que l'interprétation de cette chaîne comme du code source génère le même Composant initial.
+		Cette opération n'est pas strictement nécessaire à l'implémentation de Polyphony, cependant elle nous permet de charger et sauvegarder les Entités d'une scène en code JavaScript, sans recourir à un format externe comme XML.
+	</dd>
+	<dt>Actualisation des Composants des Entités périphériques</dt>
+	<dd>
+		Cette opération dépend des fonctions logicielles utilisées pour récupérer les évènements du système d'exploitation.
+		Lorsqu'un évènement externe se produit (action sur la souris, le clavier, interruption du programme), le type de l'évènement est d'abord testé pour actualiser les bons Composants de chaque Entité périphérique (ex. <code>pointer.cursorPosition</code> pour un mouvement de souris).
+		Ensuite, le Méta-Système est lancé, en lui passant en paramètre le type d'évènement ayant déclenché l'actualisation.
+	</dd>
+	<dt>Initialisation des éléments de l'environnement</dt>
+	<dd>
+		Cette opération correspond au démarrage de l'application.
+		Les <i>bindings</i> avec le système d'exploitation sont d'abord initialisés s'il y a lieu.
+		Ensuite une fenêtre graphique est créée, ainsi que les Entités prédéfinies <code>pointer</code>, <code>keyboard</code>, et <code>view</code>.
+		Il se peut aussi que ces Entités soient créées par <i>hot-plug</i>, c'est-à-dire après leur branchement alors que l'application a déjà démarré.
+		C'est le cas notamment avec l'utilisation de libpointing [<a href=#casiez_no_2011>Cas11</a>].
+		Enfin, le Méta-Système est lancé une première fois pour générer un premier affichage à l'écran des Entités déjà présentes.
+	</dd>
+</dl>
+<!-- <del><sh>C'est un peu "léger" sur les 2 derniers points liés aux bindings, mais peut-être que tu développe plus dans la suite ? (implémentation).</sh></del>
+<traf>Développé à la fin de <a href=#sec3x4>3.4</a>.</traf> -->
+
+
+
+<h4>Descripteurs et Sélections</h4>
+
+<p>
+	Les Sélections sont la première interface entre les Systèmes et les Entités.
+	Elles permettent aux Systèmes de récupérer les identifiants des Entités sur lesquelles opérer, avant d'utiliser ces identifiants pour récupérer les Composants.
+	Une Sélection est un ensemble d'Entités basé sur une condition booléenne (Descripteur), dont le contenu est régulièrement mis à jour pour inclure <i>toutes</i> les Entités validant la condition, et <i>uniquement</i> ces Entités.
+	Les services relatifs aux Descripteurs et Sélections sont :
+</p>
+<dl>
+	<dt>Création d'un Descripteur — <code>let desc = (e) => 'comp' in e && e.comp < extVal</code></dt>
+	<dd>
+		Une référence vers une fonction est renvoyée, qui prend en argument une Entité et renvoie un booléen.
+		C'est donc une condition programmable, qui peut se baser sur les Composants attachés, leurs valeurs, ou une combinaison incluant des valeurs externes.
+	</dd>
+	<dt>Interrogation d'un Descripteur — <code>if (desc(e)) {...}</code></dt>
+	<dd>
+		L'exécution de la fonction référencée par le Descripteur renvoie un booléen, qui permet de vérifier à un instant donné si une Entité appartient ou non à une certaine catégorie.
+		Cette opération est la base de la construction et de la mise à jour des Sélections.
+	</dd>
+	<dt>Création d'un Sélecteur — <code>let sel = new Selection(desc, comp)</code></dt>
+	<dd>
+		Une Sélection globale et permanente est créée, à partir d'un Descripteur fourni en argument.
+		Une relation binaire d'ordre peut être fournie en second argument (fonction <i>Entité × Entité → nombre</i>), auquel cas la Sélection est garantie d'être toujours triée selon cette relation.
+		Le Descripteur n'est pas modifiable après création de la Sélection, cependant il est publiquement accessible en lecture.
+	</dd>
+	<dt>Mise à jour des Entités pour une Sélection — <code>sel.update(modified, deleted)</code></dt>
+	<dd>
+		Une Sélection est notifiée des listes d'Entités ayant été modifiées et supprimées depuis la dernière exécution d'un Système.
+		Elle insère les Entités validant pour la première fois son Descripteur, conserve les Entités l'ayant déjà validé, retire les Entités ne le validant plus, et ignore les Entités ne le validant toujours pas.
+		Les Entités de la liste <code>deleted</code> sont systématiquement retirées, quel que soit le résultat du Descripteur.
+	</dd>
+	<dt>Itération sur les Entités d'une Sélection — <code>for (let e of sel) {...}</code></dt>
+	<dd>
+		Un bloc de code est exécuté autant de fois qu'il y a d'Entités dans une Sélection, une variable (<code>e</code>) renseignant à chaque itération la référence de cette Entité.
+		Si une relation d'ordre existe pour la Sélection, elle est triée avant l'exécution de la boucle.
+		Cette opération permet à un Système d'exécuter un comportement donné sur chaque Entité, indépendamment des autres.
+	</dd>
+	<dt>Accès aléatoire à toute Entité d'une Sélection — <code>let e = sel[n]</code></dt>
+	<dd>
+		L'Entité en <code>n</code>-ième position dans la Sélection est renvoyée.
+		Plus généralement, toute Sélection est utilisable comme un tableau, à l'exception des opérations de modification du tableau.
+		Cet accès permet à un Système d'exécuter un comportement transverse à plusieurs Entités, pour lequel l'itération en séquence serait fastidieuse.
+		La résolution globale de contraintes de positionnement linéaires en est un exemple, puisqu'il s'agit de considérer l'ensemble des contraintes comme un problème d'Optimisation Linéaire, et de le résoudre globalement [<a href=#borning_solving_1997>Bor97</a>].
+	</dd>
+</dl>
+<!-- <del><sh>On (je) aurait envie d'avoir une petite discussion sur des modes un peu plus avancés de sélection, avec par exemple des compositions de descripteurs ou de sélections e.g. une sélection faite avec le produit de deux descripteurs, ou "obtenir toutes les entités de la sélection S1 qui ne sont pas dans la sélection S2". Ça pourrait vite devenir une usine à gaz "à la SQL", donc c'est peut-être un argument pour dire que tu as voulu rester "simple", mais ça pourrait néanmoins être intéressant... (et utile)</sh></del> -->
+<p>
+	De nombreuses implémentations d'ECS proposent des algèbres de combinaison des Sélections, pour par exemple “itérer sur les entités qui sont dans S1 et S2, mais pas dans S3”.
+	Ces algèbres correspondent généralement aux opérateurs booléens <i>ET</i>, <i>OU</i>, et <i>NON</i>.
+	Or en pratique, ils sont déjà implémentés dans le langage JavaScript, avec les opérateurs <code>&&</code>, <code>||</code>, et <code>!</code>.
+	Nous avons donc conçu les descripteurs comme des fonctions (plutôt que des listes de Composants), afin de réutiliser l'algèbre de composition intégrée, et d'être cohérents avec le langage.
+	De plus, nous souhaitions avoir le plus de flexibilité pour exprimer des descripteurs, car nous ne pouvions pas anticiper les opérations algébriques qui seraient les plus utilisées en pratique.
+	En effet, la majorité des implémentations d'ECS expriment les descripteurs de base (hors combinaisons algébriques) comme des listes de Composants, qui doivent tous être possédés par une Entité pour l'inclure.
+	Ces descripteurs implémentent en fait l'opération de base <i>ET</i>, et impliquent donc que c'est l'opération qui sera la plus utilisée.
+	Comme nous voulions observer avant de prendre une telle orientation, nous avons choisi l'option la plus flexible, avec des descripteurs spécifiés en code.
+</p>
+
+
+
+<h3>Choix de conception des Systèmes, Composants et périphériques</h3>
+
+<p>
+	Cette partie illustre le deuxième niveau de Polyphony (représenté en <a href=#fig-polyphony>figure</a>), construit par dessus l'implémentation d'ECS présentée dans la section précédente.
+	Ce niveau est constitué des éléments réutilisables fournis par Polyphony, pour aider les programmeurs à construire rapidement des interfaces complètes.
+	Le choix des Systèmes proposés, des Composants disponibles ainsi que l'usage des Sélections, résultent de compromis qu'il est important d'expliquer<!-- <del><notesh>J'aime pas le verbe "expliciter" alors que "expliquer" convient très bien :P</notesh></del> --> afin de soutenir les futures itérations de boîtes à outils d'IHM basées sur ECS.
+</p>
+
+<h4>Choix des Systèmes</h4>
+
+<p>
+	La conception des Systèmes dans Polyphony résulte d'un compromis entre comportements simples et comportements complexes.
+	Prenons par exemple le dessin des bordures de widgets (rectangulaires ou polygonales) dans l'application.<!-- <del><notesh>Bordures de quoi ?</notesh></del> -->
+	Nous avons quatre alternatives, classées de la plus simple à la plus complexe :
+</p>
+<ul>
+	<li>Créer un Système dessinant des segments, avec lequel une bordure est formée de plusieurs Entités positionnées en polygone.</li>
+	<li>Créer un Système dessinant des rectangles, qui conviendra pour la majorité des besoins.</li>
+	<li>Créer un Système dessinant des formes géométriques arbitraires, pour lequel le dessin d'une bordure revient à fournir un tableau de points.</li>
+	<li>Créer un Système dessinant des widgets de base (fond, bordure, image, et texte), pour lequel le dessin d'une bordure sera un sous-ensemble de ses capacités.</li>
+</ul>
+<p>
+	Avec des types de comportements simples, il est facile de les assembler de façon créative.
+	Avec un Système dessinant des segments, on pourrait ainsi changer la couleur d'un des bords, indépendamment des autres, ce qui n'est pas réalisable avec les Systèmes alternatifs plus complexes (s'ils se basent sur une seule couleur).
+	À l'opposé avec des types de comportements complexes, on définit globalement moins de Systèmes, donc la chaîne d'exécution des Systèmes est plus courte, et il est plus facile d'en avoir une vue d'ensemble.
+	De façon générale, nous voulons faciliter la programmation d'applications complexes, et rendre la structure des Systèmes la plus simple possible, donc nous favorisons les Systèmes complexes et en faible nombre.
+</p>
+<p>
+	Dans l'exemple ci-dessus, le premier Système dessinant un segment par Entité est trop simple.
+	Pour dessiner une bordure rectangulaire complète (sans “trous”), il nécessite de créer quatre Entités, et de les positionner relativement à l'Entité du widget qu'on souhaite dessiner.
+	De plus, ce Système n'apporte pas un comportement de “grande valeur”, car il peut être recréé rapidement si un développeur avait besoin de dessiner des lignes.
+</p>
+<p>
+	Le second Système est plus avancé, mais stéréotypé.
+	En effet, chaque widget qui nécessite une bordure n'aura qu'à acquérir quelques Composants (sans nécessiter de nouvelles Entités), donc il sera simple et rapide d'ajouter des bordures rectangulaires aux widgets.
+	Cependant, des chercheurs expérimentant la conception de contrôles non-rectangulaires ne pourront pas utiliser ce Système, et devront en créer un autre.
+</p>
+<p>
+	Le troisième Système est plus avancé et moins stéréotypé, mais complexe pour des usages simples.
+	Des bordures pour contrôles non-rectangulaires seraient simples à créer, et leurs coordonnées seraient incluses dans un Composant, donc ne nécessiteraient pas de multiplier les Entités.
+	Pourtant, elles rendent plus complexe le dessin de bordures pour les contrôles rectangulaires, qui devraient alors spécifier quatre points.
+</p>
+<p>
+	Enfin, le quatrième Système est trop complexe.
+	En effet, bien qu'il soit particulièrement adapté pour dessiner des contrôles standards, ce Système est “monolithique” et ne fait aucun usage des capacités de composition d'ECS.
+	La création de nouveaux types de contrôles se ferait en multipliant les Entités, chacune utilisant un sous-ensemble des capacités du Système.
+	De plus ce type de Système est le plus difficile à remplacer, donc contribue à la cristallisation des types de contrôles disponibles, et plus généralement de l'expérience utilisateur.
+</p>
+<!--
+	_ L'exemple est simpliste, et il est possible de faire un Système qui couvre plusieurs usages simultanément
+	_ L'extrapolation des besoins crée plus de complexité, car il y a beaucoup de directions possibles
+	_ Supporter uniquement les usages contemporains
+	_ Diviser les Systèmes en une poignée, afin de pouvoir éventuellement réutiliser des portions, mais quand même pouvoir les visualiser
+	_ ECS est quand même conçu pour recréer facilement des Composants et Systèmes de zéro
+-->
+<p>
+	L'exemple que nous avons choisi est volontairement simple, de manière à bien illustrer les choix qui s'offrent aux programmeurs pour concevoir des Systèmes selon leurs besoins.<!-- <del>L'exemple que nous présentons est simpliste <notesh>pas simpliste, mais simple... d'ailleurs le mieux serait peut-être de dire "L'exemple que nous avons choisi est volontairement simple de manière à bien illustrer les choix qui s'offrent aux programmeurs pour concevoir des Systèmes selon  leurs besoins."</notesh>.</del> -->
+	En pratique il est possible de faire un Système qui couvre plusieurs usages simultanément (ex. qui permette de spécifier une bordure complète, ou chaque côté séparément).
+	Lors de l'élaboration d'un Système, nous pourrions être tentés de multiplier ces options, et d'inclure des besoins hypothétiques futurs, pour faciliter le prototypage de nouvelles interactions.
+	Or l'extrapolation des besoins crée des Systèmes plus complexes, car il existe de nombreuses pistes de développements, dont certaines ne se développeront jamais.
+	Dans l'exemple des bordures ci-dessus, de telles pistes seraient : des bordures polygonales, des bordures en courbes paramétriques, des bordures d'épaisseurs/couleurs non-uniformes, ou encore des bordures animées dans le temps.
+	À partir de cette remarque, notre première recommandation est de <b>supporter uniquement les usages contemporains</b>.
+	Le modèle ECS est conçu pour faciliter la création de nouveaux Composants et Systèmes, ce qui est préférable à des Systèmes complexes supportant des besoins peu communs.
+	Enfin, de la même manière qu'on quantifie le nombre d'éléments que peut retenir la mémoire de travail (<i>empan mnésique</i>) autour de 7 [<a href=#miller_magical_1956>Mil56</a>], nous préférons réduire le nombre de Systèmes pour permettre aux développeurs d'en avoir une “vue d'ensemble” (voire de les représenter graphiquement).
+	Il faut alors identifier des comportements indépendants (ex. le dessin de bordures, d'arrière-plans, de texte, ou d'images), et les répartir en un nombre raisonnable.
+	Le choix final est un compromis qui dépend du contexte, et n'a pas une unique solution.
+	Nous recommandons donc de <b>diviser les Systèmes en un faible nombre de comportements indépendants</b>.
+</p>
+<!-- <del><p>Pour l'élaboration des Systèmes de Polyphony, nous avons donc défini et appliqué les recommandations suivantes :</p>
+<ul><b>
+	<li>les Systèmes sont de préférence complexes, tant qu'ils n'ont pas à sauter des portions de code internes selon les types de Composants <notesh>que veut dire "sauter des portions de code internes selon les types de Composants" ? Quels sont les cas, quels en sont les conséquences ?</notesh></li>
+	<li>les comportements simples peuvent être implémentés rapidement si besoin <notesh>OK, c'est assez trivial, mais c'est vague...</notesh></li>
+	<li>chaque Système doit pouvoir être remplacé, indépendamment des autres <notesh>Pareil, c'est assez trivial que ça parle de limiter les dépendances entre systèmes (tu pourrais d'ailleurs le dire explicitement), mais il faudrait expliquer un peu les tenants et aboutissants</notesh></li>
+</b></ul>
+<sh>Je trouve que ces recommandations sont assez triviales, mais pas vraiment claires. Il faudrait peut-être les reformuler, et dans tous les cas, rajouter un paragraphe explicatif pour chaque (avec illustration par des exemples ?). Ces choix et recommandations là sont importants, car ils conditionnent pas mal la méthodologie de programmation que tu veux promouvoir, donc il me semble important de développer un peu plus.</sh></del> -->
+
+<h4 class=break>Choix des Composants</h4>
+
+<p>
+	La fonction première des Composants est d'aggréger des données.
+	Ces données peuvent toujours être divisées en des valeurs atomiques — par exemple, une coordonnée <code>x</code>, une coordonnée <code>y</code>, une largeur <code>width</code>, une hauteur <code>height</code>.
+	D'un autre côté, ces données peuvent aussi être regroupées dans des ensembles partageant un sens commun — par exemple, <code>x</code>, <code>y</code>, <code>width</code> et <code>height</code> forment un rectangle, ou des bornes.
+	À l'extrême, les données peuvent être regroupées dans de grands ensembles avec un sens large — comme les classes de <i>widgets de base</i> définies dans la plupart des frameworks.
+	Il existe donc un équilibre à trouver entre Composants légers (voire atomiques), et Composants lourds.
+</p>
+<p>
+	Les programmeurs interagissent directement avec les Composants, pour gérer les comportements ajoutés aux diverses Entités.
+	L'enjeu de ce choix de conception est donc la facilité qu'auront les programmeurs à s'abstraire<!-- <del>se dépêtrer <notesh>"dépêtrer" bof bof...</notesh></del> --> du bas-niveau, et à manipuler peu de Composants à la fois.
+	Si les Composants sont trop lourds (comme des widgets complets), alors le mécanisme de composition d'ECS ne peut pas être exploité à son maximum<!-- <del>ne sert à rien <notesh>un peu extrême "ne sert à rien", dire plutôt "ne peut pas être exploité à son maximum"</notesh></del> -->, puisqu'on ajouterait des comportements en activant des options dans un Composant, plutôt qu'en acquérant de nouveaux Composants.
+	Si les Composants sont trop légers, alors les différents comportements nécessitent beaucoup de Composants, et les programmeurs doivent écrire plus de code pour les ajouter aux Entités.
+</p>
+<p>
+	La performance de l'application influence aussi ce choix de conception.
+	En faveur des Composants lourds, l'accès à une donnée d'un Composant (en lecture et écriture) est plus rapide que l'accès à un Composant d'une Entité, à cause de la flexibilité du stockage des Composants d'une Entité.
+	En faveur des Composants légers, le regroupement en mémoire de toutes les données utilisées par un même Système favorise l'utilisation des caches du processeur, donc les données inutilisées d'un Composant diminuent globalement la performance de l'application.
+</p>
+<p>Pour le choix des Composants de Polyphony, nous avons donc appliqué ces recommandations :</p>
+<ul>
+	<li><b>les données requises par <i>un</i> Système devraient appartenir à <i>un</i> seul Composant</b></li>
+	<li><b>les données partagées par <i>plusieurs</i> Systèmes devraient être réparties pour que chaque Système dépendant d'un Composant en utilise <i>toutes</i> les variables</b></li>
+</ul>
+<p>
+	En exemple d'application de ces recommandations, nous avons observé que tous les éléments affichables de l'interface possédaient nécessairement les variables <code>x</code>, <code>y</code>, <code>width</code> et <code>height</code> — y compris ceux non-rectangulaires qui possèdent alors un rectangle englobant.
+	Seul le pointeur système possède uniquement des coordonnées <code>x</code> et <code>y</code>, cependant ses comportements ne sont pas destinés à être composés avec ceux des widgets de l'interface.
+	En conséquence, Polyphony propose un Composant <code>Bounds</code> incluant les quatre variables.
+</p>
+<!-- <sh>Mieux que pour les système, ici il y a un exemple de ces recommandations... Ce qui est intéressant aussi ici, c'est que du coup les Composants "bien regroupés" par rapport aux Systèmes qui les utilisent peuvent apporter une couche "sémantique" et faciliter la programmation, amis aussi la compréhension. Par exemple, le Composant (x, y, w, h) peut s'appeler "Bounded", ce qui donne un sens (un peu comme les interfaces). Et un Composant "Drawable" pour le Système d'affichage serait une composition de "Bounded" avec en plus un "BackgroundColor" ?</sh>
+<traf>C'est la <i>Sélection</i> "Drawable" qui inclurait les Entités avec les Composants Bounded et BackgroundColor</traf> -->
+
+<h4>Choix liés aux Sélections</h4>
+
+<p>En programmation par objets (et Entités), les objets se “connaissent” les uns les autres en stockant des références (généralement des adresses en mémoire) :</p>
+<ul>
+	<li>un objet en “connaît” un autre en stockant une référence vers celui-ci</li>
+	<li>un objet en “connaît” plusieurs autres en stockant un tableau de références vers ceux-ci</li>
+</ul>
+<p>Avec l'utilisation des Sélections, de nouvelles manières de référer aux objets apparaissent :</p>
+<ul>
+	<li>on peut référer à une Entité qu'on sait être le premier élément d'une Sélection (ex : le premier pointeur, <code>Pointers[0]</code>)</li>
+	<li>on peut référer à plusieurs Entités en leur attribuant un Composant les différenciant des autres Entités, et en les récupérant par une Sélection</li>
+</ul>
+<p>
+	Dans Polyphony, toutes ces manières de référer aux Entités coexistent, et offrent souvent plusieurs manières de faire.
+	Dans l'exemple de notre application de dessin, pour référer aux boutons activables mutuellement exclusifs (les outils de déplacement, rectangles, et ellipses), faut-il conserver un tableau de références, ou attribuer aux boutons un même Composant <code>toggleGroup</code> ?
+	De même, pour définir les relations de parenté dans un arbre de scène, chaque noeud stocke-t-il un tableau d'enfants, ou les enfants portent-ils un Composant <code>parent</code> ?
+</p>
+<p>
+	Pour répondre à ces questions, il faut rappeler que les Sélections sont des structures coûteuses en performance, car Polyphony les maintient à jour en leur présentant <i>chaque</i> Entité qui est modifiée.
+	Il faut donc éviter de les utiliser abusivement.
+	Dans le premier cas, on utilisera une sélection <code>ToggleGroups</code> qui réfère à toutes les Entités possédant un Composant <code>toggleGroup</code>, et on filtrera lors de leur énumération les Entités avec un même <code>toggleGroup</code> (car on sait qu'elles sont peu nombreuses).
+	Ce choix permet en outre d'ajouter facilement un nouveau bouton à un groupe, en lui attribuant le même Composant <code>toggleGroup</code>.
+	Dans le second cas, on suppose que de grands arbres de scène risquent d'être utilisés.
+	Avec une Sélection de toutes les Entités ayant un Composant <code>parent</code>, on aurait beaucoup d'Entités à ignorer pour énumérer celles avec un <code>parent</code> donné.
+	De plus, l'ordre des enfants d'un noeud est important (qui ne serait pas garanti dans une Sélection sans critère de tri).
+	On utilisera donc plutôt un tableau d'enfants sur chaque noeud parent de l'arbre.
+	Ainsi, pour différencier les deux cas, nous recommandons d'<b>utiliser une Sélection lorsque le nombre d'Entités à écarter est faible</b>, car chaque Entité ignorée dans une Sélection est beaucoup plus coûteuse qu'une Entité ignorée dans un tableau.
+</p>
+<p>
+	Enfin, lors de la détection de techniques d'interaction sur les périphériques, il se pose la question des Entités auxquelles attribuer les Composants générés.
+	Prenons par exemple la technique du glisser-déposer : lors du dépôt d'un objet sur un autre, un <i>évènement</i> de dépôt temporaire est généré, qui doit être communiqué aux Systèmes en aval dans la chaîne d'exécution.
+	Les Composants à créer peuvent être stockés :
+</p>
+<ul>
+	<li>sur l'objet receveur, qui indique quel objet il a reçu (<code>tmpDropOf</code>), et éventuellement quel pointeur l'a déposé (<code>tmpDropBy</code>)</li>
+	<li>sur l'objet déposé, qui indique sur quel objet il est relâché (<code>tmpDropOn</code>), et éventuellement quel pointeur l'a déposé (<code>tmpDropBy</code>)</li>
+	<li>sur le pointeur à l'origine du dépôt, qui indique quel objet a été déplacé (<code>tmpDropOf</code>), et sur quel objet il l'a déposé (<code>tmpDropOn</code>)</li>
+	<li>sur une combinaison des trois</li>
+</ul>
+<p>
+	L'interaction entre les périphériques et les Entités induit la possibilité de stocker l'information d'un côté ou de l'autre (ou des deux côtés).
+	Dans le cas du glisser-déposer, on suppose que <i>beaucoup</i> d'Entités seront déplaçables, <i>beaucoup</i> pourront recevoir des dépôts, mais qu'il existera <i>peu</i> de pointeurs (généralement un seul).
+	Il sera donc judicieux d'ajouter les Composants sur le pointeur, car les Systèmes en aval n'auront qu'à énumérer la Sélection <code>Pointers</code> pour détecter l'action de dépôt (et écarteront peu d'Entités).
+	Ainsi, nous recommandons de <b>stocker les Composants temporaires sur les Entités les moins nombreuses</b> (c'est-à-dire accessibles à partir des Sélections les plus réduites).
+</p>
+<!-- <del><p>Nous synthétisons ces observations avec les recommandations suivantes :</p>
+<ul>
+	<li><b>les Sélections devraient évoluer infréquemment <notesh>rarement ?</notesh>, car leur mise à jour est coûteuse</b></li>
+	<li><b>on utilise une Sélection pour référer à un groupe d'Entités lorsque le nombre d'Entités à écarter est faible <notesh>Pourquoi ?</notesh></b></li>
+</ul>
+
+<sh>idem que précédemment, un peu de discussion et des exemples ?</sh></del>
+<traf>J'ai intégré la première recommandation plus près de son contexte pour la rendre plus claire, et remplacé la seconde qui était floue.</traf> -->
+
+<link rel=stylesheet href=style.css>
+<script src=scripts.js></script>
+<script>prefix_headers(3, 3)</script>
